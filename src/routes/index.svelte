@@ -1,39 +1,20 @@
-<h1>Welcome to SvelteKit</h1>
+<h1>Image Search</h1>
 
 <script context="module" lang="ts">
-    // /** @type {import('./__types/[slug]').Load} */  
-    // export async function load({ params, fetch, session, stuff }) {
 
-    //   const url = `http://image-search.0ape.com/search_api?num=3&q=asdf`;
-    //   const response = await fetch(url);
-    //   return {
-    //     status: response.status,
-    //     props: {
-    //       article: response.ok && (await response.json())
-    //     }
-    //   };
-
-    // }
 </script>
 
 <script lang="ts">
-    
+    console.log("======== starting script ========")
+
     import { page } from '$app/stores';
-
-    import {
-      afterNavigate,
-      beforeNavigate,
-      disableScrollHandling,
-      goto,
-      invalidate,
-      prefetch,
-      prefetchRoutes
-    } from '$app/navigation';
-
+    import { goto } from '$app/navigation';
+    import ImageGrid from '../components/ImageGrid.svelte';
+    
     let search_query=$page.url.searchParams.get('q');
 
     async function get_search_results(q) {
-      const url = `http://image-search.0ape.com/search_api?num=10&q=`+encodeURIComponent(q);
+      const url = `http://image-search.0ape.com/search_api?num=300&q=`+encodeURIComponent(q);
       const res = await fetch(url);
       const text = await res.json();
       console.log("searching for "+q)
@@ -43,41 +24,23 @@
         throw new Error(text);
       }
     }
+
     let search_results = get_search_results(search_query);
     let cached_search_results = [];
-    function handleClick() {
-      // Now set it to the real fetch promise 
+    function submit_form() {
+      goto('?q='+encodeURIComponent(search_query));
       search_results = get_search_results(search_query) 
     }
 </script>
 
-<p>Current URL: {$page.url.searchParams}</p>
-<p>Current q: {search_query}</p>
-
 <h1>Search</h1>
-<form >
+
+<form on:submit|preventDefault={submit_form}>
     <input type="search" name="q" 
       bind:value={search_query} 
       on:input={() => cached_search_results = get_search_results(search_query)}
     />
     <button type="submit">Search</button>
-    
 </form>
-<button type="submit" on:click={ handleClick } >
-  Better Search
-</button>
 
-
-{#await search_results}
-	<p>...waiting</p>
-{:then search_results}
-  {#each search_results as [image_id,image_score], idx}
-    <div style="float:left">
-      <img src="http://image-search.0ape.com/thm/{image_id}?size=400"><br>
-      {image_id} -- {image_score} -- {idx}<br>
-    </div>
-  {/each}
-{:catch error}
-	<p style="color: red">{error.message}</p>
-{/await}
-<!-- consider: https://www.youtube.com/watch?v=jpKbyiQsj3k -->
+<ImageGrid bind:imgs={search_results}></ImageGrid>
