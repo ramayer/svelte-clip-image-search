@@ -1,30 +1,42 @@
 <h1>Welcome to SvelteKit</h1>
 
 <script context="module" lang="ts">
-    /** @type {import('./__types/[slug]').Load} */  
-    export async function load({ params, fetch, session, stuff }) {
+    // /** @type {import('./__types/[slug]').Load} */  
+    // export async function load({ params, fetch, session, stuff }) {
 
-      const url = `http://image-search.0ape.com/search_api?num=1000&q=asdf`;
-      const response = await fetch(url);
-      return {
-        status: response.status,
-        props: {
-          article: response.ok && (await response.json())
-        }
-      };
+    //   const url = `http://image-search.0ape.com/search_api?num=3&q=asdf`;
+    //   const response = await fetch(url);
+    //   return {
+    //     status: response.status,
+    //     props: {
+    //       article: response.ok && (await response.json())
+    //     }
+    //   };
 
-    }
+    // }
 </script>
 
 <script lang="ts">
     
     import { page } from '$app/stores';
+
+    import {
+      afterNavigate,
+      beforeNavigate,
+      disableScrollHandling,
+      goto,
+      invalidate,
+      prefetch,
+      prefetchRoutes
+    } from '$app/navigation';
+
     let search_query=$page.url.searchParams.get('q');
 
     async function get_search_results(q) {
-      const url = `http://image-search.0ape.com/search_api?num=10&q=`+q;
+      const url = `http://image-search.0ape.com/search_api?num=10&q=`+encodeURIComponent(q);
       const res = await fetch(url);
       const text = await res.json();
+      console.log("searching for "+q)
       if (res.ok) {
         return text;
       } else {
@@ -32,8 +44,11 @@
       }
     }
     let search_results = get_search_results(search_query);
-
-
+    let cached_search_results = [];
+    function handleClick() {
+      // Now set it to the real fetch promise 
+      search_results = get_search_results(search_query) 
+    }
 </script>
 
 <p>Current URL: {$page.url.searchParams}</p>
@@ -41,8 +56,17 @@
 
 <h1>Search</h1>
 <form >
-    <input type="search" name="q" bind:value={search_query} /><button type="submit">Search</button>
+    <input type="search" name="q" 
+      bind:value={search_query} 
+      on:input={() => cached_search_results = get_search_results(search_query)}
+    />
+    <button type="submit">Search</button>
+    
 </form>
+<button type="submit" on:click={ handleClick } >
+  Better Search
+</button>
+
 
 {#await search_results}
 	<p>...waiting</p>
