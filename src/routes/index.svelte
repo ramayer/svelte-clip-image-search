@@ -1,7 +1,4 @@
-<h1>Image Search</h1>
-
 <script context="module" lang="ts">
-
 </script>
 
 <script lang="ts">
@@ -14,7 +11,8 @@
     let search_query=$page.url.searchParams.get('q');
 
     async function get_search_results(q) {
-      const url = `http://image-search.0ape.com/search_api?num=300&q=`+encodeURIComponent(q);
+      //const url = `http://image-search.0ape.com/search_api?num=300&q=`+encodeURIComponent(q);
+      const url = `http://192.168.12.110:8000/search_api?num=300&q=`+encodeURIComponent(q);
       const res = await fetch(url);
       const text = await res.json();
       console.log("searching for "+q)
@@ -33,9 +31,8 @@
     }
 </script>
 
-<h1>Search</h1>
-
 <form on:submit|preventDefault={submit_form}>
+   
     <input type="search" name="q" 
       bind:value={search_query} 
       on:input={() => cached_search_results = get_search_results(search_query)}
