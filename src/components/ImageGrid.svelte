@@ -1,11 +1,11 @@
-<script>
+<script lang="ts">
 	import {onMount} from 'svelte';
  
   // Based on
   // https://github.com/BerkinAKKAYA/svelte-image-gallery
 
-	export let imgs;
-	export let base_url;
+	export let imgs  : number[][] = [];
+	export let base_url : string;
 
   //let num_imgs = 4;
   //let max_imgs = 20;
@@ -19,29 +19,17 @@
   $: num_visible_imgs = imgs && 4
 
   // Wait for the images on top of the gallery to load before the ones further down.
-  function wait_for_images_to_load(f){
+  function wait_for_images_to_load(f: ()=>void){
     Promise.all(
       Array.from(document.images)
 		    .filter(img => !img.complete)
 		    .map(img => new Promise(resolve => { img.onload = img.onerror = resolve; }))
     ).then(() => { f() });
   }
-  // function increase_limit(upto){
-  //   num_imgs += 3;
-  //   num_visible_imgs += 3;
-  //   if (num_imgs < upto) {
-  //     setTimeout( () => 
-  //       wait_for_images_to_load(()=>{increase_limit(upto)})
-  //       ,500
-  //     )
-  //   }
-  // }
 
-  // nicer scroll
-
-  let scroll_element = null;
+  let scroll_element: Element|null = null;
   let scroll_element_visibility = 0;
-  function check_if_more_images_needed(entries){
+  function check_if_more_images_needed(entries: any[]){
     const first = entries[0];
     scroll_element_visibility = first.intersectionRatio;
     add_images_if_scroll_visible()
@@ -67,7 +55,8 @@
     console.log('imagegrid onMount')
     console.log("scroll element = "+scroll_element)
     const observer = new IntersectionObserver(check_if_more_images_needed)
-    observer.observe(scroll_element);
+    if (scroll_element)
+      observer.observe(scroll_element);
     add_images_if_scroll_visible();
     setTimeout( add_images_if_scroll_visible, 100)
   });
@@ -90,7 +79,7 @@
   function attempt_reducing_num_visible_imgs() {
     let est_imgs = (window_innerHeight * galleryWidth) / (desired_size*desired_size)
     if (num_visible_imgs > 2 * est_imgs) {
-      $: num_visible_imgs = 2 * est_imgs;
+      num_visible_imgs = 2 * est_imgs;
     }
   }
 
@@ -100,17 +89,18 @@
   $: images_available && add_images_if_scroll_visible();
 
   let num_cols = 3;
-  let img_cols =[]
-  async function process_images(imgs2) {
-    let cols = [];
-    let img_array = await imgs;
+  let img_cols: any[] =[]
+  function process_images() {
+    if (!columnCount) return
+    let cols:number[][] = [];
+    let img_array = imgs;
     images_available = img_array.length;
     cols = [...Array(columnCount)].map((_, i) => []);
     for (const [idx, img] of img_array.entries()) {
       cols[idx%columnCount].push(img[0])
       if (idx > num_visible_imgs) {break}
     }
-    debugtxt = cols;
+    debugtxt = JSON.stringify(cols);
     img_cols = cols;
     return(cols)
   }
@@ -122,15 +112,12 @@
 
 Size: <input type=range bind:value={desired_size} min=50 max=800>; scroll_element_visibility = {scroll_element_visibility}<br>
 
-<br>
-  let {window_scrollY}, {window_innerHeight}, {window_outerHeight}
-
-
+<br>{window_scrollY}, {window_innerHeight}, {window_outerHeight}
 
 <svelte:window bind:scrollY={window_scrollY} bind:innerHeight={window_innerHeight} bind:outerHeight={window_outerHeight}/>
 
 num_visible_imgs = {num_visible_imgs}
-<a href="#" on:click={add_images_if_scroll_visible}>load more</a>
+<a href="#1" on:click={add_images_if_scroll_visible}>load more</a>
 
 <div id="gallery" bind:clientWidth={galleryWidth} style={galleryStyle}>
     {#each img_cols as img_col, idx}
@@ -139,13 +126,14 @@ num_visible_imgs = {num_visible_imgs}
       <img
         min-height:10px
         src = "{base_url}thm/{img_id}?size={thm_size}"
+        alt = "{img_id}"
         >
     {/each}
    </div>
   {/each}
 </div>
 
-<div id="summary" bind:this={scroll_element}>{num_visible_imgs}, images of {images_available}. <a href="#" on:click={add_images_if_scroll_visible}>load more</a></div>
+<div id="summary" bind:this={scroll_element}>{num_visible_imgs}, images of {images_available}. <a href="#2" on:click={add_images_if_scroll_visible}>load more</a></div>
 
 <hr style="clear:both">
 
