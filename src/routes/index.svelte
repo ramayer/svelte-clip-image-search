@@ -10,16 +10,18 @@
     
     let search_query=$page.url.searchParams.get('q');
 
+    let base_url = "http://192.168.12.110:8000/"; // "http://image-search.0ape.com/"; // 
+
     async function get_search_results(q) {
-      //const url = `http://image-search.0ape.com/search_api?num=300&q=`+encodeURIComponent(q);
-      const url = `http://192.168.12.110:8000/search_api?num=300&q=`+encodeURIComponent(q);
-      const res = await fetch(url);
-      const text = await res.json();
+      if (!q) {return [];}
       console.log("searching for "+q)
-      if (res.ok) {
-        return text;
+      //const url = `http://image-search.0ape.com/search_api?num=300&q=`+encodeURIComponent(q);
+      const url = base_url + `search_api?num=2500&q=`+encodeURIComponent(q);
+      const resp = await fetch(url);
+      if (resp.ok) {
+        return await resp.json();
       } else {
-        throw new Error(text);
+        throw new Error(resp.statusText);
       }
     }
 
@@ -32,7 +34,6 @@
 </script>
 
 <form on:submit|preventDefault={submit_form}>
-   
     <input type="search" name="q" 
       bind:value={search_query} 
       on:input={() => cached_search_results = get_search_results(search_query)}
@@ -40,4 +41,11 @@
     <button type="submit">Search</button>
 </form>
 
-<ImageGrid bind:imgs={search_results}></ImageGrid>
+
+{#await search_results}
+  <p>...loading</p>
+{:then apiResponse}
+  <ImageGrid bind:imgs={search_results} bind:base_url={base_url}></ImageGrid>
+{:catch error}
+  <p style="color: #ccc">{error.message}</p>
+{/await}

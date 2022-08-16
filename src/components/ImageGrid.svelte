@@ -5,15 +5,20 @@
   // https://github.com/BerkinAKKAYA/svelte-image-gallery
 
 	export let imgs;
+	export let base_url;
 
   //let num_imgs = 4;
   //let max_imgs = 20;
   let num_visible_imgs = 4;
+  let images_available = 0;
+
+  let window_scrollY     = 0;
+  let window_innerHeight = 0;
+  let window_outerHeight = 0;
 
   $: num_visible_imgs = imgs && 4
 
   // Wait for the images on top of the gallery to load before the ones further down.
-
   function wait_for_images_to_load(f){
     Promise.all(
       Array.from(document.images)
@@ -39,23 +44,22 @@
   function check_if_more_images_needed(entries){
     const first = entries[0];
     scroll_element_visibility = first.intersectionRatio;
-    setTimeout( () => 
-        wait_for_images_to_load(()=>{add_images_if_scroll_visible()})
-        ,100
-      )
+    add_images_if_scroll_visible()
   }
   let intersection_observer  = null;
   
   function add_images_if_scroll_visible() {
-    if (scroll_element_visibility > 0){
+    if (scroll_element_visibility > 0 && num_visible_imgs < images_available){
       console.log("need to add images")
-      num_visible_imgs = num_visible_imgs + 3;
+      num_visible_imgs = num_visible_imgs + 12;
       setTimeout( () => 
         wait_for_images_to_load(()=>{add_images_if_scroll_visible()})
         ,100
       )
     } else {
-      console.log("no need to add images")
+      console.log("no need to add images: "+ 
+        scroll_element_visibility + " " + 
+        num_visible_imgs + " < " + images_available);
     }
   }
 
@@ -63,34 +67,44 @@
     console.log('imagegrid onMount')
     console.log("scroll element = "+scroll_element)
     const observer = new IntersectionObserver(check_if_more_images_needed)
-    observer.observe(scroll_element)
-    setTimeout( () => 
-        wait_for_images_to_load(()=>{add_images_if_scroll_visible()})
-        ,100
-      )
+    observer.observe(scroll_element);
+    add_images_if_scroll_visible();
+    setTimeout( add_images_if_scroll_visible, 100)
   });
 
   // set up gallery parameters
 
+  // let columnCount = 0;
+
   let galleryWidth = 0;
-  let columnCount = 0;
-  let desired_size = 100;
-  export let gap = 5;
+  let desired_size = 250;
+
+  export let gap = 6;
   export let hover = true;
   //export let loading;
 
-  $: columnCount = parseInt(galleryWidth / desired_size) || 1;
+  $: columnCount = Math.floor(galleryWidth / desired_size) || 1;
+  $: thm_size = Math.floor(desired_size / 100 + 1)*100 || 100;
   $: columnCount && process_images();
+
+  function attempt_reducing_num_visible_imgs() {
+    let est_imgs = (window_innerHeight * galleryWidth) / (desired_size*desired_size)
+    if (num_visible_imgs > 2 * est_imgs) {
+      $: num_visible_imgs = 2 * est_imgs;
+    }
+  }
+
+  $: desired_size && attempt_reducing_num_visible_imgs()
   $: num_visible_imgs && process_images();
   $: galleryStyle = `grid-template-columns: repeat(${columnCount}, 1fr); --gap: ${gap}px`;
+  $: images_available && add_images_if_scroll_visible();
 
   let num_cols = 3;
-  let images_available = 0;
   let img_cols =[]
   async function process_images(imgs2) {
     let cols = [];
     let img_array = await imgs;
-    images_available = img_array.length
+    images_available = img_array.length;
     cols = [...Array(columnCount)].map((_, i) => []);
     for (const [idx, img] of img_array.entries()) {
       cols[idx%columnCount].push(img[0])
@@ -106,25 +120,32 @@
 
 </script>
 
-scroll_element_visibility = {scroll_element_visibility}
-num_visible_imgs = {num_visible_imgs}
+Size: <input type=range bind:value={desired_size} min=50 max=800>; scroll_element_visibility = {scroll_element_visibility}<br>
 
-<input type=button on:click={add_images_if_scroll_visible}>
-<input type=range bind:value={desired_size} min=50 max=400>
+<br>
+  let {window_scrollY}, {window_innerHeight}, {window_outerHeight}
+
+
+
+<svelte:window bind:scrollY={window_scrollY} bind:innerHeight={window_innerHeight} bind:outerHeight={window_outerHeight}/>
+
+num_visible_imgs = {num_visible_imgs}
+<a href="#" on:click={add_images_if_scroll_visible}>load more</a>
+
 <div id="gallery" bind:clientWidth={galleryWidth} style={galleryStyle}>
     {#each img_cols as img_col, idx}
     <div class="column">
     {#each img_col as img_id}
       <img
         min-height:10px
-        src="http://192.168.12.110:8000/thm/{img_id}?size={400}"
-        loading="lazy">
+        src = "{base_url}thm/{img_id}?size={thm_size}"
+        >
     {/each}
    </div>
   {/each}
-  </div>
+</div>
 
-  <div id="summary" bind:this={scroll_element}>{num_visible_imgs}, images of {images_available}</div>
+<div id="summary" bind:this={scroll_element}>{num_visible_imgs}, images of {images_available}. <a href="#" on:click={add_images_if_scroll_visible}>load more</a></div>
 
 <hr style="clear:both">
 
@@ -136,7 +157,7 @@ num_visible_imgs = {num_visible_imgs}
         width: 100%;
         display: grid;
         gap: var(--gap);
-        background:black;
+        background: #000;
     }
     #gallery .column {
         display: flex;
