@@ -1,15 +1,17 @@
 <script lang="ts">
 
-    console.log("======== starting script ========")
-
     import { page } from '$app/stores';
     import { goto } from '$app/navigation';
+    import {onMount} from 'svelte';
     import ImageGrid from '../components/ImageGrid.svelte';
     
-    let base_url = "http://192.168.12.110:8000/"; // "http://image-search.0ape.com/"; //
+    let base_url = "http://image-search.0ape.com/"; //"http://192.168.12.110:8000/"; // 
     
-    let search_query=$page.url.searchParams.get('q');
-    
+    let search_query=$page.url.searchParams.get('q'); 
+    let search_results = get_search_results(search_query);
+    onMount(() => {
+      
+    })
     async function get_search_results(q: string|number|boolean|null) {
       console.log("searching for "+q);
       if (!q) {
@@ -25,7 +27,6 @@
       }
     }
 
-    let search_results = get_search_results(search_query);
     let cached_search_results = null;
     function submit_form() {
       goto('?q='+encodeURIComponent(search_query||''));
@@ -33,7 +34,7 @@
     }
     let foo = null
 </script>
-
+{base_url}
 <form on:submit|preventDefault={submit_form}>
     <input type="search" name="q" 
       bind:value={search_query} 

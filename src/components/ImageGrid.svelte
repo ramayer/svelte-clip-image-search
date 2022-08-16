@@ -1,47 +1,40 @@
 <script lang="ts">
+  
 	import {onMount} from 'svelte';
- 
-  // Based on
-  // https://github.com/BerkinAKKAYA/svelte-image-gallery
+  import { tick } from "svelte";
 
+  // array of images
 	export let imgs  : number[][] = [];
 	export let base_url : string;
 
-  //let num_imgs = 4;
-  //let max_imgs = 20;
   let num_visible_imgs = 4;
   let images_available = 0;
 
   let window_scrollY     = 0;
   let window_innerHeight = 0;
   let window_outerHeight = 0;
+  let gallery_div;
 
   $: num_visible_imgs = imgs && 4
 
   // Wait for the images on top of the gallery to load before the ones further down.
   function wait_for_images_to_load(f: ()=>void){
+    console.log("waiting for " + document.images.length + " images to load")
     Promise.all(
       Array.from(document.images)
 		    .filter(img => !img.complete)
 		    .map(img => new Promise(resolve => { img.onload = img.onerror = resolve; }))
-    ).then(() => { f() });
+    ).then(() => { console.log("loaded"); f() });
   }
 
-  let scroll_element: Element|null = null;
-  let scroll_element_visibility = 0;
-  function check_if_more_images_needed(entries: any[]){
-    const first = entries[0];
-    scroll_element_visibility = first.intersectionRatio;
-    add_images_if_scroll_visible()
-  }
-  let intersection_observer  = null;
-  
   function add_images_if_scroll_visible() {
     if (scroll_element_visibility > 0 && num_visible_imgs < images_available){
       console.log("need to add images")
-      num_visible_imgs = num_visible_imgs + 12;
       setTimeout( () => 
-        wait_for_images_to_load(()=>{add_images_if_scroll_visible()})
+        wait_for_images_to_load(()=>{
+          num_visible_imgs = num_visible_imgs + 12;
+          add_images_if_scroll_visible()
+        })
         ,100
       )
     } else {
@@ -51,10 +44,25 @@
     }
   }
 
+  let scroll_element: Element|null = null;
+  let scroll_element_visibility = 1;
+  function check_if_more_images_needed(entries: any[]){
+    let visibility = 0;
+    console.log("checking")
+    entries.forEach(function(item) {
+      visibility = item.intersectionRatio;
+      console.log("v = "+visibility)
+    })
+    scroll_element_visibility = visibility;
+    add_images_if_scroll_visible()
+  }
+
+  let intersection_observer  = null;
+  const observer = new IntersectionObserver(check_if_more_images_needed)
+
+  
   onMount(() => {
-    console.log('imagegrid onMount')
-    console.log("scroll element = "+scroll_element)
-    const observer = new IntersectionObserver(check_if_more_images_needed)
+    console.log("in imagegrid onMount, scroll element = "+scroll_element)
     if (scroll_element)
       observer.observe(scroll_element);
     add_images_if_scroll_visible();
@@ -62,7 +70,6 @@
   });
 
   // set up gallery parameters
-
   // let columnCount = 0;
 
   let galleryWidth = 0;
@@ -90,7 +97,7 @@
 
   let num_cols = 3;
   let img_cols: any[] =[]
-  function process_images() {
+  async function process_images() {
     if (!columnCount) return
     let cols:number[][] = [];
     let img_array = imgs;
@@ -102,6 +109,21 @@
     }
     debugtxt = JSON.stringify(cols);
     img_cols = cols;
+
+    await tick(); // wait til the dom was updated.
+
+    observer.disconnect()
+    observer.observe(scroll_element);
+    if (gallery_div) {
+      let column_footers = gallery_div.querySelectorAll('.column_footer')
+      console.log(column_footers)
+      column_footers.forEach((f)=>{
+        console.log("found a footer" + f)
+        observer.observe(f);
+      });
+    } else {
+      console.log("hey - there's no gallery_div here")
+    }
     return(cols)
   }
   let debugtxt = 'initial'
@@ -119,16 +141,18 @@ Size: <input type=range bind:value={desired_size} min=50 max=800>; scroll_elemen
 num_visible_imgs = {num_visible_imgs}
 <a href="#1" on:click={add_images_if_scroll_visible}>load more</a>
 
-<div id="gallery" bind:clientWidth={galleryWidth} style={galleryStyle}>
+<div id="gallery" bind:this={gallery_div} bind:clientWidth={galleryWidth} style={galleryStyle}>
     {#each img_cols as img_col, idx}
     <div class="column">
     {#each img_col as img_id}
       <img
+        class='img-hover'
         min-height:10px
         src = "{base_url}thm/{img_id}?size={thm_size}"
         alt = "{img_id}"
         >
     {/each}
+    <div class="column_footer"> </div>
    </div>
   {/each}
 </div>
@@ -138,6 +162,9 @@ num_visible_imgs = {num_visible_imgs}
 <hr style="clear:both">
 
 <style>
+  .column_footer {
+    border: 1px solid red;
+  }
     #slotHolder {
         display: none;
     }
@@ -164,6 +191,8 @@ num_visible_imgs = {num_visible_imgs}
     }
     .img-hover:hover {
         opacity: 1;
-        transform: scale(1.05);
+        z-index: 15;
+        transform: scale(1.25);
+        border: 5px inset #ccc;
     }
 </style>
