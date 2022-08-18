@@ -1,3 +1,4 @@
+<div>{$page.url.searchParams.get('q')} - {search_query}</div>
 <script lang="ts">
 
     import { page } from '$app/stores';
@@ -5,12 +6,21 @@
     import {onMount} from 'svelte';
     import ImageGrid from '../components/ImageGrid.svelte';
     
-    let base_url = "http://image-search.0ape.com/"; //"http://192.168.12.110:8000/"; // 
+    let base_url = "http://image-search.0ape.com/"; //"http://192.168.12.110:8000/"; //
     
+    function q_parameter_changed(new_q) {
+      console.log("new_q = " + new_q + " old_q = " + search_query)
+      if (search_query != new_q) {
+        search_query = new_q;
+        search_results = get_search_results(search_query);
+      }
+    }
+    $:  q_parameter_changed($page.url.searchParams.get('q'));
+    $:  q_parameter_changed($page.url.searchParams.get('q'));
     let search_query=$page.url.searchParams.get('q'); 
     let search_results = get_search_results(search_query);
     onMount(() => {
-      
+      console.log("/ onMount")
     })
     async function get_search_results(q: string|number|boolean|null) {
       console.log("searching for "+q);

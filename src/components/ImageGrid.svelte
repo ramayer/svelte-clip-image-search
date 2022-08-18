@@ -19,28 +19,21 @@
 
   // Wait for the images on top of the gallery to load before the ones further down.
   function wait_for_images_to_load(f: ()=>void){
-    console.log("waiting for " + document.images.length + " images to load")
     Promise.all(
       Array.from(document.images)
 		    .filter(img => !img.complete)
 		    .map(img => new Promise(resolve => { img.onload = img.onerror = resolve; }))
-    ).then(() => { console.log("loaded"); f() });
+    ).then(() => { f() });
   }
 
   function add_images_if_scroll_visible() {
     if (scroll_element_visibility > 0 && num_visible_imgs < images_available){
-      console.log("need to add images")
       setTimeout( () => 
         wait_for_images_to_load(()=>{
           num_visible_imgs = num_visible_imgs + 12;
           add_images_if_scroll_visible()
-        })
-        ,100
+        }),100
       )
-    } else {
-      console.log("no need to add images: "+ 
-        scroll_element_visibility + " " + 
-        num_visible_imgs + " < " + images_available);
     }
   }
 
@@ -48,10 +41,8 @@
   let scroll_element_visibility = 1;
   function check_if_more_images_needed(entries: any[]){
     let visibility = 0;
-    console.log("checking")
     entries.forEach(function(item) {
-      visibility = item.intersectionRatio;
-      console.log("v = "+visibility)
+      visibility += item.intersectionRatio;
     })
     scroll_element_visibility = visibility;
     add_images_if_scroll_visible()
@@ -62,7 +53,6 @@
 
   
   onMount(() => {
-    console.log("in imagegrid onMount, scroll element = "+scroll_element)
     if (scroll_element)
       observer.observe(scroll_element);
     add_images_if_scroll_visible();
@@ -116,13 +106,9 @@
     observer.observe(scroll_element);
     if (gallery_div) {
       let column_footers = gallery_div.querySelectorAll('.column_footer')
-      console.log(column_footers)
       column_footers.forEach((f)=>{
-        console.log("found a footer" + f)
         observer.observe(f);
       });
-    } else {
-      console.log("hey - there's no gallery_div here")
     }
     return(cols)
   }
