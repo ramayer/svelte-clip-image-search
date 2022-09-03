@@ -123,16 +123,17 @@
 
 </script>
 
-Size: <input type=range bind:value={desired_size} min=50 max=800>; scroll_element_visibility = {scroll_element_visibility}<br>
-
-<br>{window_scrollY}, {window_innerHeight}, {window_outerHeight}
-
 <svelte:window bind:scrollY={window_scrollY} bind:innerHeight={window_innerHeight} bind:outerHeight={window_outerHeight}/>
 
+Size: <input type=range bind:value={desired_size} min=50 max=800>
+
+<!--
+ scroll_element_visibility = {scroll_element_visibility}<br>
+<br>{window_scrollY}, {window_innerHeight}, {window_outerHeight}
 num_visible_imgs = {num_visible_imgs}
 <a href="#1" on:click={add_images_if_scroll_visible}>load more</a>
 img_cols = {img_cols.length} thm_size = {thm_size}
-
+-->
 
 <div id="gallery" bind:this={gallery_div} bind:clientWidth={galleryWidth} style={galleryStyle}>
     {#each img_cols as img_col, idx}
@@ -205,6 +206,5 @@ img_cols = {img_cols.length} thm_size = {thm_size}
     .image_container:hover td {color: var(--brighttext)}
     .image_container:hover .image_overlay {display:block;  background:blue; background-color:#000;}
     .image_container:hover a {color: #88f}
-
 
 </style>
