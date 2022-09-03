@@ -6,7 +6,7 @@
     import {onMount} from 'svelte';
     import ImageGrid from '../components/ImageGrid.svelte';
     
-    let base_url = "http://image-search.0ape.com/"; //"http://192.168.12.110:8000/"; //
+    let base_url = "http://192.168.12.110:8000/"; // "http://image-search.0ape.com/";
     
     function q_parameter_changed(new_q) {
       console.log("new_q = " + new_q + " old_q = " + search_query)

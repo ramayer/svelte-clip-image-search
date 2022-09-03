@@ -1,11 +1,11 @@
 <script lang="ts">
-  
-	import {onMount} from 'svelte';
-  import { tick } from "svelte";
+
+  import {onMount} from 'svelte';
+  import {tick} from "svelte";
 
   // array of images
-	export let imgs  : number[][] = [];
-	export let base_url : string;
+  export let imgs  : number[][] = [];
+  export let base_url : string;
 
   let num_visible_imgs = 4;
   let images_available = 0;
@@ -16,6 +16,11 @@
   let gallery_div;
 
   $: num_visible_imgs = imgs && 4
+
+  function mlt_url(s) {
+      let data = {"image_id":s}
+      return(JSON.stringify(data))
+  }
 
   // Wait for the images on top of the gallery to load before the ones further down.
   function wait_for_images_to_load(f: ()=>void){
@@ -126,17 +131,28 @@ Size: <input type=range bind:value={desired_size} min=50 max=800>; scroll_elemen
 
 num_visible_imgs = {num_visible_imgs}
 <a href="#1" on:click={add_images_if_scroll_visible}>load more</a>
+img_cols = {img_cols.length} thm_size = {thm_size}
+
 
 <div id="gallery" bind:this={gallery_div} bind:clientWidth={galleryWidth} style={galleryStyle}>
     {#each img_cols as img_col, idx}
     <div class="column">
     {#each img_col as img_id}
+     <div class='image_container'>
+	<div class="image_overlay">
+	  <a href="?q={mlt_url(img_id)}" ><nobr>more like this</nobr></a>
+	  <a href='#' ><nobr> + </nobr></a>
+	  <a href='#' ><nobr> - </nobr></a>
+	</div>
+	<a href="{base_url}img/{img_id}?size={thm_size}" target=_blank>
       <img
         class='img-hover'
-        min-height:10px
+        style='min-height:10px'
         src = "{base_url}thm/{img_id}?size={thm_size}"
         alt = "{img_id}"
         >
+        </a>
+      </div>
     {/each}
     <div class="column_footer"> </div>
    </div>
@@ -174,11 +190,21 @@ num_visible_imgs = {num_visible_imgs}
     .img-hover {
         opacity: 0.9;
         transition: all 0.2s;
+        z-index: 1;
     }
     .img-hover:hover {
+        position: relative;
         opacity: 1;
-        z-index: 15;
+        z-index: 10;
         transform: scale(1.25);
-        border: 5px inset #ccc;
+        /* border: 5px inset #666; */
+        border: 10px solid black;
     }
+    .image_container { position: relative;}
+    .image_overlay   { position: absolute; top: 2px;  left: 2px; padding:4px; display:none; width: 80%; z-index:20; }
+    .image_container:hover td {color: var(--brighttext)}
+    .image_container:hover .image_overlay {display:block;  background:blue; background-color:#000;}
+    .image_container:hover a {color: #88f}
+
+
 </style>
