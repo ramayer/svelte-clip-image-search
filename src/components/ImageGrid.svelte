@@ -113,7 +113,7 @@
 
   let galleryWidth = 0;
   let desired_size = 250;
-
+  let preview_width = 10;
   export let gap = 6;
   export let hover = true;
   //export let loading;
@@ -121,7 +121,8 @@
   $: columnCount = Math.floor(galleryWidth / desired_size) || 1;
   $: thm_size = Math.floor(desired_size / 100 + 1) * 100 || 100;
   $: columnCount && process_images();
-
+  $: preview_width = galleryWidth / columnCount* Math.floor(img_cols.length/2+1)
+  $: preview_cols  = Math.floor(img_cols.length/2+1)
   function attempt_reducing_num_visible_imgs() {
     let est_imgs =
       (window_innerHeight * galleryWidth) / (desired_size * desired_size);
@@ -185,6 +186,17 @@ num_visible_imgs = {num_visible_imgs}
 img_cols = {img_cols.length} thm_size = {thm_size}
 -->
 
+<div class="gallery_container">
+{#if img_cols.length > 4}
+  <div class="preview" style="width:{preview_width}px; height:{innerHeight/2}px">
+    {#if preview_id}
+      <img src="{base_url}thm/{preview_id}?size=1024" style="max-width:100%; max-height:100%" />
+    {:else}
+      Nothing to preview
+    {/if}
+  </div>
+{/if}
+
 <div
   id="gallery"
   bind:this={gallery_div}
@@ -193,6 +205,9 @@ img_cols = {img_cols.length} thm_size = {thm_size}
 >
   {#each img_cols as img_col, idx}
     <div class="column">
+      {#if idx >= img_cols.length - preview_cols && img_cols.length > 4}
+      <div class="spacer" style="height:{innerHeight/2}px">{idx}, </div>
+      {/if}
       {#each img_col as img_id}
         <div
           class="image_container"
@@ -225,27 +240,13 @@ img_cols = {img_cols.length} thm_size = {thm_size}
     </div>
   {/each}
 </div>
+</div>
 
 <div id="summary" bind:this={scroll_element}>
   {num_visible_imgs}, images of {images_available}.
   <a href="#2" on:click={add_images_if_scroll_visible}>load more</a>
 </div>
 
-{#if img_cols.length > 4}
-  <div
-    id="preview"
-    class:preview_left={preview_class === "left"}
-    class:preview_right={preview_class === "right"}
-    class:preview_top={preview_class2 === "top"}
-    class:preview_bottom={preview_class2 === "bottom"}
-  >
-    {#if preview_id}
-      <img src="{base_url}img/{preview_id}" />
-    {:else}
-      Nothing to preview
-    {/if}
-  </div>
-{/if}
 
 <hr style="clear:both" />
 
@@ -263,6 +264,7 @@ img_cols = {img_cols.length} thm_size = {thm_size}
     gap: var(--gap);
     background: #000;
   }
+
   #gallery .column {
     display: flex;
     flex-direction: column;
@@ -315,28 +317,23 @@ img_cols = {img_cols.length} thm_size = {thm_size}
     color: #eef;
   }
 
-  #preview {
+  .gallery_container {
+    position: relative;
+  }
+  .preview {
     color: #fff;
     border: 1px solid red;
     position: fixed;
-    width: 50%;
-    height: 50%;
     background-color: #000;
-    border: 20px outset #ccc;
+    /* border: 2px outset #ccc; */
+    border: 2px solid #f00; 
+    top:30px;
+    right:0px;
+    z-index:99;
+    display:flex;
   }
-  .preview_left {
-    left: 20px;
-  }
-  .preview_right {
-    right: 20px;
-  }
-  .preview_top {
-    top: 20px;
-  }
-  .preview_bottom {
-    bottom: 20px;
-  }
-  #preview img {
+  
+  .preview img {
     display: block;
     margin: auto;
     max-width: 100%;

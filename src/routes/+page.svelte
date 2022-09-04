@@ -4,7 +4,9 @@
   import { onMount } from "svelte";
   import ImageGrid from "../components/ImageGrid.svelte";
 
-  let base_url = "http://192.168.12.110:8000/"; // "http://image-search.0ape.com/";
+  // let base_url = "http://192.168.12.110:8000/";
+  let base_url = "http://image-search.0ape.com/";
+
   let search_query = $page.url.searchParams.get("q");
   let search_results = get_search_results(search_query);
 
