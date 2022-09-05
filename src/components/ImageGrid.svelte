@@ -192,7 +192,7 @@ img_cols = {img_cols.length} thm_size = {thm_size}
     {#if preview_id}
       <img src="{base_url}thm/{preview_id}?size=1024" style="max-width:100%; max-height:100%" />
     {:else}
-      Nothing to preview
+      <div style="margin:auto">Mouse-over a thumbnail to show a preview</div>
     {/if}
   </div>
 {/if}
@@ -213,27 +213,27 @@ img_cols = {img_cols.length} thm_size = {thm_size}
           class="image_container"
           on:mouseenter={(e) => mousedover(img_id, e.clientX, e.clientY)}
         >
-          <div class="image_overlay">
-            {#if desired_size > 150}
-              <a href={search_for(mlt_url(img_id))}
-                ><nobr>more like this</nobr></a
-              >
-            {:else}
-              <a href={search_for(mlt_url(img_id))}><nobr>mlt</nobr></a>
-            {/if}
-            <nobr>
-              <a href={search_for(search_query + " +" + mlt_url(img_id))}>▲</a>
-              <a href={search_for(search_query + " -" + mlt_url(img_id))}>▼</a>
-            </nobr>
-          </div>
-          <a href="{base_url}img/{img_id}" target="_blank">
             <img
               class="img-hover"
               style="min-height:10px"
               src="{base_url}thm/{img_id}?size={thm_size}"
               alt={img_id}
             />
-          </a>
+            <div class="image_overlay">
+              {#if desired_size > 150}
+                <a href={search_for(mlt_url(img_id))}
+                  ><nobr>more like this</nobr></a
+                >
+              {:else}
+                <a href={search_for(mlt_url(img_id))}><nobr>mlt</nobr></a>
+              {/if}
+              <nobr>
+                <a href={search_for(search_query + " +" + mlt_url(img_id))}>▲</a>
+                <a href={search_for(search_query + " -" + mlt_url(img_id))}>▼</a>
+              </nobr>
+              <a href={base_url}img/{img_id}><nobr>details</nobr></a>
+            </div>
+  
         </div>
       {/each}
       <div class="column_footer">...</div>
@@ -285,29 +285,20 @@ img_cols = {img_cols.length} thm_size = {thm_size}
     position: relative;
     opacity: 1;
     z-index: 10;
-    transform: scale(1.15);
-    /* border: 5px inset #666; */
-    border: 10px solid black;
   }
   .image_container {
-    position: relative;
+
+  }
+  .image_container:hover {
+    border: 1px solid blue;
   }
   .image_overlay {
-    position: absolute;
-    top: 2px;
-    left: 2px;
-    padding: 4px;
+    padding-bottom: 10px;
     display: none;
     width: 80%;
-    z-index: 20;
-  }
-  .image_container:hover td {
-    color: var(--brighttext);
   }
   .image_container:hover .image_overlay {
     display: block;
-    background: blue;
-    background-color: #000;
   }
   .image_container:hover a {
     color: #77f;

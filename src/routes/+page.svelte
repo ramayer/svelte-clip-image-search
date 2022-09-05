@@ -49,7 +49,7 @@
 
 <div id="search_form">
   <form on:submit|preventDefault={submit_form}>
-    <label for="q">Search</label>
+    <label for="q"><a href="/">Search</a></label>
     <input
       id="q"
       type="search"
@@ -82,6 +82,14 @@
     z-index: 30;
   }
   #search_form #q{
-    width:80%
+    width:50%
+  }
+  a {
+    text-decoration: none;
+    color: white;
+  }
+  a:hover {
+    text-decoration: underline;
+    color: #ccf;
   }
 </style>
