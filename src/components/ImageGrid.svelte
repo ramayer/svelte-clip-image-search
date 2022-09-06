@@ -2,6 +2,7 @@
   import { onMount } from "svelte";
   import { tick } from "svelte";
   import { loop_guard } from "svelte/internal";
+  import { fade, fly, scale } from 'svelte/transition';
 
   // array of images
   export let imgs: number[][] = [];
@@ -25,6 +26,9 @@
   
   let num_parallel_image_loads = 12;
   let thumnail_loading_throttle = 100;
+
+  num_parallel_image_loads = 24
+  thumnail_loading_throttle = 1;
 
   $: num_visible_imgs = imgs && 4;
 
@@ -190,8 +194,12 @@ img_cols = {img_cols.length} thm_size = {thm_size}
 {#if img_cols.length > 4}
   <div class="preview" style="width:{preview_width}px; height:{innerHeight/2}px">
     {#if preview_id}
-      <img src="{base_url}thm/{preview_id}?size=1024" style="max-width:100%; max-height:100%" />
-    {:else}
+    {#key preview_id}
+      <img 
+      in:fade
+        src="{base_url}thm/{preview_id}?size=1024" style="max-width:100%; max-height:100%" />
+        {/key}
+        {:else}
       <div style="margin:auto">Mouse-over a thumbnail to show a preview</div>
     {/if}
   </div>
@@ -206,7 +214,7 @@ img_cols = {img_cols.length} thm_size = {thm_size}
   {#each img_cols as img_col, idx}
     <div class="column">
       {#if idx >= img_cols.length - preview_cols && img_cols.length > 4}
-      <div class="spacer" style="height:{innerHeight/2}px">{idx}, </div>
+      <div class="spacer" style="height:{innerHeight/2}px"> </div>
       {/if}
       {#each img_col as img_id}
         <div
@@ -218,8 +226,7 @@ img_cols = {img_cols.length} thm_size = {thm_size}
               style="min-height:10px"
               src="{base_url}thm/{img_id}?size={thm_size}"
               alt={img_id}
-            />
-            <div class="image_overlay">
+            /><div class="image_overlay">
               {#if desired_size > 150}
                 <a href={search_for(mlt_url(img_id))}
                   ><nobr>more like this</nobr></a
@@ -233,7 +240,6 @@ img_cols = {img_cols.length} thm_size = {thm_size}
               </nobr>
               <a href={base_url}img/{img_id}><nobr>details</nobr></a>
             </div>
-  
         </div>
       {/each}
       <div class="column_footer">...</div>
@@ -271,13 +277,15 @@ img_cols = {img_cols.length} thm_size = {thm_size}
   }
   #gallery .column * {
     width: 100%;
+  }
+  #gallery .column img {
     margin-top: var(--gap);
   }
   #gallery .column *:nth-child(1) {
     margin-top: 0;
   }
   .img-hover {
-    opacity: 0.9;
+    opacity: 0.7;
     transition: all 0.2s;
     z-index: 1;
   }
@@ -287,21 +295,37 @@ img_cols = {img_cols.length} thm_size = {thm_size}
     z-index: 10;
   }
   .image_container {
+    border: 1px solid black;
 
   }
   .image_container:hover {
-    border: 1px solid blue;
+    border: 1px solid black;
   }
   .image_overlay {
-    padding-bottom: 10px;
-    display: none;
-    width: 80%;
+    width: 90%;
+    transition: all .2s ease-in-out;
+    color: transparent;
+    line-height: 0;
+    padding: 0;
+    margin: 0;
+    height: 0px;
+    width: 0px;
+    display:block;
   }
   .image_container:hover .image_overlay {
-    display: block;
+    //padding-top: 1em;
+    padding-bottom: 1em;
+    color: black;
+    line-height: 1;
+    height: auto;
+
+  }
+  .image_container a{ 
+    display:none;
   }
   .image_container:hover a {
     color: #77f;
+    display:inline;
     text-decoration: none;
   }
   .image_container:hover a:hover {
@@ -313,11 +337,10 @@ img_cols = {img_cols.length} thm_size = {thm_size}
   }
   .preview {
     color: #fff;
-    border: 1px solid red;
+    border: 1px solid #222;
     position: fixed;
     background-color: #000;
     /* border: 2px outset #ccc; */
-    border: 2px solid #f00; 
     top:30px;
     right:0px;
     z-index:99;
