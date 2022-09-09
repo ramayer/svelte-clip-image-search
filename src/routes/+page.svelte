@@ -4,12 +4,13 @@
   import { onMount } from "svelte";
   import ImageGrid from "../components/ImageGrid.svelte";
 
-  // let base_url = "http://192.168.12.110:8000/";
-  // let base_url = "http://image-search.0ape.com/";
-  let base_url = "http://localhost:8000/";
+  //let base_url = "http://192.168.12.110:8000/";
+  let base_url = "http://image-search.0ape.com/";
+  // let base_url = "http://localhost:8000/";
 
   let search_query = $page.url.searchParams.get("q");
   let search_results = get_search_results(search_query);
+  let thm_size = 224;
 
   function q_parameter_changed(new_q) {
     console.log("new_q = " + new_q + " old_q = " + search_query);
@@ -60,6 +61,13 @@
         (cached_search_results = get_search_results(search_query))}
     />
     <button type="submit">Search</button>
+    <label for="sz">Size:</label><input
+      id="sz"
+      type="range"
+      bind:value={thm_size}
+      min="56"
+      max="896"
+    />
   </form>
 </div>
 <div id="search_form_spacer" />
@@ -67,7 +75,84 @@
 {#await search_results}
   <p>...loading</p>
 {:then api_response}
-  <ImageGrid imgs={api_response} bind:base_url bind:search_query />
+  {#if api_response.length > 0}
+    <ImageGrid
+      imgs={api_response}
+      bind:base_url
+      bind:search_query
+      desired_size={thm_size}
+    />
+  {:else}
+    <div id="no_results_msg" class="no_results_msg">
+      <h2>CLIP embedding based search of Wikimedia images</h2>
+
+      This system lets you do simple math on CLIP embeddings with prefixes like
+      "-" to subtract CLIP vectors and "+" to add them.
+      <ul>
+        <li>
+          <a href="/?q=zebra -stripes %2Bspots">zebra -stripes +spots</a> - Animals
+          that look kinda like zebras but with spots instead of stripes.
+        </li>
+        <li>
+          <a href="/?q=zebra -mammal %2Bfish">zebra -mammal +fish</a> - Animals that
+          are like zebras but fish instead of mammals.
+        </li>
+        <li>
+          <a href="/?q=zebra -animal %2Bcar">zebra -animal +car</a> - Objects colored
+          like zebras but more cars than animals.
+        </li>
+        <li>
+          <a href="/?q=zebra%20-%22black%20and%20white%22"
+            >zebra -"black and white"</a
+          >
+          - Baby zebras (brown & white) and a Greater Kudu (a brown & white
+          striped 4-legged animal).  Of course you could also just search for 
+          <ul>
+          <li><a href="/?q=zebra%20-big %2Bsmall">zebra -big +small</a>
+          or even more simply, just </li><li><a href="/?q=baby%20zebra">baby zebra</a> to find the same baby
+            zebra.</li>
+          </ul>
+        </li>
+        <li>
+          <a href="/?q=furry black and white striped animal"
+            >furry black and white striped animal</a>
+             - zebras but also lemurs, and other furry black and white animals.
+        </li>
+        <li>
+          <a href="/?q=striped horse-like animal">striped horse-like animal</a> -
+          more zebras (and horses with stripes)
+        </li>
+        <li>
+          <a href="/?q=zebra habitat -zebra">zebra habitat -zebra</a> - places that
+          look like zebras might live there.
+        </li>
+      </ul>
+      It can also do a search based on the difference between the CLIP embeddings
+      of two images directly. For example, CLIP considers 
+      <a href="/?q=%7B%22image_id%22%3A28754%7D">this image of a spider on a purple flower</a>
+      minus
+      <a href="/?q=%7B%22image_id%22%3A174054%7D"
+        >this image of the same kind of spider on a white flower</a>
+      to be
+      <a
+        href="/?q=%7B%22image_id%22%3A28754%7D%20-%7B%22image_id%22%3A174054%7D"
+        >this set of pictures which is mostly purple flowers without the spider</a>.
+
+        <br>
+        <br>
+        <br>
+
+    </div>
+    <hr>
+
+    <small>Images in this demo are from Wikimedia Commons,
+      available under various different licenses specified on
+      their description page.  Click on the "details" link for each image to see its
+      specific license.<br>
+      Source code for the server-side of this project is 
+      <a href="https://github.com/ramayer/rclip-server">available
+      here on github</a>. Source code for the client side will be posted soon.</small>
+  {/if}
 {:catch error}
   <p style="color: #ccc">{error.message}</p>
 {/await}
@@ -76,21 +161,39 @@
   #search_form,
   #search_form_spacer {
     width: 100%;
-    height: 30px;
+    height: 40px;
   }
   #search_form {
     position: fixed;
     z-index: 30;
+    display: table-cell;
+    vertical-align: middle;
+    /*border: 1px solid red;*/
   }
-  #search_form #q{
-    width:50%
+  #search_form #q {
+    width: 50%;
   }
+  #search_form * {
+    vertical-align: middle;
+  }
+
   a {
     text-decoration: none;
-    color: white;
+    color: #88f;
   }
   a:hover {
     text-decoration: underline;
     color: #ccf;
+  }
+  #search_form a {
+    color: #fff;
+    font-size: 20pt;
+    font-weight: bold;
+  }
+  .no_results_msg {
+    width: 70%;
+    padding: 30px;
+    margin: auto;
+    background-color: #000;
   }
 </style>

@@ -1,13 +1,13 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { tick } from "svelte";
-  import { loop_guard } from "svelte/internal";
-  import { fade, fly, scale } from 'svelte/transition';
+  import { fade } from 'svelte/transition';
 
   // array of images
   export let imgs: number[][] = [];
   export let base_url: string;
   export let search_query: string;
+  export let desired_size: number = 224;
 
   let num_visible_imgs = 4;
   let images_available = 0;
@@ -24,11 +24,11 @@
   //   If using Wikimedia as an image source, anything faster than 12 in parallel, and 100ms between
   // batches will cause Wikimedia to return HTTP 429 Too Many Requests errors.
   
-  let num_parallel_image_loads = 12;
-  let thumnail_loading_throttle = 100;
+  let num_parallel_image_loads = 6;
+  let thumnail_loading_throttle = 50;
 
-  num_parallel_image_loads = 24
-  thumnail_loading_throttle = 1;
+  // num_parallel_image_loads = 24
+  // thumnail_loading_throttle = 1;
 
   $: num_visible_imgs = imgs && 4;
 
@@ -116,14 +116,13 @@
   // let columnCount = 0;
 
   let galleryWidth = 0;
-  let desired_size = 250;
   let preview_width = 10;
   export let gap = 6;
-  export let hover = true;
+  //export let hover = true;
   //export let loading;
 
   $: columnCount = Math.floor(galleryWidth / desired_size) || 1;
-  $: thm_size = Math.floor(desired_size / 100 + 1) * 100 || 100;
+  $: thm_size = Math.floor(desired_size / 112 + 1) * 112 || 224;
   $: columnCount && process_images();
   $: preview_width = galleryWidth / columnCount* Math.floor(img_cols.length/2+1)
   $: preview_cols  = Math.floor(img_cols.length/2+1)
@@ -132,6 +131,9 @@
       (window_innerHeight * galleryWidth) / (desired_size * desired_size);
     if (num_visible_imgs > 2 * est_imgs) {
       num_visible_imgs = 2 * est_imgs;
+    }
+    if (num_visible_imgs > 12) {
+      num_visible_imgs = 12;
     }
   }
 
@@ -173,15 +175,14 @@
   //$: debugtxt = process_images(imgs);
   $: process_images();
 </script>
-
 <svelte:window
   bind:scrollY={window_scrollY}
   bind:innerHeight={window_innerHeight}
   bind:outerHeight={window_outerHeight}
 />
-
+<!--
 Size: <input type="range" bind:value={desired_size} min="50" max="800" />
-
+-->
 <!--
  scroll_element_visibility = {scroll_element_visibility}<br>
 <br>{window_scrollY}, {window_innerHeight}, {window_outerHeight}
@@ -189,14 +190,15 @@ num_visible_imgs = {num_visible_imgs}
 <a href="#1" on:click={add_images_if_scroll_visible}>load more</a>
 img_cols = {img_cols.length} thm_size = {thm_size}
 -->
-
 <div class="gallery_container">
 {#if img_cols.length > 4}
-  <div class="preview" style="width:{preview_width}px; height:{innerHeight/2}px">
+  <div class="preview" style="width:{preview_width}px; height:{window_innerHeight/2}px">
     {#if preview_id}
     {#key preview_id}
       <img 
-      in:fade
+        alt={preview_id}
+        in:fade
+        loading="lazy"
         src="{base_url}thm/{preview_id}?size=1024" style="max-width:100%; max-height:100%" />
         {/key}
         {:else}
@@ -214,7 +216,7 @@ img_cols = {img_cols.length} thm_size = {thm_size}
   {#each img_cols as img_col, idx}
     <div class="column">
       {#if idx >= img_cols.length - preview_cols && img_cols.length > 4}
-      <div class="spacer" style="height:{innerHeight/2}px"> </div>
+      <div class="spacer" style="height:{window_innerHeight/2}px"> </div>
       {/if}
       {#each img_col as img_id}
         <div
@@ -249,8 +251,20 @@ img_cols = {img_cols.length} thm_size = {thm_size}
 </div>
 
 <div id="summary" bind:this={scroll_element}>
+  <!--
   {num_visible_imgs}, images of {images_available}.
+  -->
+  Please be patient.  Wikimedia throttles the speed of thumbnail serving to a few a second.
   <a href="#2" on:click={add_images_if_scroll_visible}>load more</a>
+  <br>
+
+  <small>Images in this demo are from Wikimedia Commons,
+    available under various different licenses specified on
+    their description page.  Click on the "details" link for each image to see its
+    specific license.<br>
+    Source code for the server-side of this project is 
+    <a href="https://github.com/ramayer/rclip-server">available
+    here on github</a>. Source code for the client side will be posted soon.</small>
 </div>
 
 
@@ -285,8 +299,8 @@ img_cols = {img_cols.length} thm_size = {thm_size}
     margin-top: 0;
   }
   .img-hover {
-    opacity: 0.7;
-    transition: all 0.2s;
+    opacity: 0.9;
+    transition: all 0.1s;
     z-index: 1;
   }
   .img-hover:hover {
@@ -313,7 +327,6 @@ img_cols = {img_cols.length} thm_size = {thm_size}
     display:block;
   }
   .image_container:hover .image_overlay {
-    //padding-top: 1em;
     padding-bottom: 1em;
     color: black;
     line-height: 1;
@@ -337,11 +350,11 @@ img_cols = {img_cols.length} thm_size = {thm_size}
   }
   .preview {
     color: #fff;
-    border: 1px solid #222;
+    /*border: 1px solid #222;*/
     position: fixed;
     background-color: #000;
     /* border: 2px outset #ccc; */
-    top:30px;
+    /* top: 60px */
     right:0px;
     z-index:99;
     display:flex;
