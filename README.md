@@ -1,43 +1,20 @@
-# create-svelte
+#  Svelte CLIP Image Search
 
-Everything you need to build a Svelte project, powered by [`create-svelte`](https://github.com/sveltejs/kit/tree/master/packages/create-svelte).
+A SvelteKit UI for a CLIP-based image search backend. 
 
-## Creating a project
+## My first attempt at a SvelteKit based UI.
 
-If you're seeing this, you've probably already done this step. Congrats!
+This project uses the [same FastAPI backend for CLIP-based image search](ramayer/rclip-server) as my earlier Vue-based UI found [here](https://github.com/ramayer/rclip-server/blob/main/assets/rclip_server.html).
 
-```bash
-# create a new project in the current directory
-npm create svelte@latest
+## Demo
 
-# create a new project in my-app
-npm create svelte@latest my-app
-```
+A demo of this UI, using Wikimedia Commons images, can be [seen here](http://image-search.0ape.com/).
 
-## Developing
+Try searching for somethign like [skiing -summer +winter](http://image-search.0ape.com/?q=skiing%20%2Bsummer%20-winter) to see sports that are kinda-like skiing, but happen in summer instead of winter.
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+## Thanks
 
-```bash
-npm run dev
+Special Thanks to: 
 
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
-```
-
-## Building
-
-To create a production version of your app:
-
-```bash
-npm run build
-```
-
-You can preview the production build with `npm run preview`.
-
-> To deploy your app, you may need to install an [adapter](https://kit.svelte.dev/docs/adapters) for your target environment.
-
-
-## TODO
-
-* Add a footer like: https://css-tricks.com/an-explanation-of-how-the-intersection-observer-watches/
+* Github user @yurijmikhalevich for his [rclip](https://github.com/yurijmikhalevich/rclip) CLI tools that inspired this project and are now used to manage all my home photos.
+* Github user @berkinakkaya for his [svelte-image-gallery](https://github.com/berkinakkaya/svelte-image-gallery) project that made me interested in porting the front-end to Svelte, (and whose code I used, though I need to double-check with him about licensing.... doing that now)
