@@ -41,6 +41,10 @@
     return eu;
   }
 
+  // https://stackoverflow.com/questions/11381673/detecting-a-mobile-browser
+  let isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+
   function mousedover(pid, x, y) {
     preview_id = pid;
     preview_class = x < galleryWidth / 2 ? "right" : "left";
@@ -122,9 +126,9 @@
   //export let loading;
 
   $: columnCount = Math.floor(galleryWidth / desired_size) || 1;
-  $: thm_size = Math.floor(desired_size / 112 + 1) * 112 || 224;
+  $: thm_size = Math.floor(desired_size / 240 + 1) * 240 || 240;
   $: columnCount && process_images();
-  $: preview_width = galleryWidth / columnCount* Math.floor(img_cols.length/2+1)
+  $: preview_width = (galleryWidth+gap) / columnCount* Math.floor(img_cols.length/2+1)
   $: preview_cols  = Math.floor(img_cols.length/2+1)
   function attempt_reducing_num_visible_imgs() {
     let est_imgs =
@@ -180,6 +184,7 @@
   bind:innerHeight={window_innerHeight}
   bind:outerHeight={window_outerHeight}
 />
+
 <!--
 Size: <input type="range" bind:value={desired_size} min="50" max="800" />
 -->
@@ -223,12 +228,22 @@ img_cols = {img_cols.length} thm_size = {thm_size}
           class="image_container"
           on:mouseenter={(e) => mousedover(img_id, e.clientX, e.clientY)}
         >
+          {#if isMobile}
             <img
               class="img-hover"
               style="min-height:10px"
               src="{base_url}thm/{img_id}?size={thm_size}"
               alt={img_id}
-            /><div class="image_overlay">
+            />
+          {:else}
+            <a href={base_url}img/{img_id}><img
+              class="img-hover"
+              style="min-height:10px"
+              src="{base_url}thm/{img_id}?size={thm_size}"
+              alt={img_id}
+            /></a>
+          {/if}
+            <div class="image_overlay">
               {#if desired_size > 150}
                 <a href={search_for(mlt_url(img_id))}
                   ><nobr>more like this</nobr></a
@@ -242,6 +257,7 @@ img_cols = {img_cols.length} thm_size = {thm_size}
               </nobr>
               <a href={base_url}img/{img_id}><nobr>details</nobr></a>
             </div>
+          
         </div>
       {/each}
       <div class="column_footer">...</div>
@@ -333,7 +349,7 @@ img_cols = {img_cols.length} thm_size = {thm_size}
     height: auto;
 
   }
-  .image_container a{ 
+  .image_overlay a{ 
     display:none;
   }
   .image_container:hover a {
@@ -352,8 +368,8 @@ img_cols = {img_cols.length} thm_size = {thm_size}
     color: #fff;
     /*border: 1px solid #222;*/
     position: fixed;
-    background-color: #000;
-    /* border: 2px outset #ccc; */
+    background-color: #444;
+    border: 2px outset #555;
     /* top: 60px */
     right:0px;
     z-index:99;

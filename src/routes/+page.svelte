@@ -84,7 +84,7 @@
     />
   {:else}
     <div id="no_results_msg" class="no_results_msg">
-      <h2>CLIP embedding based search of Wikimedia images</h2>
+      <h2>SvelteKit UI for a CLIP embedding based search of Wikimedia images</h2>
 
       This system lets you do simple math on CLIP embeddings with prefixes like
       "-" to subtract CLIP vectors and "+" to add them.
@@ -148,7 +148,8 @@
     <small>Images in this demo are from Wikimedia Commons,
       available under various different licenses specified on
       their description page.  Click on the "details" link for each image to see its
-      specific license.<br>
+      specific license.
+      <br><br>
       Source code for the server-side of this project is 
       <a href="https://github.com/ramayer/rclip-server">available
       here on github</a>. Source code for the client side will be posted soon.</small>
@@ -168,6 +169,7 @@
     z-index: 30;
     display: table-cell;
     vertical-align: middle;
+    background-color: rgba(0,0,0,.5);
     /*border: 1px solid red;*/
   }
   #search_form #q {
@@ -193,7 +195,7 @@
   .no_results_msg {
     width: 70%;
     padding: 30px;
-    margin: auto;
+    margin: 40px auto 40px auto ;
     background-color: #000;
   }
 </style>
