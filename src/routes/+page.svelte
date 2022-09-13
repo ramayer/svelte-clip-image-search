@@ -51,7 +51,7 @@
 
 <div id="search_form">
   <form on:submit|preventDefault={submit_form}>
-    <label for="q"><a href="/">Search</a></label>
+    <label for="q"><a href="/">Img Search</a></label>
     <input
       id="q"
       type="search"
@@ -61,7 +61,7 @@
         (cached_search_results = get_search_results(search_query))}
     />
     <button type="submit">Search</button>
-    <label for="sz">Size:</label><input
+    <label for="sz">Thm Size:</label><input
       id="sz"
       type="range"
       bind:value={thm_size}

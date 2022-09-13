@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { tick } from "svelte";
-  import { fade } from 'svelte/transition';
+  import { fade } from "svelte/transition";
 
   // array of images
   export let imgs: number[][] = [];
@@ -17,13 +17,11 @@
   let window_outerHeight = 0;
   let gallery_div;
   let preview_id = null;
-  let preview_class = "right";
-  let preview_class2 = "top";
 
-  // Throttle image loading.  
+  // Throttle image loading.
   //   If using Wikimedia as an image source, anything faster than 12 in parallel, and 100ms between
   // batches will cause Wikimedia to return HTTP 429 Too Many Requests errors.
-  
+
   let num_parallel_image_loads = 6;
   let thumnail_loading_throttle = 50;
 
@@ -44,11 +42,21 @@
   // https://stackoverflow.com/questions/11381673/detecting-a-mobile-browser
   let isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
+  // https://svelte.dev/examples/deferred-transitions
+  let full_res_preview_id = null;
+  const image_preloader = new Image();
+  const preload_image = image => {
+    full_res_preview_id = null;
+		image_preloader.onload = () => {
+			full_res_preview_id = image;
+		};
+		image_preloader.src = base_url + 'thm/' + preview_id +'?size=1024';
+	};
+
 
   function mousedover(pid, x, y) {
     preview_id = pid;
-    preview_class = x < galleryWidth / 2 ? "right" : "left";
-    preview_class2 = y < innerHeight / 2 ? "bottom" : "top";
+    preload_image(pid)
   }
 
   // Wait for the images on top of the gallery to load before the ones further down.
@@ -72,15 +80,20 @@
   function add_images_if_scroll_visible() {
     if (already_waiting_for_images) {
       console.log("already waiting for images to load");
-      return
+      return;
     }
     if (scroll_element_visibility > 0 && num_visible_imgs < images_available) {
-      console.log("adding images because num_visible_imgs = " + num_visible_imgs);
+      console.log(
+        "adding images because num_visible_imgs = " + num_visible_imgs
+      );
       already_waiting_for_images = true;
       setTimeout(
         () =>
           wait_for_images_to_load(() => {
-            console.log("wait for images to load returned, num_visible="+num_visible_imgs)
+            console.log(
+              "wait for images to load returned, num_visible=" +
+                num_visible_imgs
+            );
             num_visible_imgs = num_visible_imgs + num_parallel_image_loads;
             already_waiting_for_images = false;
             add_images_if_scroll_visible();
@@ -88,10 +101,15 @@
         thumnail_loading_throttle
       );
     } else {
-      console.log("not adding images because"+
-                  " scroll_element_visibility = "+ scroll_element_visibility +
-                  ", num_visible_imgs = " + num_visible_imgs + 
-                  ", and images_available " + images_available)
+      console.log(
+        "not adding images because" +
+          " scroll_element_visibility = " +
+          scroll_element_visibility +
+          ", num_visible_imgs = " +
+          num_visible_imgs +
+          ", and images_available " +
+          images_available
+      );
     }
   }
 
@@ -103,7 +121,9 @@
       visibility += item.intersectionRatio;
     });
     scroll_element_visibility = visibility;
-    console.log("check_if_more_images_needed calling add_images_if_scroll_visible")
+    console.log(
+      "check_if_more_images_needed calling add_images_if_scroll_visible"
+    );
     add_images_if_scroll_visible();
   }
 
@@ -128,8 +148,9 @@
   $: columnCount = Math.floor(galleryWidth / desired_size) || 1;
   $: thm_size = Math.floor(desired_size / 240 + 1) * 240 || 240;
   $: columnCount && process_images();
-  $: preview_width = (galleryWidth+gap) / columnCount* Math.floor(img_cols.length/2+1)
-  $: preview_cols  = Math.floor(img_cols.length/2+1)
+  $: preview_width =
+    ((galleryWidth + gap) / columnCount) * Math.floor(img_cols.length / 2 + 1);
+  $: preview_cols = Math.floor(img_cols.length / 2 + 1);
   function attempt_reducing_num_visible_imgs() {
     let est_imgs =
       (window_innerHeight * galleryWidth) / (desired_size * desired_size);
@@ -179,6 +200,7 @@
   //$: debugtxt = process_images(imgs);
   $: process_images();
 </script>
+
 <svelte:window
   bind:scrollY={window_scrollY}
   bind:innerHeight={window_innerHeight}
@@ -196,53 +218,81 @@ num_visible_imgs = {num_visible_imgs}
 img_cols = {img_cols.length} thm_size = {thm_size}
 -->
 <div class="gallery_container">
-{#if img_cols.length > 4}
-  <div class="preview" style="width:{preview_width}px; height:{window_innerHeight/2}px">
-    {#if preview_id}
-    {#key preview_id}
-      <img 
-        alt={preview_id}
-        in:fade
-        loading="lazy"
-        src="{base_url}thm/{preview_id}?size=1024" style="max-width:100%; max-height:100%" />
-        {/key}
-        {:else}
-      <div style="margin:auto">Mouse-over a thumbnail to show a preview</div>
-    {/if}
-  </div>
-{/if}
-
-<div
-  id="gallery"
-  bind:this={gallery_div}
-  bind:clientWidth={galleryWidth}
-  style={galleryStyle}
->
-  {#each img_cols as img_col, idx}
-    <div class="column">
-      {#if idx >= img_cols.length - preview_cols && img_cols.length > 4}
-      <div class="spacer" style="height:{window_innerHeight/2}px"> </div>
+  {#if img_cols.length > 4}
+    <div
+      class="preview underlay"
+      style="width:{preview_width}px; height:{window_innerHeight / 2}px"
+    >
+      {#if preview_id}
+      {#key preview_id}
+        <img
+            alt={preview_id}
+            in:fade="{{duration: 200 }}"
+            src="{base_url}thm/{preview_id}?size={thm_size}"
+            style="width:{preview_width}px; height:{window_innerHeight / 2}px"
+          />
+          {/key}
+      {:else}
+        <div style="margin:auto">Mouse-over a thumbnail to show a preview</div>
       {/if}
-      {#each img_col as img_id}
-        <div
-          class="image_container"
-          on:mouseenter={(e) => mousedover(img_id, e.clientX, e.clientY)}
-        >
-          {#if isMobile}
-            <img
-              class="img-hover"
-              style="min-height:10px"
-              src="{base_url}thm/{img_id}?size={thm_size}"
-              alt={img_id}
-            />
-          {:else}
-            <a href={base_url}img/{img_id}><img
-              class="img-hover"
-              style="min-height:10px"
-              src="{base_url}thm/{img_id}?size={thm_size}"
-              alt={img_id}
-            /></a>
-          {/if}
+    </div>
+    <!-- could probably be done better 
+         using deferred transitions 
+         like https://svelte.dev/examples/deferred-transitions -->
+    <div
+      class="preview"
+      style="width:{preview_width}px; height:{window_innerHeight / 2}px"
+    >
+      {#if full_res_preview_id}
+        {#key full_res_preview_id}
+          <img
+            alt={full_res_preview_id}
+            in:fade="{{duration: 200 }}"
+            src="{base_url}thm/{preview_id}?size=1024"
+            style="max-width:100%; max-height:100%; background: 000"
+          />
+        {/key}
+      {/if}
+    </div>
+  {/if}
+
+  <!--
+    Todo - picture elements may be an easier way to serve correct-sized thumbnails
+    https://developer.mozilla.org/en-US/docs/Learn/HTML/Multimedia_and_embedding/Responsive_images
+  -->
+  <div
+    id="gallery"
+    bind:this={gallery_div}
+    bind:clientWidth={galleryWidth}
+    style={galleryStyle}
+  >
+    {#each img_cols as img_col, idx}
+      <div class="column">
+        {#if idx >= img_cols.length - preview_cols && img_cols.length > 4}
+          <div class="spacer" style="height:{window_innerHeight / 2}px" />
+        {/if}
+        {#each img_col as img_id}
+          <div
+            class="image_container"
+            on:mouseenter={(e) => mousedover(img_id, e.clientX, e.clientY)}
+          >
+            {#if isMobile}
+              <img
+                class="img-hover"
+                style="min-height:10px"
+                src="{base_url}thm/{img_id}?size={thm_size}"
+                alt={img_id}
+              />
+            {:else}
+              <a href="{base_url}img/{img_id}"
+                ><img
+                  class="img-hover"
+                  style="min-height:10px"
+                  src="{base_url}thm/{img_id}?size={thm_size}"
+                  alt={img_id}
+                /></a
+              >
+            {/if}
             <div class="image_overlay">
               {#if desired_size > 150}
                 <a href={search_for(mlt_url(img_id))}
@@ -255,34 +305,35 @@ img_cols = {img_cols.length} thm_size = {thm_size}
                 <a href={search_for(search_query + " +" + mlt_url(img_id))}>▲</a>
                 <a href={search_for(search_query + " -" + mlt_url(img_id))}>▼</a>
               </nobr>
-              <a href={base_url}img/{img_id}><nobr>details</nobr></a>
+              <a href="{base_url}img/{img_id}"><nobr>details</nobr></a>
             </div>
-          
-        </div>
-      {/each}
-      <div class="column_footer">...</div>
-    </div>
-  {/each}
-</div>
+          </div>
+        {/each}
+        <div class="column_footer">...</div>
+      </div>
+    {/each}
+  </div>
 </div>
 
 <div id="summary" bind:this={scroll_element}>
   <!--
   {num_visible_imgs}, images of {images_available}.
   -->
-  Please be patient.  Wikimedia throttles the speed of thumbnail serving to a few a second.
+  Please be patient. Wikimedia throttles the speed of thumbnail serving to a few
+  a second.
   <a href="#2" on:click={add_images_if_scroll_visible}>load more</a>
-  <br>
+  <br />
 
-  <small>Images in this demo are from Wikimedia Commons,
-    available under various different licenses specified on
-    their description page.  Click on the "details" link for each image to see its
-    specific license.<br>
-    Source code for the server-side of this project is 
-    <a href="https://github.com/ramayer/rclip-server">available
-    here on github</a>. Source code for the client side will be posted soon.</small>
+  <small
+    >Images in this demo are from Wikimedia Commons, available under various
+    different licenses specified on their description page. Click on the
+    "details" link for each image to see its specific license.<br />
+    Source code for the server-side of this project is
+    <a href="https://github.com/ramayer/rclip-server"
+      >available here on github</a
+    >. Source code for the client side will be posted soon.</small
+  >
 </div>
-
 
 <hr style="clear:both" />
 
@@ -291,9 +342,7 @@ img_cols = {img_cols.length} thm_size = {thm_size}
     border: 1px solid #222;
     color: #888;
   }
-  #slotHolder {
-    display: none;
-  }
+
   #gallery {
     width: 100%;
     display: grid;
@@ -326,35 +375,33 @@ img_cols = {img_cols.length} thm_size = {thm_size}
   }
   .image_container {
     border: 1px solid black;
-
   }
   .image_container:hover {
     border: 1px solid black;
   }
   .image_overlay {
     width: 90%;
-    transition: all .2s ease-in-out;
+    transition: all 0.2s ease-in-out;
     color: transparent;
     line-height: 0;
     padding: 0;
     margin: 0;
     height: 0px;
     width: 0px;
-    display:block;
+    display: block;
   }
   .image_container:hover .image_overlay {
     padding-bottom: 1em;
     color: black;
     line-height: 1;
     height: auto;
-
   }
-  .image_overlay a{ 
-    display:none;
+  .image_overlay a {
+    display: none;
   }
   .image_container:hover a {
     color: #77f;
-    display:inline;
+    display: inline;
     text-decoration: none;
   }
   .image_container:hover a:hover {
@@ -366,17 +413,22 @@ img_cols = {img_cols.length} thm_size = {thm_size}
   }
   .preview {
     color: #fff;
-    /*border: 1px solid #222;*/
+    border: 2px solid #000;
     position: fixed;
-    background-color: #444;
-    border: 2px outset #555;
+    /*background-color: #8884;*/
+    /*border: 2px outset #555;*/
+
     /* top: 60px */
-    right:0px;
-    z-index:99;
-    display:flex;
+    right: 0px;
+    z-index: 99;
+    display: flex;
   }
-  
+  .underlay {
+    background-color: #000;
+  }
+
   .preview img {
+    object-fit: contain;
     display: block;
     margin: auto;
     max-width: 100%;
