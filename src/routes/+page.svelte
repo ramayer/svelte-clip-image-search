@@ -10,7 +10,8 @@
 
   let search_query = $page.url.searchParams.get("q");
   let search_results = get_search_results(search_query);
-  let thm_size = 224;
+  let col_count = 6;
+  let max_col_count = 16;
 
   function q_parameter_changed(new_q) {
     console.log("new_q = " + new_q + " old_q = " + search_query);
@@ -49,33 +50,30 @@
   let foo = null;
 </script>
 
-<form on:submit|preventDefault={submit_form}>
-  <nav id="search_form">
-    <div class="nav_q nav_item">
-      <label for="q"><a href="/" class="mag">&#9906;</a></label>
-      <input
-        id="q"
-        type="search"
-        name="q"
-        bind:value={search_query}
-        on:input={() =>
-          (cached_search_results = get_search_results(search_query))}
-      />
-      <button class="qbtn" type="submit"><div>&nbsp;👀&nbsp;</div></button>
-    </div>
-    <div class="nav_sz nav_item">
-      <nobr>
-        <label for="sz">▫</label><input
-          id="sz"
-          class="sz .slider"
-          type="range"
-          bind:value={thm_size}
-          min="56"
-          max="896"
-        /><label for="sz">◻</label>
-      </nobr>
-    </div>
-  </nav>
+<form on:submit|preventDefault={submit_form} id="search_form">
+  <div class="nav_q nav_item">
+    <label for="q"><a href="/" class="mag">&#9906;</a></label>
+    <input
+      id="q"
+      name="q"
+      type="search"
+      bind:value={search_query}
+      on:input={() =>
+        (cached_search_results = get_search_results(search_query))}
+    />
+    <button class="qbtn" type="submit"><div>&nbsp;👀&nbsp;</div></button>
+  </div>
+  <div class="nav_item" style="flex-grow:0.1" />
+  <div class="nav_sz nav_item">
+    <label for="sz">▫</label><input
+      id="sz"
+      class="sz .slider"
+      type="range"
+      bind:value={col_count}
+      min="1"
+      max={max_col_count}
+    /><label for="sz">◻</label>
+  </div>
 </form>
 <div id="search_form_spacer" />
 
@@ -87,7 +85,7 @@
       imgs={api_response}
       bind:base_url
       bind:search_query
-      desired_size={thm_size}
+      columnCount={max_col_count + 1 - col_count}
     />
   {:else}
     <div id="no_results_msg" class="no_results_msg">
@@ -178,20 +176,22 @@
 {/await}
 
 <style>
+  html {
+    margin: 0px;
+  }
   #search_form,
   #search_form_spacer {
     width: 100%;
     height: 40px;
   }
   #search_form {
-    flex-direction: row;
-    position: fixed;
-    z-index: 30;
     display: flex;
+    position: fixed;
+    left: 0px;
+    z-index: 30;
     vertical-align: middle;
     background-color: rgba(0, 0, 0, 0.5);
-    border: 1px solid green;
-    /*border: 1px solid red;*/
+    margin: 0px;
   }
   #search_form #q {
     flex-shrink: 1;
@@ -205,21 +205,25 @@
     padding: 3px;
     flex-shrink: 1;
     flex-grow: 1;
-    border: 1px solid red;
+    vertical-align: middle;
     display: flex;
+    white-space: nowrap;
   }
   #sz {
-   flex-grow: 1;
+    flex-grow: 1;
+    flex-shrink: 3;
   }
   .nav_q {
     flex-grow: 2;
     flex-shrink: 1;
   }
   .nav_sz {
+    display: table-cell;
+    line-height: 30px;
     flex-grow: 0;
     flex-shrink: 1;
+    vertical-align: middle;
   }
-
 
   a {
     text-decoration: none;
@@ -277,5 +281,8 @@
   }
   .sz {
     width: 80%;
+  }
+  body {
+    margin: 33px;
   }
 </style>

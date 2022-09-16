@@ -7,7 +7,8 @@
   export let imgs: number[][] = [];
   export let base_url: string;
   export let search_query: string;
-  export let desired_size: number = 224;
+  //export let desired_size: number = 224;
+  export let columnCount = 5;
 
   let num_visible_imgs = 4;
   let images_available = 0;
@@ -45,18 +46,17 @@
   // https://svelte.dev/examples/deferred-transitions
   let full_res_preview_id = null;
   const image_preloader = new Image();
-  const preload_image = image => {
+  const preload_image = (image) => {
     full_res_preview_id = null;
-		image_preloader.onload = () => {
-			full_res_preview_id = image;
-		};
-		image_preloader.src = base_url + 'thm/' + preview_id +'?size=1024';
-	};
-
+    image_preloader.onload = () => {
+      full_res_preview_id = image;
+    };
+    image_preloader.src = base_url + "thm/" + preview_id + "?size=1024";
+  };
 
   function mousedover(pid, x, y) {
     preview_id = pid;
-    preload_image(pid)
+    preload_image(pid);
   }
 
   // Wait for the images on top of the gallery to load before the ones further down.
@@ -145,8 +145,9 @@
   //export let hover = true;
   //export let loading;
 
-  $: columnCount = Math.floor(galleryWidth / desired_size) || 1;
-  $: thm_size = Math.floor(desired_size / 240 + 1) * 240 || 240;
+  // $: columnCount = Math.floor(galleryWidth / desired_size) || 1;
+  $: desired_size = galleryWidth / columnCount;
+  $: thm_size = Math.floor(galleryWidth / columnCount / 240 + 1) * 240 || 240;
   $: columnCount && process_images();
   $: preview_width =
     ((galleryWidth + gap) / columnCount) * Math.floor(img_cols.length / 2 + 1);
@@ -162,7 +163,7 @@
     }
   }
 
-  $: desired_size && attempt_reducing_num_visible_imgs();
+  $: thm_size && attempt_reducing_num_visible_imgs();
   $: num_visible_imgs && process_images();
   $: galleryStyle = `grid-template-columns: repeat(${columnCount}, 1fr); --gap: ${gap}px`;
   $: images_available && add_images_if_scroll_visible();
@@ -224,14 +225,14 @@ img_cols = {img_cols.length} thm_size = {thm_size}
       style="width:{preview_width}px; height:{window_innerHeight / 2}px"
     >
       {#if preview_id}
-      {#key preview_id}
-        <img
+        {#key preview_id}
+          <img
             alt={preview_id}
-            in:fade="{{duration: 200 }}"
+            in:fade={{ duration: 200 }}
             src="{base_url}thm/{preview_id}?size={thm_size}"
             style="width:{preview_width}px; height:{window_innerHeight / 2}px"
           />
-          {/key}
+        {/key}
       {:else}
         <div style="margin:auto">Mouse-over a thumbnail to show a preview</div>
       {/if}
@@ -247,7 +248,7 @@ img_cols = {img_cols.length} thm_size = {thm_size}
         {#key full_res_preview_id}
           <img
             alt={full_res_preview_id}
-            in:fade="{{duration: 200 }}"
+            in:fade={{ duration: 200 }}
             src="{base_url}thm/{preview_id}?size=1024"
             style="max-width:100%; max-height:100%; background: 000"
           />
@@ -302,8 +303,10 @@ img_cols = {img_cols.length} thm_size = {thm_size}
                 <a href={search_for(mlt_url(img_id))}><nobr>mlt</nobr></a>
               {/if}
               <nobr>
-                <a href={search_for(search_query + " +" + mlt_url(img_id))}>▲</a>
-                <a href={search_for(search_query + " -" + mlt_url(img_id))}>▼</a>
+                <a href={search_for(search_query + " +" + mlt_url(img_id))}>▲</a
+                >
+                <a href={search_for(search_query + " -" + mlt_url(img_id))}>▼</a
+                >
               </nobr>
               <a href="{base_url}img/{img_id}"><nobr>details</nobr></a>
             </div>
