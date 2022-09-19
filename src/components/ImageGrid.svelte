@@ -150,8 +150,8 @@
   $: thm_size = Math.floor(galleryWidth / columnCount / 240 + 1) * 240 || 240;
   $: columnCount && process_images();
   $: preview_width =
-    ((galleryWidth + gap) / columnCount) * Math.floor(img_cols.length / 2 + 1);
-  $: preview_cols = Math.floor(img_cols.length / 2 + 1);
+    ((galleryWidth + gap) / columnCount) * Math.floor(img_cols.length / 2);
+  $: preview_cols = Math.floor(img_cols.length / 2);
   function attempt_reducing_num_visible_imgs() {
     let est_imgs =
       (window_innerHeight * galleryWidth) / (desired_size * desired_size);

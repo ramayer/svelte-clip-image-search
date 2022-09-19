@@ -66,6 +66,7 @@
   <div class="nav_item" style="flex-grow:0.1" />
   <div class="nav_sz nav_item">
     <label for="sz">▫</label><input
+      style="direction: rtl"
       id="sz"
       class="sz .slider"
       type="range"
@@ -76,7 +77,6 @@
   </div>
 </form>
 <div id="search_form_spacer" />
-
 {#await search_results}
   <p>...loading</p>
 {:then api_response}
@@ -85,7 +85,7 @@
       imgs={api_response}
       bind:base_url
       bind:search_query
-      columnCount={max_col_count + 1 - col_count}
+      columnCount={col_count}
     />
   {:else}
     <div id="no_results_msg" class="no_results_msg">
