@@ -39,3 +39,7 @@ Special Thanks to:
 
 * Github user @yurijmikhalevich for his [rclip](https://github.com/yurijmikhalevich/rclip) CLI tools that inspired this project and are now used to manage all my home photos.
 * Github user @berkinakkaya for his [svelte-image-gallery](https://github.com/berkinakkaya/svelte-image-gallery) project that made me interested in porting the front-end to Svelte, (and whose code I used, though I need to double-check with him about licensing.... doing that now)
+
+## TODO
+
+* push some of the heavy lifting to the browser; especially to process images from webcams; possibly using this: https://github.com/josephrocca/openai-clip-js

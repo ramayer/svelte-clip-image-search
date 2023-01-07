@@ -140,6 +140,7 @@
   // let columnCount = 0;
 
   let galleryWidth = 0;
+  let cols_triggering_preview = 8;
   let preview_width = 10;
   export let gap = 6;
   //export let hover = true;
@@ -150,8 +151,8 @@
   $: thm_size = Math.floor(galleryWidth / columnCount / 240 + 1) * 240 || 240;
   $: columnCount && process_images();
   $: preview_width =
-    ((galleryWidth + gap) / columnCount) * Math.floor(img_cols.length / 2);
-  $: preview_cols = Math.floor(img_cols.length / 2);
+    ((galleryWidth + gap) / columnCount) * Math.ceil(img_cols.length / 2);
+  $: preview_cols = Math.ceil(img_cols.length / 2);
   function attempt_reducing_num_visible_imgs() {
     let est_imgs =
       (window_innerHeight * galleryWidth) / (desired_size * desired_size);
@@ -219,7 +220,7 @@ num_visible_imgs = {num_visible_imgs}
 img_cols = {img_cols.length} thm_size = {thm_size}
 -->
 <div class="gallery_container">
-  {#if img_cols.length > 4}
+  {#if img_cols.length > cols_triggering_preview}
     <div
       class="preview underlay"
       style="width:{preview_width}px; height:{window_innerHeight / 2}px"
@@ -269,7 +270,7 @@ img_cols = {img_cols.length} thm_size = {thm_size}
   >
     {#each img_cols as img_col, idx}
       <div class="column">
-        {#if idx >= img_cols.length - preview_cols && img_cols.length > 4}
+        {#if idx >= img_cols.length - preview_cols && img_cols.length > cols_triggering_preview}
           <div class="spacer" style="height:{window_innerHeight / 2}px" />
         {/if}
         {#each img_col as img_id}
