@@ -2,21 +2,22 @@
 
     import {page} from "$app/stores"
     import ResultList from './ResultList.svelte';
-
     import type {PageData} from './$types';
 
     export let data: PageData;
 
     const searchform_class = "flex-1 h-10 px-4 m-1 text-gray-700 placeholder-gray-400 bg-transparent border-none appearance-none lg:h-12 dark:text-gray-200 focus:outline-none focus:placeholder-transparent focus:ring-0"; 
 
-    const url = $page.url;
+    const url = $page.url;  // this will stay as the original value of the url
     let q = $page.url.searchParams.get('q');
     
-    console.log('page',$page)
-    $:console.log('data',data)
-    console.log('url',url)
-    $:console.log('q',q)
-
+    $:console.log("===")
+    $:console.log('+page.svelte page',$page)
+    $:console.log('+page.svelte data',data)
+    $:console.log('+page.svelte url',url)
+    $:console.log('+page.svelte q',q)
+    $:console.log("===")
+    
 </script>
 
 <form>
