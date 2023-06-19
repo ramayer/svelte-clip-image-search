@@ -3,12 +3,14 @@ import type { RequestHandler } from './$types';
 
 export const GET = (async ({ setHeaders, url, params }) => {
 
-    const id = Number(url.searchParams.get('id'));
+    const w = Number(url.searchParams.get('w'));
+    const h = Number(url.searchParams.get('h'));
     const img_id = params.img_id;
     console.log("hey",img_id,params)
     //try {
-        ///
         const img_url = 'https://picsum.photos/302'
+        // "http://localhost:8000/thm/{img_id}"
+
         const img_res = await fetch(img_url)
         const img_abuf = await img_res.arrayBuffer();
         const img_ct = img_res.headers.get('content-type')

@@ -1,8 +1,9 @@
 <script lang="ts">
-    import { writable } from "svelte/store";
+
     import ResultImg from './ResultImg.svelte';
     export let results: { q: string | null; ids: number[] } | null;
     export let cols = 4;
+
     let imgs: number[] = [];
     
     $: num_available = results ? results["ids"].length : 0;
@@ -31,10 +32,11 @@
 </script>
 
 Hello ResultList
+
 <div class="grid" style="{gridstyle};">
     {#if imgs}
         {#each imgs as r}
-            <ResultImg img_id={r}></ResultImg>
+            <ResultImg img_id={String(r)}></ResultImg>
         {/each}
     {/if}
 </div>
