@@ -84,7 +84,6 @@ import { selected_img, selected_state } from './stores.js';
     </div>
 </form>
 
-
 <div>
     Debug = {s_img}, {s_state}
 </div>
