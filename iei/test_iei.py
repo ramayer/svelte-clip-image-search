@@ -1,5 +1,5 @@
 import image_embedding_indexer
-iei=image_embedding_indexer.ImageEmbeddingIndexer(device='cuda')
+iei=image_embedding_indexer.ImageEmbeddingIndexer(device='cpu')
 print(iei)
 
 test_imgs = [
