@@ -10,7 +10,9 @@
 
 </script>
 
-<div on:mouseenter={() => handle_interaction(img_id)}>
+<div on:mouseenter={(e) => handle_interaction(img_id)}
+    on:keydown={(e) => handle_interaction(img_id)}
+    on:click={(e) => handle_interaction(img_id)}
+    >
     <img alt={"" + img_id} src="/t/{img_id}" />
-    {img_id}<br />
 </div>
