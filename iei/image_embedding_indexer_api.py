@@ -10,7 +10,7 @@ import image_embedding_indexer
 
 print("Starting")
 
-iei = image_embedding_indexer.ImageEmbeddingIndexer("../data/image_embedding_indexes")
+iei = image_embedding_indexer.ImageEmbeddingIndexer("./data/image_embedding_indexes")
 app = FastAPI()
 hdrs = {'Cache-Control': f'public, max-age={60*60*24*365}'}
 hdrs = {'Cache-Control': f'public, max-age={60*5}'}
@@ -130,7 +130,9 @@ async def test(img_id:Optional[int],
     fh = None
     q: list[list[float] | np.ndarray] | None = None
     if t == 'face':
+        print(img_id)
         ia = iei.get_insightface_analysis(img_id)
+        print("here ia is ",ia)
         if isinstance(ia,list):
             q = [x['embedding'] for x in ia]
             fh = iei.face_faiss_helper

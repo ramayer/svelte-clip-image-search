@@ -4,12 +4,18 @@ console.log("============== +page.server.ts")
 
 
 async function query_backend(q:string) {
-    let base_url = 'http://192.168.12.110:8000/similar_images/?';
+    let base_url = 'http://localhost:8000/similar_images/?';
     let params = new URLSearchParams({
         q: q
     })
-    let url = 'http://192.168.12.110:8000/similar_images/1';
-    let resp:number[][][] = await fetch(url).then(r => r.json())
+    let url = 'http://localhost:8000/similar_images/1';
+    let resp:number[][][] = await fetch(url).then((r) => {
+        if (r.ok) {
+            return r.json()
+        } else {
+            return [[[0,0],[0,0]]]
+        }
+    })
     console.log('query_backend for ',url,' returned ',resp)
     return resp;
 }
