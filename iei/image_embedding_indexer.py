@@ -50,6 +50,7 @@ if check_imports := False:
         print("you might want to")
         print("pip install torchvision open_clip_torch transformers autofaiss insightface onnxruntime")
 
+
 # get_ipython().run_line_magic('pip', 'install torchvision open_clip_torch transformers autofaiss insightface onnxruntime >& /tmp/pip.out')
 
 
@@ -92,9 +93,7 @@ import time
 import torch
 import zlib
 
-
 # In[322]:
-
 
 @dataclasses.dataclass
 class ImgData():
@@ -121,7 +120,7 @@ class ImgMetadata():
 # In[323]:
 
 
-os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+#os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 #os.environ['CUDA_VISIBLE_DEVICES'] = ''
 class OpenClipWrapper:
     def __init__(self,model_name='ViT-B-32-quickgelu',pretrained='laion400m_e32',device='cpu'):
