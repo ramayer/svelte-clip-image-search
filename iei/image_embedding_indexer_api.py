@@ -66,7 +66,7 @@ async def similar_images(img_id:int, response:fastapi.Response, k:Optional[int]=
   response.headers.update(hdrs)
   print(f"here response headers is {response.headers}")
   query = iei.get_openclip_embedding(img_id)
-  if query.any():
+  if query and query.any():
     res = iei.clip_faiss_helper.search(np.stack([query]),k or 400)
     r3 = orjson.loads(orjson.dumps(res,option=orjson.OPT_SERIALIZE_NUMPY))
     return r3
