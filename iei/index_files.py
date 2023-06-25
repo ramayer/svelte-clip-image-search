@@ -14,8 +14,8 @@ def get_file_uri(file_path):
     return uri
 
 def process_file(f):
-    img_uri = get_file_uri(f)
-    src_uri = src_uri
+    src_uri = get_file_uri(f)
+    img_uri = src_uri
     title = f
     x = iei.preprocess_img(img_uri,src_uri,title,None,"{}")
 
@@ -44,7 +44,7 @@ def list_files(files, recurse=False, fileformat=None):
                     if not is_likely_image(filepath):
                         continue
                 print(filepath)
-                process_file(f)
+                process_file(filepath)
         else:
             if os.path.exists(file) and (fileformat is None or file.endswith(f".{fileformat}")):
                 print(file)
@@ -52,7 +52,7 @@ def list_files(files, recurse=False, fileformat=None):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
-        usage="%(prog)s -r -r ~/tmp/'*pics*/**/2010-07-23' 
+        usage="%(prog)s -r ~/tmp/'*pics*/**/2010-07-23'"
     )
     parser.add_argument('files', nargs='+', help='Files to list')
     parser.add_argument('-r', '--recurse', action='store_true', help='Enable recursion')

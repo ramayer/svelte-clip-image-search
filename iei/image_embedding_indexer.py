@@ -357,9 +357,12 @@ class ImgHelper:
             mtime  = email.utils.parsedate_to_datetime(mtime_h) if mtime_h else None
             img_bytes = resp.content
         else:
-            mtime = datetime.datetime.fromtimestamp(os.path.getmtime(uri),
+            filepath = re.sub(r'^file://','',uri)
+            print("reading ",filepath)
+
+            mtime = datetime.datetime.fromtimestamp(os.path.getmtime(filepath),
                                                     tz=datetime.timezone.utc)
-            with open(uri,"rb") as f:
+            with open(filepath,"rb") as f:
                 img_bytes = f.read()
         if not mtime:
             mtime = datetime.datetime.now()
@@ -373,14 +376,15 @@ class ImgHelper:
 
     def make_thm(self,img:Image.Image,max_w=256,max_h=1024) -> Image.Image:
         # TODO - consider if it needs: 
+        #  - yes, it does need it.
         t_img        = ImageOps.exif_transpose(img)
-        img_w,img_h  = img.size
+        img_w,img_h  = t_img.size
         wscale       = max_w / img_w
         hscale       = max_h / img_h
         scale        = min([1,wscale,hscale])
         t_w          = round(img_w * scale)
         t_h          = round(img_h * scale)
-        return img.resize((t_w,t_h), Image.Resampling.LANCZOS)
+        return t_img.resize((t_w,t_h), Image.Resampling.LANCZOS)
     
         #import torchvision.transforms.functional as F
         #i2 = img.convert("RGBA")
@@ -500,7 +504,8 @@ class ImageEmbeddingIndexer:
                  imgidx_path="./data/image_embedding_indexes", 
                  clip_model=('ViT-B-32-quickgelu','laion400m_e32'),
                  thm_size = (320,640),
-                 device='cpu'):
+                 device='cpu',
+                 debug=True):
         #configure_sqlite3()
         os.makedirs(imgidx_path , exist_ok=True)
         self.imgidx_path       = imgidx_path
@@ -509,7 +514,7 @@ class ImageEmbeddingIndexer:
         self.thm_size          = thm_size
         self.metadata_db       = sqlite3.connect(f"{imgidx_path}/img_metadata.sqlite3")
         self.img_helper        = ImgHelper()
-        self.debug             = False
+        self.debug             = debug
         
         # attributes of pointers to the image
         create_img_metadata_sql="""
@@ -802,6 +807,10 @@ class ImageEmbeddingIndexer:
         clip = self.get_openclip_embedding(img_id)
         face  = self.get_insightface_analysis(img_id)
         need_image = (thm is None) or (clip is None) or (face is None)
+        if not need_image:
+            print(f"{img_id} was already done")
+            return
+
         if need_image and (img is None):
             if self.debug:
                 print(f"{img_id} needed image: {(thm is None)} or {(clip is None)} or {(face is None)}")

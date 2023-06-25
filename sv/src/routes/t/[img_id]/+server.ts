@@ -9,7 +9,8 @@ export const GET = (async ({ setHeaders, url, params }) => {
     //console.log("t",img_id,params)
     //try {
         //const img_url = 'https://picsum.photos/302'
-        const img_url = `http://192.168.12.110:8000/thm/${img_id}`
+        //const img_url = `http://192.168.12.110:8000/thm/${img_id}`
+        const img_url = `http://localhost:8000/thm/${img_id}`
 
         const img_res = await fetch(img_url)
         const img_abuf = await img_res.arrayBuffer();

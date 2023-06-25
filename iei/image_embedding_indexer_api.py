@@ -1,6 +1,16 @@
 #!/usr/bin/env python
 #
 # see localhost:8000/docs
+#
+#   Search syntax:
+#
+#      zebra -mammal +fish
+#      clip:1234
+#      "cats and dogs" -""
+#
+#      face:4321.2
+#      text:"hello world"
+#      around:1234
 
 
 from typing import Optional, Union
@@ -15,7 +25,6 @@ app = FastAPI()
 hdrs = {'Cache-Control': f'public, max-age={60*60*24*365}'}
 hdrs = {'Cache-Control': f'public, max-age={60*5}'}
 
-
 #####################################################################
 #
 #####################################################################
@@ -28,14 +37,6 @@ async def initialize_large_models():
 @app.get("/")
 async def home():
     return {"Hello": "World"}
-
-# @app.get("/items/{item_id}")
-# def read_item(item_id: int, q: Union[str, None] = None):
-#     return {"item_id": item_id, "q": q}
-
-# @app.get("/items/{item_id}")
-# def read_item(item_id: int, q: Union[str, None] = None):
-#     return {"item_id": item_id, "q": q}
 
 
 import orjson
