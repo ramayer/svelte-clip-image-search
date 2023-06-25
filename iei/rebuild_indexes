@@ -1,0 +1,6 @@
+#!/usr/bin/env python
+
+import image_embedding_indexer
+iei=image_embedding_indexer.ImageEmbeddingIndexer(device='cpu')
+iei.make_all_faiss_indexes()
+
