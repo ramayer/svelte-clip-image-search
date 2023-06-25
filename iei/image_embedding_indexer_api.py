@@ -56,6 +56,21 @@ async def thm(img_id:int, size:int=400):
               <circle cx="50%" cy="50%" r="25%" fill="#222"/>
               </svg>'''
      return fastapi.Response(svg,media_type="image/svg+xml", headers=hdrs)
+  
+
+@app.get("/img/{img_id}")
+async def img(img_id:int, size:int=400):
+  hdrs = {'Cache-Control': 'public, max-age=0'}
+  metadata = iei.get_metadata(img_id)
+  if not metadata:
+     raise fastapi.HTTPException(status_code=500, detail=f"no metdata for {img_id}")
+  img,_,_ = iei.img_helper.fetch_img(metadata.img_uri)
+  if not img:
+     raise fastapi.HTTPException(status_code=500, detail=f"can't load image for {img_id}")
+  buf = io.BytesIO()
+  thm.save(buf,format="WebP",quality=90)
+  return fastapi.Response(content = buf.getvalue(), headers = hdrs, media_type="image/webp")
+
 
 from fastapi.responses import ORJSONResponse
 
