@@ -2,25 +2,27 @@ import type {PageServerLoad} from './$types';
 
 console.log("============== +page.server.ts")
 
-
+interface ResponseData {
+    imgids: number[];
+    scores: number[];
+  }
+  
 async function query_backend(q:string) {
-    let base_url = 'http://localhost:8000/similar_images/?';
+    let base_url = 'http://localhost:8000/search/?';
     let params = new URLSearchParams({
         q: q
     })
-    let url = 'http://localhost:8000/similar_images/1';
-    let resp:number[][][] = await fetch(url).then((r) => {
+    let url = base_url + params;
+    let resp:ResponseData = await fetch(url).then((r) => {
         if (r.ok) {
             return r.json()
         } else {
-            return [[[0,0],[0,0]]]
+            return {imgids:[1,2,3],scores:[3,2,1]}
         }
     })
     console.log('query_backend for ',url,' returned ',resp)
     return resp;
 }
-
-
 
 export const load = (async (event) => {
     console.log("============== +page.server.ts load")
@@ -29,7 +31,7 @@ export const load = (async (event) => {
     console.log('q',q);
     if (q) {
        let result = query_backend(q)
-       let ids = (await result)[0].map((x)=> x[1])
+       let ids = (await result).imgids
        console.log("here ids",ids)
        return {
             q: q,

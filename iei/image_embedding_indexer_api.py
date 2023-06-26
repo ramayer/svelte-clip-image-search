@@ -15,6 +15,8 @@
 
 from typing import Optional, Union
 from fastapi import FastAPI
+from pydantic import BaseModel
+
 import fastapi
 import image_embedding_indexer
 
@@ -45,7 +47,7 @@ import time
 @app.get("/thm/{img_id}")
 async def thm(img_id:int, size:int=400):
   hdrs = {'Cache-Control': 'public, max-age=0'}
-  time.sleep(0.1)
+  #time.sleep(0.1)
   if thm := iei.get_thm(img_id):
     buf = io.BytesIO()
     thm.save(buf,format="WebP",quality=50)
@@ -63,12 +65,12 @@ async def img(img_id:int, size:int=400):
   hdrs = {'Cache-Control': 'public, max-age=0'}
   metadata = iei.get_metadata(img_id)
   if not metadata:
-     raise fastapi.HTTPException(status_code=500, detail=f"no metdata for {img_id}")
+     raise fastapi.HTTPException(status_code=404, detail=f"no metdata for {img_id}")
   img,_,_ = iei.img_helper.fetch_img(metadata.img_uri)
   if not img:
-     raise fastapi.HTTPException(status_code=500, detail=f"can't load image for {img_id}")
+     raise fastapi.HTTPException(status_code=404, detail=f"can't load image for {img_id}")
   buf = io.BytesIO()
-  thm.save(buf,format="WebP",quality=90)
+  img.save(buf,format="WebP",quality=90)
   return fastapi.Response(content = buf.getvalue(), headers = hdrs, media_type="image/webp")
 
 
@@ -109,7 +111,28 @@ async def instightface_analysis(img_id:int, size:Optional[int]=400):
 
 #####################################################################
 
-from pydantic import BaseModel
+
+class SearchResults(BaseModel):
+    imgids: list[int]
+    scores: list[int]
+
+@app.get("/search")
+async def search(q: Optional[str] = None, iid: Optional[int] = None, type: Optional[str] = None):
+    # Process the parameters and generate response data
+    # Replace this with your actual implementation
+    results = None
+    if q:
+       emb = iei.ocw.txt_embeddings([q])
+       fh = iei.clip_faiss_helper 
+       results = fh.search(emb,k=1000)
+    if results:
+        response_data = SearchResults(imgids=results[0].imgids, 
+                                      scores=[max(int(s*1000),-999) for s in results[0].scores])
+        return response_data
+    
+
+#####################################################################
+
 class ImgModel(BaseModel):
     imgs: list[str] | None
 class EmbModel(BaseModel):
@@ -166,11 +189,12 @@ async def test(img_id:Optional[int],
        return """<div>nothing found</div>"""
 
     res = fh.search(np.stack(q),k or 5)
-    r3 = orjson.loads(orjson.dumps(res,option=orjson.OPT_SERIALIZE_NUMPY))
+    #r3 = orjson.loads(orjson.dumps(res,option=orjson.OPT_SERIALIZE_NUMPY))
+    
     
     results = []
-    for a in r3:
-      for scr,idx in a:
+    for a in res:
+      for scr,idx in zip(a.scores,a.imgids):
             h = f"""<div>
                 <img loading="lazy" src='/thm/{idx}'/><br>
                 {scr:.2f}

@@ -274,8 +274,16 @@ class SimpleSqliteKVStore(collections.abc.MutableMapping):
 # In[326]:
 
 
+from dataclasses import dataclass
+from typing import List
+
 class FaissHelper:
-    
+
+    @dataclass
+    class SearchResult:
+        scores: list[float]
+        imgids: list[int]
+
     def __init__(self,prefix:str):
         self.index_path = f"{prefix}.faiss"
         self.id_path    = f"{self.index_path}.id_lookup.txt.gz"
@@ -291,12 +299,15 @@ class FaissHelper:
     def search_without_index(self,targets,ids,embs,k=10):
         results = []
         for target in targets:
-            scores = (np.stack(embs) @ target.T)#[:,0]
-            result = sorted(zip(scores,ids),key=lambda x:-x[0])[0:k]
+            unsorted_scores = (np.stack(embs) @ target.T)#[:,0]
+            result_pairs= sorted(zip(unsorted_scores,ids),key=lambda x:-x[0])[0:k]
+            scores = [rp[0] for rp in result_pairs]
+            imgids = [rp[1] for rp in result_pairs]
+            result = FaissHelper.SearchResult(scores=scores,imgids = imgids)
             results.append(result)
         return results
     
-    def search(self,target,k=10):
+    def search(self,target,k=10) -> list['FaissHelper.SearchResult']:
         idl = self.id_lookup
         print("SHAPE=",idl.shape)
         if idl.shape == ():
@@ -306,9 +317,9 @@ class FaissHelper:
         results = []
         for drow,irow in zip(dsts,idxs):
             scores = [float(d) for d in drow]
-            ids     = [idl[i] for i in irow]
-            result = zip(scores,ids)
-            results.append(list(result))
+            imgids = [idl[i] for i in irow]
+            result = FaissHelper.SearchResult(scores=scores,imgids = imgids)
+            results.append(result)
         return results
         
     def normalize(self,v):
@@ -330,6 +341,8 @@ class FaissHelper:
                      )
         img_id_np = np.array(ids,dtype=np.int32)
         np.savetxt(self.id_path, img_id_np, fmt='%d')
+
+        print(f"image_id_path should be at {self.id_path}")
         self.load()
         return   
         ####  other id lookup alternatives
@@ -825,7 +838,7 @@ class ImageEmbeddingIndexer:
         t2 = time.time()
         if clip is None:  self.set_openclip_embedding(img_id,img)
         t3 = time.time()
-        if face is None:  self.set_insightface_analysis(img_id,img)
+        #if face is None:  self.set_insightface_analysis(img_id,img)
         t4 = time.time()
         if self.debug:
             print(t1-t0,t2-t1,t3-t2,t4-t3)

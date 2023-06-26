@@ -4,7 +4,9 @@
 </script>
 {#if selected_img}
 <div class="fixed bottom-1 right-1 h-[40vh] w-[50vw] bg-black ...">
-    ResultDetail for {selected_img}
-    <img alt={"" + selected_img} src="/i/{selected_img}" />
+    ResultDetail for {selected_img}z
+    <img alt={"" + selected_img} 
+         style="max-height:40vh"
+         src="/i/{selected_img}" />
 </div>
 {/if}
