@@ -9,8 +9,8 @@
     let q = $page.url.searchParams.get("q");
     let min_cols = 1;
     let max_cols = 20;
-    let cols = 10;
-    let inv_cols = max_cols - cols;
+    let cols = 7;
+    let inv_cols = max_cols - cols + 1;
 
     $: cols_store.set(max_cols - inv_cols + min_cols)
     let questions = [
@@ -25,19 +25,20 @@
 
 <form>
     <div
-        class="p-2 flex w-full [&>*]:bg-gray-900 [&>*]:border-gray-600 [&>*]:border"
+        class="p-1 pr-3 rounded-2xl flex w-full bg-transparent [&>*]:bg-gray-900 [&>*]:border-gray-500 [&>*]:border"
     >
         <div class="rounded-l-lg p-1">
             <a href="/" class="inline-block" style="transform: rotate(45deg);"
                 >⚲</a
             >
         </div>
+        <div class="inline-flex flex-grow">
         <input
             type="search"
             name="q"
             bind:value={q}
-            class="inline-flex flex-grow p-1"
-        />
+            class="inline-flex flex-grow p-1 bg-gray-800"
+        /></div>
         <select bind:value={selected} on:change={() => (answer = "")} class="">
             {#each questions as question}
                 <option value={question}>
@@ -45,11 +46,11 @@
                 </option>
             {/each}
         </select>
+        <label style="padding-top:5px">
+            <input type="range" bind:value={inv_cols} min="{min_cols}" max="{max_cols}" />
+        </label>
         <button type="submit" class="rounded-r-lg">
             <div class="inline-flex">&nbsp;👀&nbsp;</div>
         </button>
-        <label style="border:0px; padding-top:5px">
-            <input type="range" bind:value={inv_cols} min="{min_cols}" max="{max_cols}" />
-        </label>
     </div>
 </form>

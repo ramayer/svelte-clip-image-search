@@ -14,10 +14,13 @@ def get_file_uri(file_path):
     return uri
 
 def process_file(f):
-    src_uri = get_file_uri(f)
-    img_uri = src_uri
-    title = f
-    x = iei.preprocess_img(img_uri,src_uri,title,None,"{}")
+    try:
+        src_uri = get_file_uri(f)
+        img_uri = src_uri
+        title = f
+        x = iei.preprocess_img(img_uri,src_uri,title,None,"{}")
+    except Exception as e:
+        print(e)
 
 def is_likely_image(file_path):
    image_extensions = [

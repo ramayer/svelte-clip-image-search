@@ -16,7 +16,7 @@
     let s_state = 0;
 
     export let data: PageData;
-    let cols = 20;
+    let cols = 7;
 
     let debug = "";
     const url = $page.url; // this will stay as the original value of the url
@@ -39,7 +39,7 @@
     $: console.log("+page.svelte q", q);
 </script>
 
-<div class="fixed top-1 left-1 w-full bg-black ...">
+<div class="fixed top-1 left-1 w-full pr-2">
     <SearchForm />
 </div>
 <div class="h-16" />
@@ -48,4 +48,6 @@
     Debug = {s_img}, {s_state}
 </div>
 <ResultList results={data} {cols}>hi</ResultList>
+{#if cols>4}
 <ResultDetail selected_img={s_img} selected_state={s_state} />
+{/if}

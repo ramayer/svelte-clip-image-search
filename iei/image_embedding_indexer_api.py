@@ -66,12 +66,10 @@ async def img(img_id:int, size:int=400):
   metadata = iei.get_metadata(img_id)
   if not metadata:
      raise fastapi.HTTPException(status_code=404, detail=f"no metdata for {img_id}")
-  img,_,_ = iei.img_helper.fetch_img(metadata.img_uri)
-  if not img:
+  img,_,_,img_bytes = iei.img_helper.fetch_img(metadata.img_uri)
+  if not img_bytes:
      raise fastapi.HTTPException(status_code=404, detail=f"can't load image for {img_id}")
-  buf = io.BytesIO()
-  img.save(buf,format="WebP",quality=90)
-  return fastapi.Response(content = buf.getvalue(), headers = hdrs, media_type="image/webp")
+  return fastapi.Response(content = img_bytes, headers = hdrs, media_type="image/webp")
 
 
 from fastapi.responses import ORJSONResponse
@@ -124,7 +122,7 @@ async def search(q: Optional[str] = None, iid: Optional[int] = None, type: Optio
     if q:
        emb = iei.ocw.txt_embeddings([q])
        fh = iei.clip_faiss_helper 
-       results = fh.search(emb,k=1000)
+       results = fh.search(emb,k=5000)
     if results:
         response_data = SearchResults(imgids=results[0].imgids, 
                                       scores=[max(int(s*1000),-999) for s in results[0].scores])

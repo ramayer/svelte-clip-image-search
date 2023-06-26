@@ -363,7 +363,7 @@ class FaissHelper:
 
 class ImgHelper:
         
-    def fetch_img(self,uri) -> tuple[Image.Image,ImgData,datetime.datetime]:
+    def fetch_img(self,uri) -> tuple[Image.Image,ImgData,datetime.datetime,bytes]:
         if re.match(r'^https?:',uri):
             resp = requests.get(uri)
             mtime_h = resp.headers.get('Last-Modified')
@@ -372,7 +372,6 @@ class ImgHelper:
         else:
             filepath = re.sub(r'^file://','',uri)
             print("reading ",filepath)
-
             mtime = datetime.datetime.fromtimestamp(os.path.getmtime(filepath),
                                                     tz=datetime.timezone.utc)
             with open(filepath,"rb") as f:
@@ -385,7 +384,7 @@ class ImgHelper:
         sha224   = base64.b85encode(hashlib.sha224(img_bytes).digest()).decode('utf-8')
         w,h      = img.size
         img_data = ImgData(None,sha224,w,h,bytesize,mtime,mimetype)
-        return (img, img_data, mtime)
+        return (img, img_data, mtime,img_bytes)
 
     def make_thm(self,img:Image.Image,max_w=256,max_h=1024) -> Image.Image:
         # TODO - consider if it needs: 
@@ -414,9 +413,9 @@ class ImgHelper:
     
     def get_data_url(self,url: str) -> str|None:
         try:
-            i,d,m = self.fetch_img(url)
-            t = self.make_thm(i)
-            b = self.img_bytes(t)
+            i,d,m,b = self.fetch_img(url)
+            #t = self.make_thm(i)
+            #b = self.img_bytes(t)
             u = self.bytes_to_data_url(b)
             return u
         except:

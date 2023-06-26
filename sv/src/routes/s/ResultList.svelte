@@ -158,7 +158,7 @@
         {/each}
     {/if}
 </div>
-<div id="result_summary_element" bind:this={result_summary_element}>
+<div id="result_summary_element" class="h-[50vh]" bind:this={result_summary_element}>
     result summary
 </div>
 
