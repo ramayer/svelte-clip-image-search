@@ -42,11 +42,8 @@
 <div class="fixed top-1 left-1 w-full pr-2">
     <SearchForm />
 </div>
-<div class="h-16" />
+<div class="h-12" />
 
-<div>
-    Debug = {s_img}, {s_state}
-</div>
 <ResultList results={data} {cols}>hi</ResultList>
 {#if cols>4}
 <ResultDetail selected_img={s_img} selected_state={s_state} />
