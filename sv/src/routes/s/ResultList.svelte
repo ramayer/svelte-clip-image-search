@@ -89,7 +89,8 @@
     }
 
     let more_images_are_loading = false;
-    function try_adding_images() {
+    async function try_adding_images() {
+        await tick()
         if (num_visible > num_available) {
             console.log("try_adding_images: no more available");
             return;
