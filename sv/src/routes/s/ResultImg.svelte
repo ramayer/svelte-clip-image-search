@@ -9,6 +9,13 @@
         selected_img.set('');
         await tick()
 		selected_img.set(r);
+        return true;
+    }
+
+    async function handle_click(r:string) {
+        selected_img.set('');
+        await tick()
+        selected_img.set(r);
         selected_state.update(n => n + 1);
         return true;
     }
@@ -17,7 +24,7 @@
 
 <div on:mouseenter={(e) => handle_interaction(img_id)}
     on:keydown={(e) => handle_interaction(img_id)}
-    on:click={(e) => handle_interaction(img_id)}
+    on:click={(e) => handle_click(img_id)}
     >
     <img alt={"" + img_id} src="/t/{img_id}" />
 </div>

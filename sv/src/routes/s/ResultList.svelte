@@ -17,7 +17,7 @@
     $: console.log("ResultList.svetle imgs", imgs);
     // $: console.log("ResultList.svetle results", results && results["ids"]);
 
-    let observer:IntersectionObserver|null; 
+    let observer: IntersectionObserver | null;
     let result_grid_element: Element | null = null;
 
     ///////////////////////////////////////////////////////////////////////////////
@@ -39,34 +39,36 @@
         return ic;
     }
 
-    async function update_observers(col_data:number[][]){
-        await tick()
-        observer?.disconnect()
+    async function update_observers(col_data: number[][]) {
+        await tick();
+        observer?.disconnect();
+        await tick();
         if (result_summary_element) {
-            observer?.observe(result_summary_element)
+            //observer?.observe(result_summary_element)
         }
-        let column_footers = result_grid_element?.querySelectorAll(".column_footer")
-        let col_count=0;
+        let column_footers =
+            result_grid_element?.querySelectorAll(".column_footer");
+        let col_count = 0;
         column_footers?.forEach((f) => {
-            console.log("adding another observer")
-            observer?.observe(f)
-            col_count ++
+            console.log("adding another observer", f);
+            observer?.observe(f);
+            col_count++;
         });
         if (col_data.length != col_count) {
-            console.log("unexpected column count")
+            console.log("unexpected column count");
         }
     }
     $: img_cols = organize_images_into_columns(imgs, cols, num_visible);
-    $: update_observers(img_cols)
-    $: attempt_reducing_num_visible_images(cols)
+    $: attempt_reducing_num_visible_images(cols);
+    $: update_observers(img_cols);
     ///////////////////////////////////////////////////////////////////////////////
     // Observe if more images are needed
     let visibility_of_column_bottoms = 0;
     let result_summary_element: Element | null = null;
 
-    function attempt_reducing_num_visible_images(c:number) {
+    function attempt_reducing_num_visible_images(c: number) {
         // TODO - get the old code
-        num_visible = c*2;
+        num_visible = c * 2;
     }
 
     function wait_for_all_images_to_load(f: () => void) {
@@ -100,30 +102,42 @@
             console.log("try_adding_images: bottom isn't visible");
             return;
         }
+        console.log("increasing num_visible from ", num_visible);
         num_visible += 1;
         more_images_are_loading = true;
         wait_for_all_images_to_load(async () => {
             await tick();
-            console.log("try_adding_images: images loaded so checking again")
+            console.log("try_adding_images: images loaded so checking again");
             more_images_are_loading = false;
-            try_adding_images();
+            setTimeout(() => {
+                try_adding_images();
+            }, 100);
         });
     }
 
     function check_if_bottom_is_visible(entries: any[]) {
         let visibility = 0;
         entries.forEach(function (item) {
+            console.log("X");
             visibility += item.intersectionRatio;
         });
         visibility_of_column_bottoms = visibility;
         if (visibility_of_column_bottoms) {
             try_adding_images();
         }
-        console.log("column bottoms visibility = ",visibility);
+        console.log("column bottoms visibility = ", visibility);
     }
 
     if (browser) {
-        observer = new IntersectionObserver(check_if_bottom_is_visible);
+        let observer_options = {
+            root: document.querySelector("#scrollArea"),
+            rootMargin: "0px",
+            threshold: 0.01,
+        };
+        observer = new IntersectionObserver(
+            check_if_bottom_is_visible,
+            observer_options
+        );
         onMount(() => {
             if (result_summary_element && observer) {
                 observer.observe(result_summary_element);
@@ -151,14 +165,21 @@
                 {#each c as i}
                     <ResultImg img_id={String(i)} />
                 {/each}
-                <div class="column_footer text-gray-700" style="border:0px">
+                <div
+                    class="column_footer text-gray-700 h-[50vh]"
+                    style="border:0px"
+                >
                     ...
                 </div>
             </div>
         {/each}
     {/if}
 </div>
-<div id="result_summary_element" class="h-[50vh]" bind:this={result_summary_element}>
+<div
+    id="result_summary_element"
+    class="h-[50vh]"
+    bind:this={result_summary_element}
+>
     result summary
 </div>
 

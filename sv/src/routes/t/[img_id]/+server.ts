@@ -1,5 +1,7 @@
 import { error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
+import config from '../../config';
+
 
 export const GET = (async ({ setHeaders, url, params }) => {
 
@@ -10,7 +12,7 @@ export const GET = (async ({ setHeaders, url, params }) => {
     //try {
         //const img_url = 'https://picsum.photos/302'
         //const img_url = `http://192.168.12.110:8000/thm/${img_id}`
-        const img_url = `http://localhost:8000/thm/${img_id}`
+        const img_url = `${config.app_uri}/thm/${img_id}`
 
         const img_res = await fetch(img_url)
         const img_abuf = await img_res.arrayBuffer();

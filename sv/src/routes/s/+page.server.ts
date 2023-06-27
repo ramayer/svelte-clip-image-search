@@ -1,4 +1,6 @@
 import type {PageServerLoad} from './$types';
+import config from '../config';
+
 
 console.log("============== +page.server.ts")
 
@@ -8,7 +10,7 @@ interface ResponseData {
   }
   
 async function query_backend(q:string) {
-    let base_url = 'http://localhost:8000/search/?';
+    let base_url = config.app_uri + '/search/?';
     let params = new URLSearchParams({
         q: q
     })
