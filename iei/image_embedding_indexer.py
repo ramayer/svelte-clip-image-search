@@ -196,12 +196,6 @@ class InsightFaceWrapper:
 # In[ ]:
 
 
-
-
-
-# In[325]:
-
-
 import filelock
 import collections
 import collections.abc
@@ -359,6 +353,12 @@ class FaissHelper:
 
 
 # In[328]:
+
+
+# Fix incorrect mime types for NIKON cameras
+# https://github.com/agschwender/pilbox/issues/34
+from PIL import JpegImagePlugin
+JpegImagePlugin._getmp = lambda x: None # type: ignore
 
 
 class ImgHelper:
@@ -785,7 +785,7 @@ class ImageEmbeddingIndexer:
                 print("surprising error - no image data for metadata")
         
         if not idata:
-            img,idata,mtime = self.img_helper.fetch_img(img_uri)
+            img,idata,mtime,img_bytes = self.img_helper.fetch_img(img_uri)
             if saved_idata := self.get_img_data(idata.sha224):
                 #print(f"already had img_data for {idata.sha224} => {saved_idata.img_id}")
                 idata = saved_idata
@@ -826,7 +826,7 @@ class ImageEmbeddingIndexer:
         if need_image and (img is None):
             if self.debug:
                 print(f"{img_id} needed image: {(thm is None)} or {(clip is None)} or {(face is None)}")
-            img,_,_ = self.img_helper.fetch_img(metadata.img_uri)
+            img,_,_,_ = self.img_helper.fetch_img(metadata.img_uri)
 
         if not img:
             print(f"Error: preprocess_img expected img for {img_uri}")
