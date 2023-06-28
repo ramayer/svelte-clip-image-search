@@ -22,7 +22,8 @@
 
 </script>
 
-<div on:mouseenter={(e) => handle_interaction(img_id)}
+<div
+on:mouseenter={(e) => handle_interaction(img_id)}
     on:keydown={(e) => handle_interaction(img_id)}
     on:click={(e) => handle_click(img_id)}
     >

@@ -46,8 +46,13 @@ import io
 import time
 @app.get("/thm/{img_id}")
 async def thm(img_id:int, size:int=400):
-  hdrs = {'Cache-Control': 'public, max-age=0'}
-  #time.sleep(0.1)
+  hdrs = {'Cache-Control': 'public, max-age=300'}
+  debug_no_cache_hdrs = {
+     'Cache-Control': 'no-cache, no-store, must-revalidate',
+    'Pragma': 'no-cache',
+    'Expires': '0',
+    }
+  time.sleep(0.02)
   if thm := iei.get_thm(img_id):
     buf = io.BytesIO()
     thm.save(buf,format="WebP",quality=50)

@@ -8,9 +8,13 @@
     import type { PageData } from "./$types";
     import { onMount } from "svelte";
 
+    let top_element: HTMLDivElement;
+
     onMount(() => {
         console.log("s/+page.svelte onMount()");
+        top_element?.scrollIntoView()
     });
+
 
     let s_img = "";
     let s_state = 0;
@@ -42,7 +46,7 @@
 <div class="fixed top-1 left-1 w-full pr-2">
     <SearchForm />
 </div>
-<div class="h-12" />
+<div class="h-12" bind:this={top_element} />
 
 <ResultList results={data} {cols}>hi</ResultList>
 {#if cols>4}
