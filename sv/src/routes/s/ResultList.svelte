@@ -2,6 +2,7 @@
     import ResultImg from "./ResultImg.svelte";
     import { browser } from "$app/environment"; // for infinite scroll
     import { onMount, tick } from "svelte";
+
     export let results: { q: string | null; ids: number[] } | null;
     export let cols = 4;
 
@@ -118,7 +119,7 @@
 
         if (is_any_footer_visible()) {
             console.log("try_adding_images: footer is visible, adding images")
-            num_visible += 1;
+            num_visible += 25;
             await tick // hopefully they get added to the dom here
             setTimeout(() => { // throttle loading wikipedia images about 10/second
                 try_adding_images();

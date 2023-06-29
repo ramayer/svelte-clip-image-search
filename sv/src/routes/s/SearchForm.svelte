@@ -32,7 +32,7 @@
                 >⚲</a
             >
         </div>
-        <div class="inline-flex flex-grow">
+        <div class="flex-grow flex w-10">
         <input
             type="search"
             name="q"
@@ -46,8 +46,10 @@
                 </option>
             {/each}
         </select>
-        <label style="padding-top:5px">
-            <input type="range" bind:value={inv_cols} min="{min_cols}" max="{max_cols}" />
+        <label class="pt-2 flex-shrink">
+            <input type="range" 
+            class="flex-shrink"
+            bind:value={inv_cols} min="{min_cols}" max="{max_cols}" />
         </label>
         <button type="submit" class="rounded-r-lg">
             <div class="inline-flex">&nbsp;👀&nbsp;</div>
