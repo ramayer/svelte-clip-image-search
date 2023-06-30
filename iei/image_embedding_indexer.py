@@ -69,6 +69,8 @@ if check_imports := False:
 
 from PIL import Image,ImageOps
 from contextlib import closing
+from typing import Generator
+
 import autofaiss
 import base64
 import dataclasses
@@ -363,9 +365,17 @@ JpegImagePlugin._getmp = lambda x: None # type: ignore
 
 class ImgHelper:
         
-    def fetch_img(self,uri) -> tuple[Image.Image,ImgData,datetime.datetime,bytes]:
+    def fetch_img(self,uri,headers=None) -> tuple[Image.Image,ImgData,datetime.datetime,bytes]:
+
+        if headers:
+            print(f"using {headers}")
+        else:
+            raise(Exception("headers were missing"))
+            headers = {'User-agent': 
+                      "Clip Embedding Calculator/0.01 (https://github.com/ramayer/wikipedia_in_spark; ) generic-library/0.0"}
+        
         if re.match(r'^https?:',uri):
-            resp = requests.get(uri)
+            resp = requests.get(uri,headers=headers)
             mtime_h = resp.headers.get('Last-Modified')
             mtime  = email.utils.parsedate_to_datetime(mtime_h) if mtime_h else None
             img_bytes = resp.content
@@ -411,9 +421,9 @@ class ImgHelper:
         e = base64.b64encode(b).decode('utf-8')
         return f'data:image/jpg;base64,{e}'
     
-    def get_data_url(self,url: str) -> str|None:
+    def get_data_url(self,url: str,headers=None) -> str|None:
         try:
-            i,d,m,b = self.fetch_img(url)
+            i,d,m,b = self.fetch_img(url,headers=headers)
             #t = self.make_thm(i)
             #b = self.img_bytes(t)
             u = self.bytes_to_data_url(b)
@@ -618,8 +628,8 @@ class ImageEmbeddingIndexer:
         sql = f"select * from img_meta_data where {col}=?"
         for row in db.execute(sql,[key]):
             return ImgMetadata(*row)
-        
-    def get_all_metadata(self,key):
+
+    def get_all_metadata(self,key)  -> Generator[ImgMetadata, None, None]:
         """ key can either be an int (img_id) or a str (img_uri) """
         db  = self.metadata_db
         col = isinstance(key,int) and "img_id" or "img_uri"
@@ -769,7 +779,9 @@ class ImageEmbeddingIndexer:
     def preprocess_img(self, 
                        img_uri, src_uri, 
                        title, subtitle, extra_metadata,
-                       recheck = True):
+                       recheck = True,
+                       headers=None
+                       ):
         
         t0 = time.time()
         
@@ -785,7 +797,7 @@ class ImageEmbeddingIndexer:
                 print("surprising error - no image data for metadata")
         
         if not idata:
-            img,idata,mtime,img_bytes = self.img_helper.fetch_img(img_uri)
+            img,idata,mtime,img_bytes = self.img_helper.fetch_img(img_uri,headers=headers)
             if saved_idata := self.get_img_data(idata.sha224):
                 #print(f"already had img_data for {idata.sha224} => {saved_idata.img_id}")
                 idata = saved_idata
@@ -817,7 +829,7 @@ class ImageEmbeddingIndexer:
 
         thm  = self.get_thm(img_id)
         clip = self.get_openclip_embedding(img_id)
-        face  = self.get_insightface_analysis(img_id)
+        face = self.get_insightface_analysis(img_id)
         need_image = (thm is None) or (clip is None) or (face is None)
         if not need_image:
             print(f"{img_id} was already done")
@@ -826,7 +838,7 @@ class ImageEmbeddingIndexer:
         if need_image and (img is None):
             if self.debug:
                 print(f"{img_id} needed image: {(thm is None)} or {(clip is None)} or {(face is None)}")
-            img,_,_,_ = self.img_helper.fetch_img(metadata.img_uri)
+            img,_,_,_ = self.img_helper.fetch_img(metadata.img_uri,headers=headers)
 
         if not img:
             print(f"Error: preprocess_img expected img for {img_uri}")
@@ -837,7 +849,7 @@ class ImageEmbeddingIndexer:
         t2 = time.time()
         if clip is None:  self.set_openclip_embedding(img_id,img)
         t3 = time.time()
-        #if face is None:  self.set_insightface_analysis(img_id,img)
+        if face is None:  self.set_insightface_analysis(img_id,img)
         t4 = time.time()
         if self.debug:
             print(t1-t0,t2-t1,t3-t2,t4-t3)

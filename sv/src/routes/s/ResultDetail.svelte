@@ -8,8 +8,10 @@
 
 <div class="fixed rounded-2xl bottom-1 right-1 h-[{vh}] w-[{vw}] bg-black ...">
     ResultDetail for {selected_img} {selected_state}
+    {#if selected_img}
     <img alt={"" + selected_img} 
     class="m-auto"
          style="max-height: calc(50vh - 30px); max-width: calc(50vw - 30px)"
          src="/i/{selected_img}" />
+         {/if}
 </div>

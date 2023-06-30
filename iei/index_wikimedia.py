@@ -32,75 +32,89 @@
 
 import PIL as pillow
 import argparse
-import clip
-import clip.model
+#import clip
+#import clip.model
 import datetime
 import io
 import mwclient
-import numpy as np
+#import numpy as np
 import re
 import requests
-import sqlite3
+#import sqlite3
 import sys
-import torch
-import torch.nn
-import filelock
-lock = filelock.FileLock('/tmp/index_wikipedia.lock',timeout=10)
+#import torch
+#import torch.nn
+#import filelock
+#lock = filelock.FileLock('/tmp/index_wikipedia.lock',timeout=10)
 
 # get db
 parser                    = argparse.ArgumentParser()
-default_db                = './wikimedia_images.sqlite3'
-parser.add_argument('--db','-d',default=str(default_db),help="path to rclip's database")
+
+imgidx_path="./data/image_embedding_indexes", 
+
+parser.add_argument('--iei_path','-d',default=str(imgidx_path),help="path to iei database")
 args,unk                  = parser.parse_known_args()
 
-def create_table(dbname):
-    sql = '''
-        CREATE TABLE IF NOT EXISTS images (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        deleted BOOLEAN,
-        filepath TEXT NOT NULL UNIQUE,
-        modified_at DATETIME,
-        size INTEGER,
-        vector BLOB NOT NULL,
-        wikimedia_descr_url TEXT,
-        wikimedia_thumb_url TEXT
-      )
-    '''
-    with sqlite3.connect(dbname) as con:
-        con.execute(sql)
-        con.commit()
 
-def get_already_processed_images(dbname):
-    sql = '''select wikimedia_descr_url from images'''
-    with sqlite3.connect(dbname) as con:
-        con.row_factory = sqlite3.Row
-        return set([row['wikimedia_descr_url'] for row in con.execute(sql)])
+
+import image_embedding_indexer
+iei=image_embedding_indexer.ImageEmbeddingIndexer(device='cpu')
+
+
+# def create_table(dbname):
+#     sql = '''
+#         CREATE TABLE IF NOT EXISTS images (
+#         id INTEGER PRIMARY KEY AUTOINCREMENT,
+#         deleted BOOLEAN,
+#         filepath TEXT NOT NULL UNIQUE,
+#         modified_at DATETIME,
+#         size INTEGER,
+#         vector BLOB NOT NULL,
+#         wikimedia_descr_url TEXT,
+#         wikimedia_thumb_url TEXT
+#       )
+#     '''
+#     with sqlite3.connect(dbname) as con:
+#         con.execute(sql)
+#         con.commit()
+
+# def get_already_processed_images(dbname):
+#     imd:list[image_embedding_indexer.ImgMetadata] =  iei.get_all_metadata()
+#     src_uris = [z.src_uri for z in imd]
+#     img_uris = [z.img_uri for z in imd]
+#     return img_uris
+    
+    # sql = '''select wikimedia_descr_url from images'''
+    # with sqlite3.connect(dbname) as con:
+    #     con.row_factory = sqlite3.Row
+    #     return set([row['wikimedia_descr_url'] for row in con.execute(sql)])
         
 def check_pic(dbname,descr_url):
-    sql = '''select wikimedia_descr_url from images where wikimedia_descr_url == :descr_url'''
-    with sqlite3.connect(dbname) as con:
-        con.row_factory = sqlite3.Row
-        rows = list(con.execute(sql,{'descr_url':descr_url}))
-        return rows
+    return iei.get_metadata(descr_url)
+    # sql = '''select wikimedia_descr_url from images where wikimedia_descr_url == :descr_url'''
+    # with sqlite3.connect(dbname) as con:
+    #     con.row_factory = sqlite3.Row
+    #     rows = list(con.execute(sql,{'descr_url':descr_url}))
+    #     return rows
 
-def save_image(dbname,descr_url:str, thm_url:str, clip_embedding:np.ndarray,size):
-    clip_embedding_asbytes = clip_embedding.tobytes()
-    sql = '''
-      INSERT INTO images(filepath, wikimedia_descr_url, wikimedia_thumb_url, vector, size)
-      VALUES (:filepath, :wikimedia_descr_url, :wikimedia_thumb_url, :vector, :size)
-      ON CONFLICT(filepath) DO UPDATE SET
-        vector=:vector
-    '''
-    with lock:
-        with sqlite3.connect(dbname) as con:
-            con.execute(sql, {
-                       'filepath'            : descr_url,
-                       'wikimedia_descr_url' : descr_url,
-                       'wikimedia_thumb_url' : thm_url,
-                       'vector'              : clip_embedding_asbytes,
-                       'size'                : size
-                       })
-            con.commit()
+# def save_image(dbname,descr_url:str, thm_url:str, clip_embedding:np.ndarray,size):
+#     clip_embedding_asbytes = clip_embedding.tobytes()
+#     sql = '''
+#       INSERT INTO images(filepath, wikimedia_descr_url, wikimedia_thumb_url, vector, size)
+#       VALUES (:filepath, :wikimedia_descr_url, :wikimedia_thumb_url, :vector, :size)
+#       ON CONFLICT(filepath) DO UPDATE SET
+#         vector=:vector
+#     '''
+#     with lock:
+#         with sqlite3.connect(dbname) as con:
+#             con.execute(sql, {
+#                        'filepath'            : descr_url,
+#                        'wikimedia_descr_url' : descr_url,
+#                        'wikimedia_thumb_url' : thm_url,
+#                        'vector'              : clip_embedding_asbytes,
+#                        'size'                : size
+#                        })
+#             con.commit()
 
 def get_images_in_category(category_name):
     site = mwclient.Site('commons.wikimedia.org')
@@ -108,13 +122,13 @@ def get_images_in_category(category_name):
     images = (x for x in category.members() if isinstance(x,mwclient.image.Image))
     return images
 
-clip_model, clip_preprocess = clip.load('ViT-B/32','cpu')
+#clip_model, clip_preprocess = clip.load('ViT-B/32','cpu')
 
 # https://meta.wikimedia.org/wiki/User-Agent_policy
 wikimedia_api_headers = {'User-agent': 
-                         "OpenAI Clip Embedding Calculator/0.0 (https://github.com/ramayer/wikipedia_in_spark; ramayer+git@gmail.com) generic-library/0.0"}
+                         "Clip Embedding Calculator/0.01 (https://github.com/ramayer/wikipedia_in_spark; ramayer+git@gmail.com) generic-library/0.0"}
 
-def process_image(image_url,descr_url):
+def get_thm_url(image_url,descr_url):
     if (image_url.endswith('.svg') or 
         image_url.endswith('.webm') or
         image_url.endswith('.stl') or
@@ -123,79 +137,92 @@ def process_image(image_url,descr_url):
         image_url.endswith('.ogv')
         ):
         print(f"can't handle non-pillow.Image image types like {image_url} yet")
-        return(None,None,None,None)
+        return(None)
     ext = re.sub(r'.*\.','',image_url)
     if ext.lower() not in {'jpg', 'jpeg', 'JPG', 'PNG', 'JPEG', 'png', 'gif'}:
         print(f"not sure if it can handle image types like {image_url} yet")
-        return(None,None,None,None)
+        return(None)
     print(' ',datetime.datetime.now().isoformat(),image_url,descr_url)
     sys.stdout.flush()
     url_suffix   = re.sub(r'.*/','',image_url)
     thm_url      = re.sub('/commons/','/commons/thumb/',image_url) + '/600px-' + url_suffix
+    return thm_url
     headers      = wikimedia_api_headers
-    response     = requests.get(thm_url,headers=headers)
-    content      = response.content
+    #response     = requests.get(thm_url,headers=headers)
+    #content      = response.content
     try:
-        pil_img      = pillow.Image.open(io.BytesIO(content))
+        #pil_img      = pillow.Image.open(io.BytesIO(content))
+        return thm_url,pil_img
     except Exception as e:
-        print(e)
-        print(content)
+        print(f"exception {e} with {content} for {image_url}")
+        return None,None
         raise e
 
-    with torch.no_grad():
-        preprocessed = clip_preprocess(pil_img)
-        encoded      = clip_model.encode_image(torch.stack([preprocessed]))
-        norm         = encoded.norm(dim=-1,keepdim=True)
-        normed       = encoded / norm
-    clip_embedding = normed.cpu().numpy()
-    return(descr_url,thm_url,clip_embedding,len(content))
+    print("hey, I should do something around here. with {thm_url}..")
+    # with torch.no_grad():
+    #     preprocessed = clip_preprocess(pil_img)
+    #     encoded      = clip_model.encode_image(torch.stack([preprocessed]))
+    #     norm         = encoded.norm(dim=-1,keepdim=True)
+    #     normed       = encoded / norm
+    # clip_embedding = normed.cpu().numpy()
+    # return(descr_url,thm_url,clip_embedding,len(content))
 
-create_table(args.db)
+# create_table(args.db)
 
-already_done = set(get_already_processed_images('wikimedia_images.sqlite3'))
+already_done = [] # set(get_already_processed_images('wikimedia_images.sqlite3'))
 
 sane_cat = 'Valued_images_promoted_2021-08'
 big_cat = 'Featured_pictures_on_Wikimedia_Commons'
 bigger_cat = 'Valued_images'
 huge_cat = 'Quality_images'
 cat = 'Kung_fu'
-cat = None
+#cat = None
 
+counter = 0
 if cat:
-    for img in get_images_in_category(cat):
-        descr_url    = img.imageinfo['descriptionurl']
+    for mwimg in get_images_in_category(cat):
+        descr_url    = mwimg.imageinfo['descriptionurl']
         if descr_url in already_done:
             print(f"already done: {descr_url}")
         else:
-            title        = img.base_title
-            name         = img.name
-            image_url    = img.imageinfo['url']
-            descr_url    = img.imageinfo['descriptionurl']
+            title        = mwimg.base_title
+            name         = mwimg.name
+            image_url    = mwimg.imageinfo['url']
+            descr_url    = mwimg.imageinfo['descriptionurl']
 
-            descr_url,thm_url,clip_embedding,length = process_image(image_url,descr_url)
-            print(' ',descr_url,length)
-            if clip_embedding is not None:
-                save_image(args.db,descr_url,thm_url,clip_embedding,length)
+            print(f"will try {image_url} from {descr_url}")
 
-import json
-file = 'quality_metadata.ndjson'
-import random
-with open(file) as f:
-    lines = [json.loads(l) for l in f.readlines()]
-random.shuffle(lines)
+            #thm_url,pil_img = process_image(image_url,descr_url)
+            x = iei.preprocess_img(image_url,descr_url,title,name,"{}",headers=wikimedia_api_headers)
+            print(f"iei.preprocess_img returned {x}")
+            counter+=1
+            if counter>10:
+                break
 
-for idx,l in enumerate(lines):
-    image_url = l['url']
-    descr_url = l['descriptionurl']
-    if descr_url in already_done:
-        print(f"already done: {descr_url}")
-        continue
-    if check_pic(args.db,descr_url):
-        print(f"recently done: {descr_url}")
-        continue
+            # descr_url,thm_url,clip_embedding,length = process_image(image_url,descr_url)
+            # print(' ',descr_url,length)
+            # if clip_embedding is not None:
+            #     save_image(args.db,descr_url,thm_url,clip_embedding,length)
 
-    descr_url,thm_url,clip_embedding,length = process_image(image_url,descr_url)
-    print('indexing ',descr_url,length)
-    if clip_embedding is not None:
-        save_image(args.db,descr_url,thm_url,clip_embedding,length)
+# import json
+# file = 'quality_metadata.ndjson'
+# import random
+# with open(file) as f:
+#     lines = [json.loads(l) for l in f.readlines()]
+# random.shuffle(lines)
+
+# for idx,l in enumerate(lines):
+#     image_url = l['url']
+#     descr_url = l['descriptionurl']
+#     if descr_url in already_done:
+#         print(f"already done: {descr_url}")
+#         continue
+#     if check_pic(args.db,descr_url):
+#         print(f"recently done: {descr_url}")
+#         continue
+
+#     descr_url,thm_url,clip_embedding,length = process_image(image_url,descr_url)
+#     print('indexing ',descr_url,length)
+#     if clip_embedding is not None:
+#         save_image(args.db,descr_url,thm_url,clip_embedding,length)
 

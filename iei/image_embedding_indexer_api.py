@@ -20,6 +20,10 @@ from pydantic import BaseModel
 import fastapi
 import image_embedding_indexer
 
+from fastapi.responses import ORJSONResponse
+from fastapi.responses import RedirectResponse
+
+
 print("Starting")
 
 iei = image_embedding_indexer.ImageEmbeddingIndexer("./data/image_embedding_indexes")
@@ -67,17 +71,22 @@ async def thm(img_id:int, size:int=400):
 
 @app.get("/img/{img_id}")
 async def img(img_id:int, size:int=400):
-  hdrs = {'Cache-Control': 'public, max-age=0'}
+
   metadata = iei.get_metadata(img_id)
+
   if not metadata:
      raise fastapi.HTTPException(status_code=404, detail=f"no metdata for {img_id}")
+
+  if metadata.img_uri:
+    print("redirecting to {metadata.img_uri}")
+    response = fastapi.responses.RedirectResponse(url=metadata.img_uri)
+    return response
+
   img,_,_,img_bytes = iei.img_helper.fetch_img(metadata.img_uri)
   if not img_bytes:
      raise fastapi.HTTPException(status_code=404, detail=f"can't load image for {img_id}")
   return fastapi.Response(content = img_bytes, headers = hdrs, media_type="image/webp")
 
-
-from fastapi.responses import ORJSONResponse
 
 #####################################################################
 from fastapi import FastAPI, Response
