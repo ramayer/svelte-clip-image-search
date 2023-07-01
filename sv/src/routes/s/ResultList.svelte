@@ -14,9 +14,9 @@
     $: imgs = results ? results["ids"] : [];
     $: gridstyle = `grid-template-columns: ${"1fr ".repeat(cols)}`;
 
-    $: num_visible = results ? 1 : 1
+    $: num_visible = results ? cols*3 : 1
 
-    $: console.log("ResultList.svetle imgs", imgs);
+    $: console.log("ResultList.svetle imgs length is ", imgs.length);
     // $: console.log("ResultList.svetle results", results && results["ids"]);
 
     let observer: IntersectionObserver | null;
@@ -67,7 +67,7 @@
 
     $: img_cols = organize_images_into_columns(imgs, cols, num_visible);
     $: setTimeout(()=>{update_observers(img_cols)},100);
-    //$: attempt_reducing_num_visible_images(cols);
+    $: attempt_reducing_num_visible_images(cols);
 
     ///////////////////////////////////////////////////////////////////////////////
     // Observe if more images are needed
@@ -171,8 +171,10 @@
     }
     //console.log(img_cols);
     /*
-    [&>*]:bg-gray-300
-    https://flaviocopes.com/apply-a-style-to-a-children-with-tailwind/
+        [&>*]:bg-gray-300
+        https://flaviocopes.com/apply-a-style-to-a-children-with-tailwind/
+        https://github.com/tailwindlabs/tailwindcss/pull/8299
+        https://tailwindcss.com/docs/hover-focus-and-other-states#using-arbitrary-variants
     */
 </script>
 

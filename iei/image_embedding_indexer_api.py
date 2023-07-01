@@ -12,7 +12,7 @@
 #      text:"hello world"
 #      around:1234
 
-
+import re
 from typing import Optional, Union
 from fastapi import FastAPI
 from pydantic import BaseModel
@@ -71,21 +71,65 @@ async def thm(img_id:int, size:int=400):
 
 @app.get("/img/{img_id}")
 async def img(img_id:int, size:int=400):
-
+  req_hdrs = {'User-agent': 
+          "Clip Embedding Calculator/0.01 (https://github.com/ramayer/wikipedia_in_spark; ) generic-library/0.0"}
+        
   metadata = iei.get_metadata(img_id)
 
   if not metadata:
      raise fastapi.HTTPException(status_code=404, detail=f"no metdata for {img_id}")
-
-  if metadata.img_uri:
-    print("redirecting to {metadata.img_uri}")
+  
+  if re.match(r'^http',metadata.img_uri):
+    print(f"redirecting to {metadata.img_uri}")
     response = fastapi.responses.RedirectResponse(url=metadata.img_uri)
     return response
+  else:
+    img,_,_,img_bytes = iei.img_helper.fetch_img(metadata.img_uri,headers=req_hdrs)
+    if not img_bytes:
+      raise fastapi.HTTPException(status_code=404, detail=f"can't load image for {img_id}")
+    hdrs = {'Cache-Control': 'public, max-age=300'}
+    return fastapi.Response(content = img_bytes, headers = hdrs, media_type="image/webp")
 
-  img,_,_,img_bytes = iei.img_helper.fetch_img(metadata.img_uri)
-  if not img_bytes:
-     raise fastapi.HTTPException(status_code=404, detail=f"can't load image for {img_id}")
-  return fastapi.Response(content = img_bytes, headers = hdrs, media_type="image/webp")
+
+@app.get("/det/{img_id}")
+async def det(img_id:int, size:int=400):
+  metadata = iei.get_metadata(img_id)
+
+  if not metadata:
+     raise fastapi.HTTPException(status_code=404, detail=f"no metdata for {img_id}")
+  
+  if re.match(r'^http',metadata.src_uri):
+    print("redirecting to {metadata.src_uri}")
+    response = fastapi.responses.RedirectResponse(url=metadata.src_uri)
+    return response
+  else:
+    img,_,_,img_bytes = iei.img_helper.fetch_img(metadata.img_uri,headers={'whatever':'0'})
+    if not img_bytes:
+      raise fastapi.HTTPException(status_code=404, detail=f"can't load image for {img_id}")
+    hdrs = {'Cache-Control': 'public, max-age=300'}
+    return fastapi.Response(content = img_bytes, headers = hdrs, media_type="image/webp")
+  
+
+
+@app.get("/met/{img_id}")
+async def met(img_id:int, size:int=400):
+  img_data = iei.get_img_data(img_id)
+  metadata = iei.get_metadata(img_id)
+  to32bit     = lambda x: x.astype(np.float16) if isinstance(x,np.ndarray) else x
+  clip_emb = to32bit(iei.get_openclip_embedding(img_id))
+  face_dat = iei.get_insightface_analysis(img_id)
+  face2    = [{k:to32bit(v) for k,v in r.items()} for r in face_dat]
+  print(clip_emb.dtype)
+  data = {
+     'img_data':img_data,
+     'metadata':metadata,
+     'clip_emb':clip_emb,
+     'face_dat':face_dat,
+  }
+  cleaner = orjson.loads(orjson.dumps(data,option=orjson.OPT_SERIALIZE_NUMPY))
+  return cleaner
+
+
 
 
 #####################################################################

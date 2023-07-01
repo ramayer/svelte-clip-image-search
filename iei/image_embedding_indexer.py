@@ -367,9 +367,7 @@ class ImgHelper:
         
     def fetch_img(self,uri,headers=None) -> tuple[Image.Image,ImgData,datetime.datetime,bytes]:
 
-        if headers:
-            print(f"using {headers}")
-        else:
+        if not headers:
             raise(Exception("headers were missing"))
             headers = {'User-agent': 
                       "Clip Embedding Calculator/0.01 (https://github.com/ramayer/wikipedia_in_spark; ) generic-library/0.0"}
@@ -851,9 +849,7 @@ class ImageEmbeddingIndexer:
         t3 = time.time()
         if face is None:  self.set_insightface_analysis(img_id,img)
         t4 = time.time()
-        if self.debug:
-            print(t1-t0,t2-t1,t3-t2,t4-t3)
-        return img_id
+        return (img_id,t1-t0,t2-t1,t3-t2,t4-t3)
     
 #     def encode_pytorch_to_bytes(self,t):
 #         return t.cpu().to(torch.float16).numpy().tobytes()

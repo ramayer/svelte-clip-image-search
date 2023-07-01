@@ -27,5 +27,7 @@ on:mouseenter={(e) => handle_interaction(img_id)}
     on:keydown={(e) => handle_interaction(img_id)}
     on:click={(e) => handle_click(img_id)}
     >
-    <img alt={"" + img_id} src="/t/{img_id}" />
+    <a href="/d/{img_id}">
+        <img alt={"" + img_id} src="/t/{img_id}" />
+    </a>
 </div>

@@ -8,7 +8,7 @@
 
     let q = $page.url.searchParams.get("q");
     let min_cols = 1;
-    let max_cols = 20;
+    let max_cols = 30;
     let cols = 7;
     let inv_cols = max_cols - cols + 1;
 

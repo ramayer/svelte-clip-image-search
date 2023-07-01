@@ -13,10 +13,14 @@
     repository which is roughly 0.019% of the available images
     (76,673,875).
 
+    # Edit: as of 2023-06-30 it seems there are now 16,930 Featured Pictures
+
     https://commons.wikimedia.org/wiki/Commons:Quality_images
 
     There are currently 276,020 images marked as Quality images, which
     is roughly 0.36% of the available images (76,670,770).
+
+    # Edit: as of 2023-06-30 it seems there are 324068 Quality Images
 
     https://commons.wikimedia.org/wiki/Category:Featured_pictures_on_Wikimedia_Commons
     https://commons.wikimedia.org/wiki/Category:Quality_images
@@ -119,7 +123,7 @@ def check_pic(dbname,descr_url):
 def get_images_in_category(category_name):
     site = mwclient.Site('commons.wikimedia.org')
     category = site.Categories[category_name]
-    images = (x for x in category.members() if isinstance(x,mwclient.image.Image))
+    images = (x for x in category.members() if isinstance(x,mwclient.image.Image)) # type: ignore
     return images
 
 #clip_model, clip_preprocess = clip.load('ViT-B/32','cpu')
@@ -127,6 +131,16 @@ def get_images_in_category(category_name):
 # https://meta.wikimedia.org/wiki/User-Agent_policy
 wikimedia_api_headers = {'User-agent': 
                          "Clip Embedding Calculator/0.01 (https://github.com/ramayer/wikipedia_in_spark; ramayer+git@gmail.com) generic-library/0.0"}
+
+
+# Consider always using a thm_url
+#
+# some of the original images on Wikimedia give a DecompressionBombWarning like this:
+#
+#
+# will try https://upload.wikimedia.org/wikipedia/commons/2/29/Natica_spadicea_01.jpg from https://commons.wikimedia.org/wiki/File:Natica_spadicea_01.jpg
+#
+# /home/ron/.python/venvs/3.10/lib/python3.10/site-packages/PIL/Image.py:3035: DecompressionBombWarning: Image size (118680000 pixels) exceeds limit of 89478485 pixels, could be decompression bomb DOS attack.
 
 def get_thm_url(image_url,descr_url):
     if (image_url.endswith('.svg') or 
@@ -139,13 +153,13 @@ def get_thm_url(image_url,descr_url):
         print(f"can't handle non-pillow.Image image types like {image_url} yet")
         return(None)
     ext = re.sub(r'.*\.','',image_url)
-    if ext.lower() not in {'jpg', 'jpeg', 'JPG', 'PNG', 'JPEG', 'png', 'gif'}:
+    if ext.lower() not in {'jpg', 'jpeg', 'JPG', 'PNG', 'JPEG', 'png', 'gif','webm'}:
         print(f"not sure if it can handle image types like {image_url} yet")
         return(None)
-    print(' ',datetime.datetime.now().isoformat(),image_url,descr_url)
+    #print(' ',datetime.datetime.now().isoformat(),image_url,descr_url)
     sys.stdout.flush()
     url_suffix   = re.sub(r'.*/','',image_url)
-    thm_url      = re.sub('/commons/','/commons/thumb/',image_url) + '/600px-' + url_suffix
+    thm_url      = re.sub('/commons/','/commons/thumb/',image_url) + '/800px-' + url_suffix
     return thm_url
     headers      = wikimedia_api_headers
     #response     = requests.get(thm_url,headers=headers)
@@ -173,9 +187,10 @@ already_done = [] # set(get_already_processed_images('wikimedia_images.sqlite3')
 
 sane_cat = 'Valued_images_promoted_2021-08'
 big_cat = 'Featured_pictures_on_Wikimedia_Commons'
-bigger_cat = 'Valued_images'
+bigger_cat = 'Valued_images' # ~2000?
 huge_cat = 'Quality_images'
 cat = 'Kung_fu'
+cat = big_cat
 #cat = None
 
 counter = 0
@@ -189,14 +204,13 @@ if cat:
             name         = mwimg.name
             image_url    = mwimg.imageinfo['url']
             descr_url    = mwimg.imageinfo['descriptionurl']
-
-            print(f"will try {image_url} from {descr_url}")
-
-            #thm_url,pil_img = process_image(image_url,descr_url)
-            x = iei.preprocess_img(image_url,descr_url,title,name,"{}",headers=wikimedia_api_headers)
-            print(f"iei.preprocess_img returned {x}")
+            thm_url = get_thm_url(image_url,descr_url)
+            if not thm_url:
+                continue
+            x = iei.preprocess_img(thm_url,descr_url,title,name,"{}",headers=wikimedia_api_headers)
+            print(f"{datetime.datetime.now().isoformat()} {x}")
             counter+=1
-            if counter>10:
+            if counter>10000:
                 break
 
             # descr_url,thm_url,clip_embedding,length = process_image(image_url,descr_url)
