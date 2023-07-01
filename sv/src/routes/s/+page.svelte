@@ -3,7 +3,6 @@
 
     import { page } from "$app/stores";
     import ResultList from "./ResultList.svelte";
-    // import ResultDetail from "./ResultDetail.svelte";
     import Detail from "./Detail.svelte";
     import Preview from "./Preview.svelte";
     import SearchForm from "./SearchForm.svelte";

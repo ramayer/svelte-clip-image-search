@@ -2,8 +2,6 @@
     import { selected_img, selected_state, cols_store } from "./stores.js";
 
     import { page } from "$app/stores";
-    import ResultList from "./ResultList.svelte";
-    import ResultDetail from "./ResultDetail.svelte";
     import type { PageData } from "./$types";
 
     let q = $page.url.searchParams.get("q");
