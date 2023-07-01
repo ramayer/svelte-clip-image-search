@@ -34,7 +34,7 @@ export const load = (async (event) => {
     if (q) {
        let result = query_backend(q)
        let ids = (await result).imgids
-       console.log("here ids",ids)
+       // console.log("here ids",ids)
        return {
             q: q,
             ids: ids,

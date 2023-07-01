@@ -21,7 +21,7 @@
 </script>
 {#if d}
 <div
-    class="fixed rounded-2xl top-[5vh] left-[5vw] h-[90vh] w-[90vw] bg-blue-900"
+    class="fixed p-10 rounded-2xl top-[5vh] left-[5vw] h-[90vh] w-[90vw] bg-slate-900"
 >
     Details for {d}
 

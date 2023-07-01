@@ -3,9 +3,9 @@
 
     import { page } from "$app/stores";
     import ResultList from "./ResultList.svelte";
-    import ResultDetail from "./ResultDetail.svelte";
+    // import ResultDetail from "./ResultDetail.svelte";
     import Detail from "./Detail.svelte";
-    import Preview from "./ResultDetail.svelte";
+    import Preview from "./Preview.svelte";
     import SearchForm from "./SearchForm.svelte";
     import type { PageData } from "./$types";
     import { onMount } from "svelte";

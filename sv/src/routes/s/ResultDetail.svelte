@@ -1,4 +1,5 @@
-<script lang="ts">
+<!-- <script lang="ts">
+/* is this deprecated */
     export let selected_img:string;
     export let selected_state:number;
     let vh="50vh";
@@ -14,4 +15,4 @@
          style="max-height: calc(50vh - 30px);"
          src="/i/{selected_img}" />
          {/if}
-</div>
+</div> -->
