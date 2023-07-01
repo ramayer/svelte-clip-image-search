@@ -5,15 +5,13 @@ import config from '../../config';
 
 export const GET = (async ({ setHeaders, url, params }) => {
 
-    const w = Number(url.searchParams.get('w'));
-    const h = Number(url.searchParams.get('h'));
     const img_id = params.img_id;
-    //console.log("t",img_id,params)
+    //console.log("m",img_id,params)
     //try {
         //const img_url = 'https://picsum.photos/302'
         //const img_url = `http://192.168.12.110:8000/thm/${img_id}`
-        const img_url = `${config.app_uri}/thm/${img_id}`
-
+        const img_url = `${config.app_uri}/met/${img_id}`
+        console.log("wtf:",img_url)
         const img_res = await fetch(img_url)
         const img_abuf = await img_res.arrayBuffer();
         const img_ct = img_res.headers.get('Content-Type');

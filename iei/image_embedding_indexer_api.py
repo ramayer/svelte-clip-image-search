@@ -108,23 +108,29 @@ async def det(img_id:int, size:int=400):
       raise fastapi.HTTPException(status_code=404, detail=f"can't load image for {img_id}")
     hdrs = {'Cache-Control': 'public, max-age=300'}
     return fastapi.Response(content = img_bytes, headers = hdrs, media_type="image/webp")
-  
 
+# represent the vector's direction as well as possible with 3-digit ints.
+# it can be scaled back to a unit vector on the other side.
+def to_block_fp(a):
+   if isinstance(a,np.ndarray) and  a.dtype == np.dtype('float16') and a.shape[0]>100:
+      return (999 * a / np.max(a)).astype(np.int16)
+   else:
+      return a.astype(np.float32)
 
 @app.get("/met/{img_id}")
 async def met(img_id:int, size:int=400):
   img_data = iei.get_img_data(img_id)
   metadata = iei.get_metadata(img_id)
-  to32bit     = lambda x: x.astype(np.float16) if isinstance(x,np.ndarray) else x
+  to32bit     = lambda x: to_block_fp(x) if isinstance(x,np.ndarray) else x
   clip_emb = to32bit(iei.get_openclip_embedding(img_id))
   face_dat = iei.get_insightface_analysis(img_id)
-  face2    = [{k:to32bit(v) for k,v in r.items()} for r in face_dat]
+  face2    = [{k:to_block_fp(v) for k,v in r.items()} for r in (face_dat or [])]
   print(clip_emb.dtype)
   data = {
      'img_data':img_data,
      'metadata':metadata,
      'clip_emb':clip_emb,
-     'face_dat':face_dat,
+     'face_dat':face2,
   }
   cleaner = orjson.loads(orjson.dumps(data,option=orjson.OPT_SERIALIZE_NUMPY))
   return cleaner
