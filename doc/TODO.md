@@ -7,7 +7,7 @@
 ## UI
 
 * merge the feature that blends thumbnails with the high-res image during loading.
-
+* mobile phones have no mouseover events, so perhaps use a single click to emulate mouseover.
 
 ## Storage
 

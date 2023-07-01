@@ -1,47 +1,57 @@
 <script lang="ts">
-    export let img_id:string;
+    export let img_id: number;
 
     import { onMount, tick } from "svelte";
+    import { browser } from "$app/environment"; // for infinite scroll
+    import { preview_img, detail_img, cols_store } from "./stores.js";
 
-    import { selected_img, selected_state } from './stores.js';
+    let cols = 7;
+    let d_img = 0;
+    let p_img = 0;
+    preview_img.subscribe((x) => (p_img = x));
+    detail_img.subscribe((x) => (d_img = x));
+    cols_store.subscribe((x) => (cols = x));
 
-    import { page } from "$app/stores";
-    let q = $page.url.searchParams.get("q");
+    //import { page } from "$app/stores";
+    //let q = $page.url.searchParams.get("q");
+    let q = "wtf";
 
-    function make_link(new_idx: string) {
+    // mobile has no mouseover events; so the first single click
+    // can emulate a mouseover
+    let isMobile =
+        browser && /iPhone|iPad|iPod|Android/i.test(window.navigator.userAgent);
+
+    function make_link(iid: number) {
         let base_url = "?";
-        let new_q = q || '';
+        let new_q = q || "";
         let params = new URLSearchParams({
             q: new_q,
-            d: ""+img_id,
+            d: "" + img_id,
         });
         return base_url + params;
     }
 
-    async function handle_interaction(r:string) {
-        console.log("hi")
-        selected_img.set('');
-        await tick()
-		selected_img.set(r);
+    async function handle_interaction(r: number) {
+        console.log("setting preview image to ", r);
+        preview_img.set(0);
+        await tick();
+        preview_img.set(r);
         return true;
     }
 
-    async function handle_click(r:string) {
-        selected_img.set('');
-        await tick()
-        selected_img.set(r);
-        selected_state.update(n => n + 1);
+    async function handle_click(r: number) {
+        detail_img.set(r);
         return true;
     }
-
 </script>
 
-<div
-on:mouseenter={(e) => handle_interaction(img_id)}
-    on:keydown={(e) => handle_interaction(img_id)}
-    on:click={(e) => handle_click(img_id)}
+<div>
+    <a
+        href={make_link(img_id)}
+        on:mouseenter={(e) => handle_interaction(img_id)}
+        on:keydown={(e) => handle_interaction(img_id)}
+        on:click={(e) => handle_click(img_id)}
     >
-    <a href="{make_link(img_id)}">
         <img alt={"" + img_id} src="/t/{img_id}" />
     </a>
 </div>

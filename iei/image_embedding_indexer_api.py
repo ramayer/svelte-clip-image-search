@@ -173,16 +173,21 @@ async def instightface_analysis(img_id:int, size:Optional[int]=400):
 
 #####################################################################
 
-
 class SearchResults(BaseModel):
     imgids: list[int]
     scores: list[int]
+
 
 @app.get("/search")
 async def search(q: Optional[str] = None, iid: Optional[int] = None, type: Optional[str] = None):
     # Process the parameters and generate response data
     # Replace this with your actual implementation
     results = None
+    if q and (cids := re.findall(r'^clip:(\d+)',q[0])):
+       print(f"found a clip-like expression for {cids}")
+       emb = iei.ocw.txt_embeddings([q])
+       fh = iei.clip_faiss_helper 
+       results = fh.search(emb,k=5000)
     if q:
        emb = iei.ocw.txt_embeddings([q])
        fh = iei.clip_faiss_helper 

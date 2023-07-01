@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { selected_img, selected_state, cols_store } from "./stores.js";
+    import { preview_img, detail_img, cols_store } from "./stores.js";
 
     import { page } from "$app/stores";
     import type { PageData } from "./$types";

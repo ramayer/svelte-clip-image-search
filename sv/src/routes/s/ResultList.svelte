@@ -2,9 +2,16 @@
     import ResultImg from "./ResultImg.svelte";
     import { browser } from "$app/environment"; // for infinite scroll
     import { onMount, tick } from "svelte";
+    import { preview_img, detail_img, cols_store } from "./stores.js";
 
     export let results: { q: string | null; ids: number[] } | null;
-    export let cols = 4;
+
+    let cols = 7;
+    let d_img = 0;
+    let p_img = 0;
+    preview_img.subscribe((x) => (p_img = x));
+    detail_img.subscribe((x) => (d_img = x));
+    cols_store.subscribe((x) => (cols = x));
 
     let num_available = 12;
     let num_visible = 1;
@@ -178,19 +185,14 @@
     */
 </script>
 
-<div class="fixed bottom-20 left-1 w-50 bg-black ...">
-    visibility_of_bottom = {visibility_from_observers}<br />
-    num_visible = {num_visible}
-</div>
-
-<div id="grid" class="grid" style="{gridstyle};" bind:this={result_grid_element}>
+<div data-sveltekit-preload-data="tap" id="grid" class="grid" style="{gridstyle};" bind:this={result_grid_element}>
     {#if imgs}
         {#each img_cols as c}
             <div
                 class="[&>*]:rounded-md [&>*]:border [&>*]:border-black [&>*]:overflow-clip"
             >
                 {#each c as i}
-                    <ResultImg img_id={String(i)} />
+                    <ResultImg img_id={i} />
                 {/each}
                 <div
                     class="column_footer text-gray-700 h-[50vh]"

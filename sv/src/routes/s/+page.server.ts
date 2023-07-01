@@ -1,7 +1,6 @@
 import type {PageServerLoad} from './$types';
 import config from '../config';
 
-
 console.log("============== +page.server.ts")
 
 interface ResponseData {
@@ -22,7 +21,7 @@ async function query_backend(q:string) {
             return {imgids:[1,2,3],scores:[3,2,1]}
         }
     })
-    console.log('query_backend for ',url,' returned ',resp)
+    console.log('query_backend for ',url,' returned ',resp.imgids.length, ' results')
     return resp;
 }
 
@@ -30,7 +29,7 @@ export const load = (async (event) => {
     console.log("============== +page.server.ts load")
     const q = event.url.searchParams.get('q');
     const start = 6500  *0// Math.floor(Math.random() * 100) * 100;
-    console.log('q',q);
+    console.log('querying backend for q=',q);
     if (q) {
        let result = query_backend(q)
        let ids = (await result).imgids
