@@ -2,16 +2,18 @@
     import ResultImg from "./ResultImg.svelte";
     import { browser } from "$app/environment"; // for infinite scroll
     import { onMount, tick } from "svelte";
-    import { preview_store, detail_store, cols_store , thm_size_store} from "./stores.js";
+    import { preview_store, detail_store, cols_store , thm_size_store, q_store} from "./stores.js";
 
     export let results: { q: string | null; ids: number[] } | null;
 
     let cols = 7;
     let d_img = 0;
     let p_img = 0;
+    let q = '';
     preview_store.subscribe((x) => (p_img = x));
     detail_store.subscribe((x) => (d_img = x));
     cols_store.subscribe((x) => (cols = x));
+    q_store.subscribe(async (x) => {q=''; await tick; q = x});
 
     let num_available = 12;
     let num_visible = 1;
@@ -21,7 +23,7 @@
     $: imgs = results ? results["ids"] : [];
     $: gridstyle = `grid-template-columns: ${"1fr ".repeat(cols)}`;
 
-    $: num_visible = results ? cols*3 : 2
+    $: num_visible = q ? cols*3 : 2
 
     $: console.log("ResultList.svetle imgs length is ", imgs.length);
     // $: console.log("ResultList.svetle results", results && results["ids"]);
