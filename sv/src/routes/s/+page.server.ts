@@ -8,7 +8,7 @@ interface MetadataResponseData extends Record<string,any> {}
 interface ResponseData {
     imgids: number[];
     scores: number[];
-    metadata: MetadataResponseData;
+    details: MetadataResponseData;
 }
   
 async function query_backend(q:string) {
@@ -52,7 +52,8 @@ export const load = (async (event) => {
        let result = query_backend(q)
        let ids = (await result).imgids
        if (d) {
-         details = get_metadata(parseInt(d))
+         let mdresults = get_metadata(parseInt(d))
+         details = await mdresults
        }
        // console.log("here ids",ids)
        return {

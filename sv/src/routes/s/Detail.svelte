@@ -1,6 +1,9 @@
 <script lang="ts">
-    export let results: { q: string | null; ids: number[] } | null;
+    import { goto } from "$app/navigation";
+    export let results: { q: string | null; ids: number[];details?:any } | null;
     import { preview_store, detail_store, cols_store } from "./stores.js";
+
+    console.log("here results is ",results)
 
     let cols = 7;
     let d_img = 0;
@@ -38,12 +41,30 @@
     }
 
     console.log(related_pic_ids);
+
+    let key: string;
+	let code: string ;
+
+	function handleKeydown(event: KeyboardEvent) {
+
+        if (event.code == "Escape") {
+            let loc = makelink(null)
+            goto(loc)
+        }
+        console.log("key event = ",event)
+		key = event.key;
+		code = event.code;
+	}
+
 </script>
+<svelte:window on:keydown={handleKeydown} />
 
 {#if d_img != 0}
+
     <div
         class="fixed p-10 rounded-2xl top-[5vh] left-[5vw] h-[90vh] w-[90vw] bg-slate-900 z-0"
     >
+    {key} {code}
         <div
             class="w-full bg-gray-800 py-2 px-4 flex justify-between items-center text-white text-2xl focus:outline-none"
         >
@@ -60,7 +81,10 @@
             <a href={makelink(idx_to_id(d_idx + 20))}>&#x2AF8;&#xFE0E;</a>
             <a href={makelink(null)}>&#x2715;&#xFE0E;</a>
         </div>
-
+        {#if results && results.details}
+        {results.details.metadata.title}<br>
+       {/if}
+      
         Details for {d_img}
         <a href={"/d/"+d_img} class="hover:underline text-slate-400">Source</a> | 
         <a href={cliplink(d_img)} class="hover:underline text-slate-400">More like this</a>
