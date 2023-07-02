@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { preview_img, detail_img, cols_store } from "./stores.js";
+    import { preview_store, detail_store, cols_store, q_store } from "./stores.js";
 
     import { page } from "$app/stores";
     import type { PageData } from "./$types";
@@ -16,6 +16,7 @@
         { id: 2, text: `Txt` },
     ];
 
+    q_store.subscribe((x)=>q=x)
     let selected = 0;
 
     let answer = "";    

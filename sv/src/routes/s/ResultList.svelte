@@ -2,15 +2,15 @@
     import ResultImg from "./ResultImg.svelte";
     import { browser } from "$app/environment"; // for infinite scroll
     import { onMount, tick } from "svelte";
-    import { preview_img, detail_img, cols_store } from "./stores.js";
+    import { preview_store, detail_store, cols_store , thm_size_store} from "./stores.js";
 
     export let results: { q: string | null; ids: number[] } | null;
 
     let cols = 7;
     let d_img = 0;
     let p_img = 0;
-    preview_img.subscribe((x) => (p_img = x));
-    detail_img.subscribe((x) => (d_img = x));
+    preview_store.subscribe((x) => (p_img = x));
+    detail_store.subscribe((x) => (d_img = x));
     cols_store.subscribe((x) => (cols = x));
 
     let num_available = 12;
@@ -21,19 +21,31 @@
     $: imgs = results ? results["ids"] : [];
     $: gridstyle = `grid-template-columns: ${"1fr ".repeat(cols)}`;
 
-    $: num_visible = results ? cols*3 : 1
+    $: num_visible = results ? cols*3 : 2
 
     $: console.log("ResultList.svetle imgs length is ", imgs.length);
     // $: console.log("ResultList.svetle results", results && results["ids"]);
 
     let observer: IntersectionObserver | null;
     let result_grid_element: Element | null = null;
+    let gallery_width = 1024
 
+    // rounds up to 60, 120, 240, 480, 960, 1920
+    function nice_thumbnail_size(cols:number,gallery_width:number) {
+        if (cols == 0 || gallery_width == 0) {return 800;}
+        const float_size = gallery_width / cols;
+        const size_in_units_of_60px = float_size/60;
+        const exponent = Math.ceil(Math.log2(size_in_units_of_60px));
+        const rounded_value = 60 * Math.pow(2, exponent);
+        console.log("trying thumnail size of ",float_size," => ",rounded_value)
+        return rounded_value;
+    }
+
+    $: thm_size_store.set(nice_thumbnail_size(cols,gallery_width))
 
     onMount(() => {
-        num_visible = 1
+        //num_visible = 1
     });
-
 
 
     ///////////////////////////////////////////////////////////////////////////////
@@ -111,28 +123,28 @@
     let already_trying_to_add_images = false;
     async function try_adding_images() {
         if (already_trying_to_add_images){
-            console.log("try_adding_images: not adding because already_trying_to_add_images");
+            //console.log("try_adding_images: not adding because already_trying_to_add_images");
             return;
         }
         if (num_visible > num_available) {
-            console.log("try_adding_images: not adding because no more available");
+            //console.log("try_adding_images: not adding because no more available");
             return;
         }
         already_trying_to_add_images = true;
-        console.log("try_adding_images: will try to add some after waiting")
+        //console.log("try_adding_images: will try to add some after waiting")
 
         await get_promise_for_all_loading_images();
-        console.log("try_adding_images: waited, checking footers")
+        //console.log("try_adding_images: waited, checking footers")
 
         if (is_any_footer_visible()) {
-            console.log("try_adding_images: footer is visible, adding images")
+            //console.log("try_adding_images: footer is visible, adding images")
             num_visible += 25;
             await tick // hopefully they get added to the dom here
             setTimeout(() => { // throttle loading wikipedia images about 10/second
                 try_adding_images();
             }, 100);
         } else {
-            console.log("try_adding_images: no footer is visible, not adding images")
+            //console.log("try_adding_images: no footer is visible, not adding images")
         }
         already_trying_to_add_images = false;
     }
@@ -185,7 +197,9 @@
     */
 </script>
 
-<div data-sveltekit-preload-data="tap" id="grid" class="grid" style="{gridstyle};" bind:this={result_grid_element}>
+<div data-sveltekit-preload-data="tap" id="grid" class="grid" style="{gridstyle};" bind:this={result_grid_element}
+    bind:clientWidth={gallery_width}>
+
     {#if imgs}
         {#each img_cols as c}
             <div

@@ -1,9 +1,9 @@
 <script lang="ts">
-    import { preview_img, detail_img } from "./stores.js";
+    import { preview_store, detail_store } from "./stores.js";
     let p_img = 0;
-    preview_img.subscribe((x) => (p_img = x));
+    preview_store.subscribe((x) => (p_img = x));
         let d_img = 0;
-    detail_img.subscribe((x) => (d_img = x));
+    detail_store.subscribe((x) => (d_img = x));
 </script>
 
 {#if p_img && !d_img}

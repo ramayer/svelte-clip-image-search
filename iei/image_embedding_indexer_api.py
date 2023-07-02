@@ -49,24 +49,29 @@ import orjson
 import io
 import time
 @app.get("/thm/{img_id}")
-async def thm(img_id:int, size:int=400):
+async def thm(img_id:int, w:int|None=None,h:int|None=None):
   hdrs = {'Cache-Control': 'public, max-age=300'}
   debug_no_cache_hdrs = {
      'Cache-Control': 'no-cache, no-store, must-revalidate',
     'Pragma': 'no-cache',
     'Expires': '0',
-    }
+  }
+
   #time.sleep(0.02)
-  if thm := iei.get_thm(img_id):
+  if (h or w) and (thm := iei.get_thm(img_id)):
+    #print("recompressing")
     buf = io.BytesIO()
-    thm.save(buf,format="WebP",quality=50)
+    t2 = iei.img_helper.make_thm(thm,max_w=w,max_h=h)
+    t2.save(buf,format="WebP",quality=50)
     return fastapi.Response(content = buf.getvalue(), headers = hdrs, media_type="image/webp")
-  else:
-     svg = f'''<svg version="1.1" width="{size}" height="{int(size*3/4)}" xmlns="http://www.w3.org/2000/svg">
+  if b := iei.get_thm_bytes(img_id):
+    return fastapi.Response(content = b, headers = hdrs, media_type="image/webp")
+
+  svg = f'''<svg version="1.1" width="{size}" height="{int(size*3/4)}" xmlns="http://www.w3.org/2000/svg">
               <!--<rect width="100%" height="100%" fill="#333" /> -->
               <circle cx="50%" cy="50%" r="25%" fill="#222"/>
-              </svg>'''
-     return fastapi.Response(svg,media_type="image/svg+xml", headers=hdrs)
+            </svg>'''
+  return fastapi.Response(svg,media_type="image/svg+xml", headers=hdrs)
   
 
 @app.get("/img/{img_id}")
@@ -183,12 +188,14 @@ async def search(q: Optional[str] = None, iid: Optional[int] = None, type: Optio
     # Process the parameters and generate response data
     # Replace this with your actual implementation
     results = None
-    if q and (cids := re.findall(r'^clip:(\d+)',q[0])):
+    print(q)
+    if q and (cids := re.findall(r'^clip:(\d+)',q)):
        print(f"found a clip-like expression for {cids}")
-       emb = iei.ocw.txt_embeddings([q])
+       emb = np.stack([iei.get_openclip_embedding(e) for e in cids])
+       print(emb)
        fh = iei.clip_faiss_helper 
        results = fh.search(emb,k=5000)
-    if q:
+    elif q:
        emb = iei.ocw.txt_embeddings([q])
        fh = iei.clip_faiss_helper 
        results = fh.search(emb,k=5000)

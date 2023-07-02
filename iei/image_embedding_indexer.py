@@ -394,9 +394,11 @@ class ImgHelper:
         img_data = ImgData(None,sha224,w,h,bytesize,mtime,mimetype)
         return (img, img_data, mtime,img_bytes)
 
-    def make_thm(self,img:Image.Image,max_w=256,max_h=1024) -> Image.Image:
+    def make_thm(self,img:Image.Image,max_w=2048,max_h=2048) -> Image.Image:
         # TODO - consider if it needs: 
         #  - yes, it does need it.
+        max_w        = max_w or 2048
+        max_h        = max_h or 2048
         t_img        = ImageOps.exif_transpose(img)
         img_w,img_h  = t_img.size
         wscale       = max_w / img_w
@@ -666,6 +668,9 @@ class ImageEmbeddingIndexer:
         if not thm_bytes: return None
         thm       = Image.open(io.BytesIO(thm_bytes))
         return thm
+    
+    def get_thm_bytes(self,img_id):
+        return self.thm_kvs.get(img_id)
         
     def set_thm(self,img_id,img):
         w,h = self.thm_size

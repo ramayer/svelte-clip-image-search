@@ -3,18 +3,20 @@
 
     import { onMount, tick } from "svelte";
     import { browser } from "$app/environment"; // for infinite scroll
-    import { preview_img, detail_img, cols_store } from "./stores.js";
+    import { preview_store, detail_store, cols_store, thm_size_store } from "./stores.js";
 
     let cols = 7;
     let d_img = 0;
     let p_img = 0;
-    preview_img.subscribe((x) => (p_img = x));
-    detail_img.subscribe((x) => (d_img = x));
+    let thm_size = 240;
+    preview_store.subscribe((x) => (p_img = x));
+    detail_store.subscribe((x) => (d_img = x));
+    thm_size_store.subscribe((x) => (thm_size = x));
     cols_store.subscribe((x) => (cols = x));
 
-    //import { page } from "$app/stores";
-    //let q = $page.url.searchParams.get("q");
-    let q = "wtf";
+
+    import { page } from "$app/stores";
+    let q = $page.url.searchParams.get("q");
 
     // mobile has no mouseover events; so the first single click
     // can emulate a mouseover
@@ -33,14 +35,14 @@
 
     async function handle_interaction(r: number) {
         console.log("setting preview image to ", r);
-        preview_img.set(0);
+        preview_store.set(0);
         await tick();
-        preview_img.set(r);
+        preview_store.set(r);
         return true;
     }
 
     async function handle_click(r: number) {
-        detail_img.set(r);
+        detail_store.set(r);
         return true;
     }
 </script>
@@ -52,6 +54,6 @@
         on:keydown={(e) => handle_interaction(img_id)}
         on:click={(e) => handle_click(img_id)}
     >
-        <img alt={"" + img_id} src="/t/{img_id}" />
+        <img alt={"" + img_id} src="/t/{img_id}?w={thm_size}" />
     </a>
 </div>

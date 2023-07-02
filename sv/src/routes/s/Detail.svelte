@@ -1,12 +1,12 @@
 <script lang="ts">
     export let results: { q: string | null; ids: number[] } | null;
-    import { preview_img, detail_img, cols_store } from "./stores.js";
+    import { preview_store, detail_store, cols_store } from "./stores.js";
 
     let cols = 7;
     let d_img = 0;
     let p_img = 0;
-    preview_img.subscribe((x) => (p_img = x));
-    detail_img.subscribe((x) => (d_img = x));
+    preview_store.subscribe((x) => (p_img = x));
+    detail_store.subscribe((x) => (d_img = x));
     cols_store.subscribe((x) => (cols = x));
     let ids = results ? results.ids : [];
     $: d_idx = ids.indexOf(d_img ?? 0);
@@ -62,7 +62,8 @@
         </div>
 
         Details for {d_img}
-        <a href={cliplink(d_img)}>More like this</a>
+        <a href={"/d/"+d_img} class="hover:underline text-slate-400">Source</a> | 
+        <a href={cliplink(d_img)} class="hover:underline text-slate-400">More like this</a>
 
         <img
             alt={"" + d_img}
