@@ -1,5 +1,10 @@
 <script lang="ts">
-    import { preview_store, detail_store, cols_store,q_store } from "./stores.js";
+    import {
+        preview_store,
+        detail_store,
+        cols_store,
+        q_store,
+    } from "./stores.js";
     import { page } from "$app/stores";
     import ResultList from "./ResultList.svelte";
     import Detail from "./Detail.svelte";
@@ -11,10 +16,9 @@
     export let data: PageData;
 
     const url = $page.url; // this will stay as the original value of the url
-    let q = $page.url.searchParams.get("q");
-    $:q_store.set(q || '')
-    $:d = parseInt($page.url.searchParams.get("d") || '0')
-    $:detail_store.set(d)
+
+    $: q_store.set($page.url.searchParams.get("q") || "");
+    $: detail_store.set(parseInt($page.url.searchParams.get("d") || "0"));
 
     let top_element: HTMLDivElement;
 
@@ -41,6 +45,6 @@
 <div class="h-12" bind:this={top_element} />
 <ResultList results={data}>hi</ResultList>
 {#if cols > 4}
-    <Preview/>
+    <Preview />
 {/if}
-    <Detail results={data} />
+<Detail results={data} />

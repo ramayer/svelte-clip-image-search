@@ -22,7 +22,7 @@ class="preview fixed rounded-2xl bottom-1 right-1 h-[50vh] bg-black p-4">
 <style>
 .preview {
     color: #fff;
-    border: 2px solid #f00;
+    border: 2px solid #446;
     position: fixed;
     /*background-color: #8884;*/
     /*border: 2px outset #555;*/

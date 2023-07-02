@@ -64,11 +64,12 @@
         Details for {d_img}
         <a href={"/d/"+d_img} class="hover:underline text-slate-400">Source</a> | 
         <a href={cliplink(d_img)} class="hover:underline text-slate-400">More like this</a>
-
+        <div>
         <img
             alt={"" + d_img}
-            style="max-height:80vh, max-width:100%;"
+            style="max-height:80%; max-width:100%;"
             src="/i/{d_img}"
         />
+        </div>
     </div>
 {/if}
