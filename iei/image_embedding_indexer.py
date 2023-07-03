@@ -362,12 +362,24 @@ class FaissHelper:
 from PIL import JpegImagePlugin
 JpegImagePlugin._getmp = lambda x: None # type: ignore
 
-
+import urllib.parse
 class ImgHelper:
+
+    def uri_to_file_path(self,uri):
+        parsed_uri = urllib.parse.urlparse(uri)
+        if parsed_uri.scheme == "file":
+            file_path = urllib.parse.unquote(parsed_uri.path)
+            if parsed_uri.netloc != "":
+                # Handle Windows paths with network location (e.g., file://hostname/path)
+                file_path = "//" + parsed_uri.netloc + file_path
+            return file_path
+        else:
+            raise ValueError("Not a file URI")
+
         
     def fetch_img(self,uri,headers=None) -> tuple[Image.Image,ImgData,datetime.datetime,bytes]:
 
-        if not headers:
+        if not headers and  re.match(r'^https?:',uri):
             raise(Exception("headers were missing"))
             headers = {'User-agent': 
                       "Clip Embedding Calculator/0.01 (https://github.com/ramayer/wikipedia_in_spark; ) generic-library/0.0"}
@@ -377,13 +389,23 @@ class ImgHelper:
             mtime_h = resp.headers.get('Last-Modified')
             mtime  = email.utils.parsedate_to_datetime(mtime_h) if mtime_h else None
             img_bytes = resp.content
-        else:
-            filepath = re.sub(r'^file://','',uri)
+        elif re.match(r'^file://',uri):
+            filepath = self.uri_to_file_path(uri)
             print("reading ",filepath)
             mtime = datetime.datetime.fromtimestamp(os.path.getmtime(filepath),
                                                     tz=datetime.timezone.utc)
             with open(filepath,"rb") as f:
                 img_bytes = f.read()
+        elif os.path.exists(uri):
+            filepath = uri
+            print("reading ",filepath)
+            mtime = datetime.datetime.fromtimestamp(os.path.getmtime(filepath),
+                                                    tz=datetime.timezone.utc)
+            with open(filepath,"rb") as f:
+                img_bytes = f.read()
+        else:
+            raise ValueError(f"can't figure out how to get {uri}")
+        
         if not mtime:
             mtime = datetime.datetime.now()
         bytesize = len(img_bytes)

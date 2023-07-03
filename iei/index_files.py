@@ -46,8 +46,8 @@ def list_files(files, recurse=False, fileformat=None):
                 if (fileformat is None):
                     if not is_likely_image(filepath):
                         continue
-                print(filepath)
-                process_file(filepath)
+                result = process_file(filepath)
+                print(result,filepath)
         else:
             if os.path.exists(file) and (fileformat is None or file.endswith(f".{fileformat}")):
                 print(file)
