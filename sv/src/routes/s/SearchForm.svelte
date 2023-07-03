@@ -25,6 +25,7 @@
 <form>
     <div
         class="p-1 pr-3 rounded-2xl flex w-full bg-transparent [&>*]:bg-gray-900 [&>*]:border-gray-500 [&>*]:border"
+        style="z-index:999"
     >
         <div class="rounded-l-lg p-1">
             <a href="/" class="inline-block" style="transform: rotate(45deg);"

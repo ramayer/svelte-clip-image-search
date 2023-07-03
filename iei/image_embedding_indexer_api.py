@@ -57,16 +57,16 @@ async def thm(img_id:int, w:int|None=None,h:int|None=None):
     'Expires': '0',
   }
 
-  #time.sleep(0.02)
+  #time.sleep(0.1)
   if (h or w) and (thm := iei.get_thm(img_id)):
     #print("recompressing")
     buf = io.BytesIO()
-    t2 = iei.img_helper.make_thm(thm,max_w=w,max_h=h)
+    t2 = iei.img_helper.make_thm(thm,max_w=w or 1024,max_h=h or 1024)
     t2.save(buf,format="WebP",quality=50)
     return fastapi.Response(content = buf.getvalue(), headers = hdrs, media_type="image/webp")
   if b := iei.get_thm_bytes(img_id):
     return fastapi.Response(content = b, headers = hdrs, media_type="image/webp")
-
+  size=1024
   svg = f'''<svg version="1.1" width="{size}" height="{int(size*3/4)}" xmlns="http://www.w3.org/2000/svg">
               <!--<rect width="100%" height="100%" fill="#333" /> -->
               <circle cx="50%" cy="50%" r="25%" fill="#222"/>
@@ -191,8 +191,8 @@ async def search(q: Optional[str] = None, iid: Optional[int] = None, type: Optio
     print(q)
     if q and (cids := re.findall(r'^clip:(\d+)',q)):
        print(f"found a clip-like expression for {cids}")
-       emb = np.stack([iei.get_openclip_embedding(e) for e in cids])
-       print(emb)
+       embs = [iei.get_openclip_embedding(e) for e in cids]
+       emb = np.stack(embs) # type: ignore
        fh = iei.clip_faiss_helper 
        results = fh.search(emb,k=5000)
     elif q:

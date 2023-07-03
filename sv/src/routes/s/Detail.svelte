@@ -1,9 +1,13 @@
 <script lang="ts">
     import { goto } from "$app/navigation";
-    export let results: { q: string | null; ids: number[];details?:any } | null;
+    export let results: {
+        q: string | null;
+        ids: number[];
+        details?: any;
+    } | null;
     import { preview_store, detail_store, cols_store } from "./stores.js";
 
-    console.log("here results is ",results)
+    console.log("here results is ", results);
 
     let cols = 7;
     let d_img = 0;
@@ -35,36 +39,44 @@
 
     function cliplink(new_d: number) {
         let base_url = "?";
-        let new_q = 'clip:'+new_d
+        let new_q = "clip:" + new_d;
         let p = new URLSearchParams({ q: new_q });
         return base_url + p;
     }
 
+    $: title = results?.details?.metadata
+        ? results.details.metadata.title
+        : "" + d_img;
     console.log(related_pic_ids);
 
     let key: string;
-	let code: string ;
+    let code: string;
 
-	function handleKeydown(event: KeyboardEvent) {
-
+    function handleKeydown(event: KeyboardEvent) {
         if (event.code == "Escape") {
-            let loc = makelink(null)
-            goto(loc)
+            let loc = makelink(null);
+            goto(loc);
         }
-        console.log("key event = ",event)
-		key = event.key;
-		code = event.code;
-	}
-
+        if (event.code == "ArrowRight") {
+            let loc = makelink(idx_to_id(d_idx + 1));
+            goto(loc);
+        }
+        if (event.code == "ArrowLeft") {
+            let loc = makelink(idx_to_id(d_idx - 1));
+            goto(loc);
+        }
+        console.log("key event = ", event);
+        key = event.key;
+        code = event.code;
+    }
 </script>
+
 <svelte:window on:keydown={handleKeydown} />
 
 {#if d_img != 0}
-
     <div
-        class="fixed p-10 rounded-2xl top-[5vh] left-[5vw] h-[90vh] w-[90vw] bg-slate-900 z-0"
+        class="detail_container bg-slate-900 p-4 rounded-2xl border-slate-500 border-2"
     >
-    {key} {code}
         <div
             class="w-full bg-gray-800 py-2 px-4 flex justify-between items-center text-white text-2xl focus:outline-none"
         >
@@ -81,19 +93,47 @@
             <a href={makelink(idx_to_id(d_idx + 20))}>&#x2AF8;&#xFE0E;</a>
             <a href={makelink(null)}>&#x2715;&#xFE0E;</a>
         </div>
-        {#if results && results.details}
-        {results.details.metadata.title}<br>
-       {/if}
-      
-        Details for {d_img}
-        <a href={"/d/"+d_img} class="hover:underline text-slate-400">Source</a> | 
-        <a href={cliplink(d_img)} class="hover:underline text-slate-400">More like this</a>
-        <div>
-        <img
-            alt={"" + d_img}
-            style="max-height:80%; max-width:100%;"
-            src="/i/{d_img}"
-        />
+        <div class="caption">
+            {title}
+            <br />
+            <a href={"/d/" + d_img}>Source</a>
+            |
+            <a href={cliplink(d_img)}>More like this</a>
+        </div>
+        <div class="image-container">
+            <img class="detail_img" src="/i/{d_img}" alt={title} />
         </div>
     </div>
 {/if}
+
+
+<style>
+    .detail_container {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        height: 95vh;
+        width: 95vw;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .image-container {
+        flex: 1;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        overflow: hidden;
+    }
+
+    .detail_img {
+        max-width: 100%;
+        max-height: 100%;
+    }
+
+    .caption {
+        padding: 10px;
+        text-align: center;
+    }
+</style>

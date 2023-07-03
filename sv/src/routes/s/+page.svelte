@@ -39,7 +39,7 @@
     // $: console.log("+page.svelte q", q);
 </script>
 
-<div class="fixed top-1 left-1 w-full pr-2">
+<div class="fixed top-1 left-1 w-full pr-2 z-50">
     <SearchForm />
 </div>
 <div class="h-12" bind:this={top_element} />

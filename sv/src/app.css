@@ -5,3 +5,10 @@
 body {
     @apply bg-white dark:bg-gray-800 text-black dark:text-white;
 }
+
+
+@layer base {
+    a {
+      @apply hover:underline text-slate-400;
+    }
+  }
