@@ -9,11 +9,13 @@
     let cols = 7;
     let d_img = 0;
     let p_img = 0;
-    let q = '';
     preview_store.subscribe((x) => (p_img = x));
     detail_store.subscribe((x) => (d_img = x));
     cols_store.subscribe((x) => (cols = x));
-    q_store.subscribe(async (x) => {q=''; await tick; q = x});
+    
+    // let q = '';
+    // q_store.subscribe(async (x) => {q=''; await tick; q = x});
+    $: q = results?.q || ''
 
     let num_available = 12;
     let num_visible = 1;
@@ -208,7 +210,7 @@
                 class="[&>*]:rounded-md [&>*]:border [&>*]:border-black [&>*]:overflow-clip"
             >
                 {#each c as i}
-                    <ResultImg img_id={i} />
+                    <ResultImg img_id={i} q={q} />
                 {/each}
                 <div
                     class="column_footer text-gray-700 h-[50vh]"

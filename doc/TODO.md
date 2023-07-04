@@ -14,3 +14,7 @@
 * Only convert some of the ML model results to float16 before storing on disk.  Some should stay ints, others should stay 32-bit.
 * Store separate thm indexes for faces?
 * Store a text embedding.
+
+## Bugs
+
+* The URLs in the result images need to get their 'q' parameter from the result data. There's a race condition if getting from the url or the store.

@@ -1,5 +1,6 @@
 <script lang="ts">
     export let img_id: number;
+    export let q: string;
 
     import { onMount, tick } from "svelte";
     import { browser } from "$app/environment"; // for infinite scroll
@@ -14,9 +15,7 @@
     thm_size_store.subscribe((x) => (thm_size = x));
     cols_store.subscribe((x) => (cols = x));
 
-
     import { page } from "$app/stores";
-    let q = $page.url.searchParams.get("q");
 
     // mobile has no mouseover events; so the first single click
     // can emulate a mouseover
@@ -51,6 +50,8 @@
     <a
         href={make_link(img_id)}
         on:mouseenter={(e) => handle_interaction(img_id)}
+        on:mousedown={(e) => handle_interaction(img_id)}
+        on:touchstart={(e) => handle_interaction(img_id)}
         on:keydown={(e) => handle_interaction(img_id)}
     >
         <img alt={"" + img_id} src="/t/{img_id}?w={thm_size}" />

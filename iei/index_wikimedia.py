@@ -121,6 +121,7 @@ def check_pic(dbname,descr_url):
 #             con.commit()
 
 def get_images_in_category(category_name):
+    print(f"getting images for {category_name}")
     site = mwclient.Site('commons.wikimedia.org')
     category = site.Categories[category_name]
     images = (x for x in category.members() if isinstance(x,mwclient.image.Image)) # type: ignore
@@ -190,7 +191,7 @@ big_cat = 'Featured_pictures_on_Wikimedia_Commons'
 bigger_cat = 'Valued_images' # ~2000?
 huge_cat = 'Quality_images'
 cat = 'Kung_fu'
-cat = big_cat
+cat = huge_cat
 #cat = None
 
 counter = 0
@@ -210,8 +211,7 @@ if cat:
             x = iei.preprocess_img(thm_url,descr_url,title,name,"{}",headers=wikimedia_api_headers)
             print(f"{datetime.datetime.now().isoformat()} {x}")
             counter+=1
-            if counter>10000:
-                break
+
 
             # descr_url,thm_url,clip_embedding,length = process_image(image_url,descr_url)
             # print(' ',descr_url,length)

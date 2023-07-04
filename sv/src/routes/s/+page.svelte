@@ -9,6 +9,7 @@
     import ResultList from "./ResultList.svelte";
     import Detail from "./Detail.svelte";
     import Preview from "./Preview.svelte";
+    import PreviewContainer from "./PreviewContainer.svelte";
     import SearchForm from "./SearchForm.svelte";
     import type { PageData } from "./$types";
     import { onMount } from "svelte";
@@ -39,12 +40,11 @@
     // $: console.log("+page.svelte q", q);
 </script>
 
-<div class="fixed top-1 left-1 w-full pr-2 z-50">
-    <SearchForm />
-</div>
+<SearchForm />
+
 <div class="h-12" bind:this={top_element} />
 <ResultList results={data}>hi</ResultList>
 {#if cols > 4}
-    <Preview />
+    <PreviewContainer />
 {/if}
 <Detail results={data} />

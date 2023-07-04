@@ -857,8 +857,8 @@ class ImageEmbeddingIndexer:
         face = self.get_insightface_analysis(img_id)
         need_image = (thm is None) or (clip is None) or (face is None)
         if not need_image:
-            print(f"{img_id} was already done")
-            return
+            #print(f"{img_id} was already done")
+            return (img_id,time.time()-t0,0,0,0)
 
         if need_image and (img is None):
             if self.debug:

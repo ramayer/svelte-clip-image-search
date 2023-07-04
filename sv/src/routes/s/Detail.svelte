@@ -1,5 +1,6 @@
 <script lang="ts">
     import { goto } from "$app/navigation";
+    import Preview from "./Preview.svelte";
     export let results: {
         q: string | null;
         ids: number[];
@@ -90,7 +91,8 @@
                     />
                 </a>
             {/each}
-            <a href={makelink(idx_to_id(d_idx + 20))}>&#x2AF8;&#xFE0E;</a>
+            <a href={makelink(idx_to_id(d_idx + 20))}>&#x25BA;&#xFE0E;</a>
+            <!-- 2AF8 is nicer -->
             <a href={makelink(null)}>&#x2715;&#xFE0E;</a>
         </div>
         <div class="caption">
@@ -101,11 +103,14 @@
             <a href={cliplink(d_img)}>More like this</a>
         </div>
         <div class="image-container">
-            <img class="detail_img" src="/i/{d_img}" alt={title} />
+            {#if false}
+                <img class="detail_img" src="/i/{d_img}" alt={title} />
+            {:else}
+                <Preview b_url="/i/{d_img}" s_url="/t/{d_img}" href={"/d/" + d_img}/>
+            {/if}
         </div>
     </div>
 {/if}
-
 
 <style>
     .detail_container {
@@ -135,5 +140,19 @@
     .caption {
         padding: 10px;
         text-align: center;
+    }
+
+    @supports (padding-top: env(safe-area-inset-top)) {
+        /* annoying phone browsers cover up parts of vh x vw */
+        .detail_container {
+            top: calc(40px + env(safe-area-inset-top));
+            left: 5vw;
+            width: 90vw;
+            transform: none;
+            height: calc(
+                100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom) -
+                    50px
+            );
+        }
     }
 </style>
