@@ -3,6 +3,17 @@
   import { preview_store, detail_store, thm_size_store } from "./stores.js";
 	import mouseposition from './mouseposition';
 
+  // https://svelte.dev/docs/svelte-motion
+  import { tweened } from 'svelte/motion';
+  import { cubicOut } from 'svelte/easing';
+  const size = tweened(1, {
+    duration: 300,
+    easing: cubicOut
+  });
+
+  $: $size = ($mouseposition.x > inner_width/2) ? 0 : 50;
+
+
   let leftoffsetn = 5
   let leftoffsetstr = "5vw"
   let p_img = 0;
@@ -20,7 +31,7 @@
   $: s_url = "/t/" + p_img + "?w=" + thm_size;
 
   $: leftoffsetn = ($mouseposition.x > inner_width/2) ? 0 : 50;
-  $: leftoffsetstr = leftoffsetn + "vw"
+  $: leftoffsetstr = $size + "vw"
 </script>
 
 <svelte:window bind:innerWidth={inner_width} />
