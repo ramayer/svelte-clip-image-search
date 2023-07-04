@@ -18,8 +18,8 @@
     cols_store.subscribe((x) => (cols = x));
     let ids = results ? results.ids : [];
     $: d_idx = ids.indexOf(d_img ?? 0);
-    $: related_pic_ids = Array.from({ length: 10 }, (_, i) =>
-        idx_to_id(d_idx + i - 5)
+    $: related_pic_ids = Array.from({ length: 9 }, (_, i) =>
+        idx_to_id(d_idx + i - 4)
     );
 
     function idx_to_id(idx: number) {
@@ -79,21 +79,26 @@
         class="detail_container bg-slate-900 p-4 rounded-2xl border-slate-500 border-2"
     >
         <div
-            class="w-full bg-gray-800 py-2 px-4 flex justify-between items-center text-white text-2xl focus:outline-none"
+            class="w-full bg-gray-800 py-2 px-4 flex justify-around items-center text-white text-2xl focus:outline-none"
         >
-            <a href={makelink(idx_to_id(d_idx - 20))}>&#x2AF7;&#xFE0E;</a>
+            <!-- &#x2AF7; is nicer but missing on old Ubuntu -->
+            <div>
+            <a href={makelink(idx_to_id(d_idx - 20))}>&#x22B2;&#xFE0E;</a></div>
+            <div class="flex-grow flex  justify-around">
             {#each related_pic_ids as rid}
-                <a href={makelink(rid)} class="inline-block">
+                <a href={makelink(rid)} class="inline-block max-w-[10%]">
                     <img
+                    class="max-w-[100%]  "
                         style="max-height:30px;"
                         alt={"" + rid}
                         src="/t/{rid}"
                     />
                 </a>
             {/each}
-            <a href={makelink(idx_to_id(d_idx + 20))}>&#x25BA;&#xFE0E;</a>
+        </div>
+            <div><a href={makelink(idx_to_id(d_idx + 20))}>&#x22B3;&#xFE0E;</a></div>
             <!-- 2AF8 is nicer -->
-            <a href={makelink(null)}>&#x2715;&#xFE0E;</a>
+            <div><a href={makelink(null)}>&#x2715;&#xFE0E;</a></div>
         </div>
         <div class="caption">
             {title}

@@ -4,7 +4,12 @@
 
     import { onMount, tick } from "svelte";
     import { browser } from "$app/environment"; // for infinite scroll
-    import { preview_store, detail_store, cols_store, thm_size_store } from "./stores.js";
+    import {
+        preview_store,
+        detail_store,
+        cols_store,
+        thm_size_store,
+    } from "./stores.js";
 
     let cols = 7;
     let d_img = 0;

@@ -11,4 +11,9 @@ body {
     a {
       @apply hover:underline text-slate-400;
     }
-  }
+    html {
+        /*font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;*/
+      }
+    
+
+}

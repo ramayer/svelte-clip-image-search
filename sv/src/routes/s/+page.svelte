@@ -8,14 +8,18 @@
     import { page } from "$app/stores";
     import ResultList from "./ResultList.svelte";
     import Detail from "./Detail.svelte";
-    import Preview from "./Preview.svelte";
     import PreviewContainer from "./PreviewContainer.svelte";
     import SearchForm from "./SearchForm.svelte";
     import type { PageData } from "./$types";
     import { onMount } from "svelte";
-
     export let data: PageData;
 
+    function handleKeydown(
+        event: KeyboardEvent) {
+        if (event.code == "Escape") {
+            preview_store.set(0)
+        }
+    }
     const url = $page.url; // this will stay as the original value of the url
 
     $: q_store.set($page.url.searchParams.get("q") || "");
@@ -40,8 +44,9 @@
     // $: console.log("+page.svelte q", q);
 </script>
 
-<SearchForm />
+<svelte:window on:keydown={handleKeydown} />
 
+<SearchForm />
 <div class="h-12" bind:this={top_element} />
 <ResultList results={data}>hi</ResultList>
 {#if cols > 4}
