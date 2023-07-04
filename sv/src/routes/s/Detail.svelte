@@ -3,18 +3,19 @@
     import Preview from "./Preview.svelte";
     export let results: {
         q: string | null;
+        d?: number | null;
         ids: number[];
         details?: any;
-    } | null;
-    import { preview_store, detail_store, cols_store } from "./stores.js";
+    };
+    import { preview_store, cols_store } from "./stores.js";
 
-    console.log("here results is ", results);
+    console.log("In Detail - d = ", results.d);
 
     let cols = 7;
-    let d_img = 0;
+    $:d_img = results.d || 0;
     let p_img = 0;
     preview_store.subscribe((x) => (p_img = x));
-    detail_store.subscribe((x) => (d_img = x));
+    //detail_store.subscribe((x) => (d_img = x));
     cols_store.subscribe((x) => (cols = x));
     let ids = results ? results.ids : [];
     $: d_idx = ids.indexOf(d_img ?? 0);
@@ -54,6 +55,7 @@
     let code: string;
 
     function handleKeydown(event: KeyboardEvent) {
+        console.log("detail keydown ",event)
         if (event.code == "Escape") {
             let loc = makelink(null);
             goto(loc);
@@ -66,9 +68,9 @@
             let loc = makelink(idx_to_id(d_idx - 1));
             goto(loc);
         }
-        console.log("key event = ", event);
-        key = event.key;
-        code = event.code;
+        // console.log("key event = ", event);
+        // key = event.key;
+        // code = event.code;
     }
 </script>
 

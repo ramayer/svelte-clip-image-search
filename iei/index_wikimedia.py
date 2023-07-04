@@ -210,9 +210,9 @@ if cat:
                 continue
             try:
                 x = iei.preprocess_img(thm_url,descr_url,title,name,"{}",headers=wikimedia_api_headers)
+                print(f"{datetime.datetime.now().isoformat()} {x}")
             except pillow.UnidentifiedImageError as e:
                 print(e)
-            print(f"{datetime.datetime.now().isoformat()} {x}")
             counter+=1
 
 

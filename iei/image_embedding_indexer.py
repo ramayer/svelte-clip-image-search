@@ -95,6 +95,13 @@ import time
 import torch
 import zlib
 
+# Avoid the error
+# OSError: image file is truncated (45 bytes not processed)
+# from some buggy jpeg encoders
+from PIL import ImageFile
+ImageFile.LOAD_TRUNCATED_IMAGES = True
+
+
 # In[322]:
 
 @dataclasses.dataclass

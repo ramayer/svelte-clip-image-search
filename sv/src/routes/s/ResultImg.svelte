@@ -6,7 +6,6 @@
     import { browser } from "$app/environment"; // for infinite scroll
     import {
         preview_store,
-        detail_store,
         cols_store,
         thm_size_store,
     } from "./stores.js";
@@ -16,14 +15,11 @@
     let p_img = 0;
     let thm_size = 240;
     preview_store.subscribe((x) => (p_img = x));
-    detail_store.subscribe((x) => (d_img = x));
     thm_size_store.subscribe((x) => (thm_size = x));
     cols_store.subscribe((x) => (cols = x));
 
     import { page } from "$app/stores";
 
-    // mobile has no mouseover events; so the first single click
-    // can emulate a mouseover
     let isMobile =
         browser && /iPhone|iPad|iPod|Android/i.test(window.navigator.userAgent);
 
@@ -45,10 +41,6 @@
         return true;
     }
 
-    async function handle_click(r: number) {
-        detail_store.set(r);
-        return true;
-    }
 </script>
 
 <div>
@@ -57,8 +49,12 @@
         on:mouseenter={(e) => handle_interaction(img_id)}
         on:mousedown={(e) => handle_interaction(img_id)}
         on:touchstart={(e) => handle_interaction(img_id)}
-        on:keydown={(e) => handle_interaction(img_id)}
     >
+    <!-- 
+        Don't add a keydown event here like:
+        on:keydown={(e) => handle_interaction(img_id)}
+        after ctrl-click opens an image in a new tab the old tab will continue listening.
+    -->
         <img alt={"" + img_id} src="/t/{img_id}?w={thm_size}" />
     </a>
 </div>
