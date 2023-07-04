@@ -46,7 +46,7 @@
       {#if f_url}
       <div class="overlay overlay-2" in:fade={{ duration: 300 }}>
         <img            
-        class="overlay-image" src={b_url} alt="large" />
+        class="overlay-image" src={f_url} alt="large" />
       </div>
       {/if}
     </div>
@@ -59,13 +59,13 @@
     position: fixed;
     z-index: 99;
     display: flex;
+    width: 50vw;
   }
   .overlay_container {
     position: relative;
-    width: 50vw;
+    width: 100%;
     height: 100%;
   }
-
   .overlay {
     position: absolute;
     top: 0;
@@ -73,16 +73,13 @@
     width: 100%;
     height: 100%;
   }
-
   .overlay-1 {
     background-color: rgba(50, 50, 150, 0.5);
     opacity: 0.9;
   }
-
   .overlay-2 {
     background-color: rgba(0, 0, 0, 1);
   }
-
   .overlay-image {
     width: 100%;
     height: 100%;
