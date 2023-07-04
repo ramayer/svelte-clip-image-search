@@ -208,7 +208,10 @@ if cat:
             thm_url = get_thm_url(image_url,descr_url)
             if not thm_url:
                 continue
-            x = iei.preprocess_img(thm_url,descr_url,title,name,"{}",headers=wikimedia_api_headers)
+            try:
+                x = iei.preprocess_img(thm_url,descr_url,title,name,"{}",headers=wikimedia_api_headers)
+            except pillow.UnidentifiedImageError as e:
+                print(e)
             print(f"{datetime.datetime.now().isoformat()} {x}")
             counter+=1
 
