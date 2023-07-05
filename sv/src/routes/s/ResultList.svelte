@@ -8,7 +8,8 @@
         thm_size_store,
     } from "./stores.js";
 
-    export let results: { q: string | null; ids: number[] } | null;
+    import type { PageData } from "./$types";
+    export let results: PageData;
 
     let cols = 7;
     //let d_img = results.d || 0;

@@ -1,12 +1,9 @@
 <script lang="ts">
     import { goto } from "$app/navigation";
     import Preview from "./Preview.svelte";
-    export let results: {
-        q: string | null;
-        d?: number | null;
-        ids: number[];
-        details?: any;
-    };
+    import type { PageData } from "./$types";
+
+    export let results: PageData;
     import { preview_store, cols_store } from "./stores.js";
 
     console.log("In Detail - d = ", results.d);
@@ -15,7 +12,6 @@
     $:d_img = results.d || 0;
     let p_img = 0;
     preview_store.subscribe((x) => (p_img = x));
-    //detail_store.subscribe((x) => (d_img = x));
     cols_store.subscribe((x) => (cols = x));
     let ids = results ? results.ids : [];
     $: d_idx = ids.indexOf(d_img ?? 0);

@@ -9,6 +9,8 @@
 * merge the feature that blends thumbnails with the high-res image during loading.
 * mobile phones have no mouseover events, so perhaps use a single click to emulate mouseover.
 
+* this gallery makes better use of space for its details: https://rob-sheridan.com/highlights/1
+
 ## Storage
 
 * Only convert some of the ML model results to float16 before storing on disk.  Some should stay ints, others should stay 32-bit.

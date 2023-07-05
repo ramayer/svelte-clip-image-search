@@ -1,9 +1,7 @@
 <script lang="ts">
     import {
         preview_store,
-        // detail_store,
         cols_store,
-        // q_store,
     } from "./stores.js";
     import { page } from "$app/stores";
     import ResultList from "./ResultList.svelte";
@@ -27,6 +25,10 @@
 
     onMount(() => {
         console.log("s/+page.svelte onMount()");
+        if (data.d) {
+            const selectedimg = document.getElementById(""+data.d);
+            selectedimg?.scrollIntoView();
+        }
         //top_element?.scrollIntoView();
     });
     let cols = 7;
@@ -42,7 +44,9 @@
 <svelte:window on:keydown={handleEscape} />
 <SearchForm />
 <div class="h-12" bind:this={top_element} />
+
 <ResultList results={data}>hi</ResultList>
+
 {#if cols > 4 && !data.d}
     <PreviewContainer />
 {/if}
