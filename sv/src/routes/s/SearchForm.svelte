@@ -7,10 +7,16 @@
     import { page } from "$app/stores";
     import type { PageData } from "./$types";
 
+    import { onMount } from "svelte";
+
+    onMount(() => {
+        q = $page.url.searchParams.get("q");
+    });
+
     let q = $page.url.searchParams.get("q");
     let min_cols = 1;
     let max_cols = 30;
-    let cols = 7;
+    let cols = 9;
     let inv_cols = max_cols - cols + 1;
 
     $: cols_store.set(max_cols - inv_cols + min_cols);

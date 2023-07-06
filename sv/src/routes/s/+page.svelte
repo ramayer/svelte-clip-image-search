@@ -31,7 +31,7 @@
         }
         //top_element?.scrollIntoView();
     });
-    let cols = 7;
+    let cols = 9;
     cols_store.subscribe((x) => (cols = x));
 
     $: console.log("=== +page.svelte");

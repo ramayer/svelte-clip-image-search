@@ -19,6 +19,7 @@ def process_file(f):
         img_uri = src_uri
         title = f
         x = iei.preprocess_img(img_uri,src_uri,title,None,"{}")
+        return x
     except Exception as e:
         print(e)
 

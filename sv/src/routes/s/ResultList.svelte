@@ -11,7 +11,7 @@
     import type { PageData } from "./$types";
     export let results: PageData;
 
-    let cols = 7;
+    let cols = 9;
     //let d_img = results.d || 0;
     let p_img = 0;
     preview_store.subscribe((x) => (p_img = x));

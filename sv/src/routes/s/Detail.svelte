@@ -35,9 +35,9 @@
         return base_url + p;
     }
 
-    function cliplink(new_d: number) {
+    function cliplink(new_d: number,model:string='clip') {
         let base_url = "?";
-        let new_q = "clip:" + new_d;
+        let new_q = model + ":" + new_d;
         let p = new URLSearchParams({ q: new_q });
         return base_url + p;
     }
@@ -104,6 +104,9 @@
             <a href={"/d/" + d_img}>Source</a>
             |
             <a href={cliplink(d_img)}>More like this</a>
+            |
+            <a href={cliplink(d_img,'face')}>{results.details?.face_dat?.length} faces</a>
+            
         </div>
         <div class="image-container">
             {#if false}

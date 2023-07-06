@@ -181,15 +181,27 @@ async def instightface_analysis(img_id:int, size:Optional[int]=400):
 class SearchResults(BaseModel):
     imgids: list[int]
     scores: list[int]
-
-
+import random
 @app.get("/search")
 async def search(q: Optional[str] = None, iid: Optional[int] = None, type: Optional[str] = None):
     # Process the parameters and generate response data
     # Replace this with your actual implementation
     results = None
     print(q)
-    if q and (cids := re.findall(r'^clip:(\d+)',q)):
+    if q and (cids := re.findall(r'^face:(\d+)',q)):
+        ia = iei.get_insightface_analysis(cids[0])
+        print("here ia is ",ia)
+        if isinstance(ia,list):
+            e = np.stack([x['embedding'] for x in ia])
+            fh = iei.face_faiss_helper
+            results = fh.search(e,k=5000)
+        else:
+           print(f"can't find faces in {img_id}")
+           e = np.stack([np.array([random.random()-0.5 for i in range(512)])])
+           fh = iei.face_faiss_helper
+           results = fh.search(e,k=5000)
+
+    elif q and (cids := re.findall(r'^clip:(\d+)',q)):
        print(f"found a clip-like expression for {cids}")
        embs = [iei.get_openclip_embedding(e) for e in cids]
        emb = np.stack(embs) # type: ignore
@@ -232,6 +244,15 @@ async def get_clip_txt_embs(i: ImgModel):
         'embs':[1,2,3],
     }    
     return result
+
+@app.get("/reindex")
+async def reindex():
+  result = iei.make_all_faiss_indexes()
+  if iei.__dict__.get('clip_faiss_helper'):
+     del iei.clip_faiss_helper
+  if iei.__dict__.get('face_faiss_helper'):
+     del iei.face_faiss_helper
+  return result
 
 #############################
 from fastapi import FastAPI, Response

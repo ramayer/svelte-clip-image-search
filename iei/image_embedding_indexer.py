@@ -331,7 +331,7 @@ class FaissHelper:
 
     def create_index(self,ids,embs):
         embeddings    = np.stack(embs)
-        autofaiss.build_index(
+        index, index_infos = autofaiss.build_index(
                       embeddings=embeddings,
                       index_path=self.index_path,
                       index_infos_path=f"{self.index_path}.infos",
@@ -347,7 +347,7 @@ class FaissHelper:
 
         print(f"image_id_path should be at {self.id_path}")
         self.load()
-        return   
+        return index_infos
         ####  other id lookup alternatives
         # with open(f"{self.index_path}.id_lookup.json","w") as f:
         #    f.write(json.dumps(img_id_lookup,indent=1))
@@ -398,7 +398,7 @@ class ImgHelper:
             img_bytes = resp.content
         elif re.match(r'^file://',uri):
             filepath = self.uri_to_file_path(uri)
-            print("reading ",filepath)
+            #print("reading ",filepath)
             mtime = datetime.datetime.fromtimestamp(os.path.getmtime(filepath),
                                                     tz=datetime.timezone.utc)
             with open(filepath,"rb") as f:
@@ -758,7 +758,7 @@ class ImageEmbeddingIndexer:
         ids,embs = self.get_all_openclip_embeddings()
         embs = np.stack(embs)
         fh = self.clip_faiss_helper
-        fh.create_index(ids,embs)
+        return fh.create_index(ids,embs)
 
 
     ################
@@ -797,7 +797,7 @@ class ImageEmbeddingIndexer:
         ids,embs = self.get_all_insightface_embeddings()
         embs = np.stack(embs)
         fh = self.face_faiss_helper
-        fh.create_index(ids,embs)
+        return fh.create_index(ids,embs)
 
     ######################
     ## make both indexes
@@ -805,9 +805,10 @@ class ImageEmbeddingIndexer:
     
     def make_all_faiss_indexes(self):
         print("making insightface's index")
-        self.make_insightface_faiss_index()
+        i1 = self.make_insightface_faiss_index()
         print("making openclip's index")
-        self.make_openclip_faiss_index()
+        i2 = self.make_openclip_faiss_index()
+        return (i1,i2)
         
     ######################
     ## Preprocess an image
