@@ -769,11 +769,16 @@ class ImageEmbeddingIndexer:
         b = self.face_kvs.get(img_id)
         return b and pickle.loads(b)
     
+    def to_float16(self,a):
+        if isinstance(a,np.ndarray) and a.dtype == np.dtype('float32'):
+            return a.astype(np.float16)
+        else:
+            return a
+    
     def set_insightface_analysis(self,img_id,img):
         kvs         = self.face_kvs
         res         = self.ifw.analyze(img)
-        to16bit     = lambda x: x.astype(np.float16) if isinstance(x,np.ndarray) else x
-        r2          = [{k:to16bit(v) for k,v in r.items()} for r in res]
+        r2          = [{k:self.to_float16(v) for k,v in r.items()} for r in res]
         kvs[img_id] = pickle.dumps(r2)
         
     def get_all_insightface_embeddings(self):

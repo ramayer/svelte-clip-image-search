@@ -191,7 +191,7 @@ big_cat = 'Featured_pictures_on_Wikimedia_Commons'
 bigger_cat = 'Valued_images' # ~2000?
 huge_cat = 'Quality_images'
 cat = 'Kung_fu'
-cat = huge_cat
+cat = big_cat
 #cat = None
 
 counter = 0
