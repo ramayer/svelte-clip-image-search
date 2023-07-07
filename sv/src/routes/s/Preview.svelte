@@ -53,7 +53,7 @@
     </div>
   {/if}
   {#if width & height}
-  <div class="overlay overlay-test flex justify-center">
+  <div class="overlay overlay-test flex justify-center align-middle">
     <div style="flex-dirction:row; display:relative; display:flex;
     border: 1px solid red;
     aspect-ratio: {width}/{height};
