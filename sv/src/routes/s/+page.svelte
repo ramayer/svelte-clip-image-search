@@ -1,8 +1,5 @@
 <script lang="ts">
-    import {
-        preview_store,
-        cols_store,
-    } from "./stores.js";
+    import { preview_store, cols_store } from "./stores.js";
     import { page } from "$app/stores";
     import ResultList from "./ResultList.svelte";
     import Detail from "./Detail.svelte";
@@ -12,21 +9,20 @@
     import { onMount } from "svelte";
     export let data: PageData;
 
-    function handleEscape(
-        event: KeyboardEvent) {
+    function handleEscape(event: KeyboardEvent) {
         if (event.code == "Escape") {
-            preview_store.set(0)
+            preview_store.set(0);
         }
     }
     const url = $page.url; // this will stay as the original value of the url
-    $: q = $page.url.searchParams.get("q") || ""
-    
+    $: q = $page.url.searchParams.get("q") || "";
+
     let top_element: HTMLDivElement;
 
     onMount(() => {
         console.log("s/+page.svelte onMount()");
         if (data.d) {
-            const selectedimg = document.getElementById(""+data.d);
+            const selectedimg = document.getElementById("" + data.d);
             selectedimg?.scrollIntoView();
         }
         //top_element?.scrollIntoView();
@@ -51,5 +47,5 @@
     <PreviewContainer />
 {/if}
 {#if data.d}
-<Detail results={data} />
+    <Detail results={data} />
 {/if}

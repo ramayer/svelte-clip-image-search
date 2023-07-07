@@ -20,3 +20,4 @@
 ## Bugs
 
 * The URLs in the result images need to get their 'q' parameter from the result data. There's a race condition if getting from the url or the store.
+* Height and width are backwards in the indexer.  Only fix it at the same time that data is migrated.

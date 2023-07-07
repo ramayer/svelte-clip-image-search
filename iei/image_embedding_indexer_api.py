@@ -196,11 +196,10 @@ async def search(q: Optional[str] = None, iid: Optional[int] = None, type: Optio
             fh = iei.face_faiss_helper
             results = fh.search(e,k=5000)
         else:
-           print(f"can't find faces in {img_id}")
+           print(f"can't find faces in {cids[0]}")
            e = np.stack([np.array([random.random()-0.5 for i in range(512)])])
            fh = iei.face_faiss_helper
            results = fh.search(e,k=5000)
-
     elif q and (cids := re.findall(r'^clip:(\d+)',q)):
        print(f"found a clip-like expression for {cids}")
        embs = [iei.get_openclip_embedding(e) for e in cids]

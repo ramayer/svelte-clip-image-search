@@ -4,7 +4,22 @@
 
   export let b_url: string = "/t/0";
   export let s_url: string = "/t/0?w=60";
-  export let href: string|null = null;
+  export let width = 0;
+  export let height = 0;
+  export let overlay_data: {
+    x: number;
+    y: number;
+    w: number;
+    h: number;
+    c: string;
+  }[] = [];
+  export let href: string | null = null;
+
+  console.log("in preview, overlay_data ", overlay_data);
+
+  let offset_width: number = 0;
+  let offset_height: number = 0;
+
   let f_url: string | null = null;
 
   // https://svelte.dev/examples/deferred-transitions
@@ -25,17 +40,35 @@
 
 <div class="overlay_container">
   <div class="overlay overlay-1">
-    <a href={href}>
-    <img class="overlay-image" src={s_url} alt="small" />
+    <a {href}>
+      <img class="overlay-image" src={s_url} alt="small" />
     </a>
   </div>
   {#if f_url}
     <div class="overlay overlay-2" in:fade={{ duration: 300 }}>
-      <a href={href}>
+      <a {href}>
         <img class="overlay-image" src={f_url} alt="large" />
-        </a>
+      </a>
     </div>
   {/if}
+  {#if width & height}
+  <div class="overlay overlay-test flex justify-center">
+    <div
+      style="aspect-ratio: {height}/{width}; border: 1px solid yellow; max-width:100%; max-height:100%; flex:grow; position:relative"
+    >
+      {#if overlay_data}
+        {#each overlay_data as o}
+          <div
+            style="position:absolute; top:{o.y}%; left:{o.x}%; height:{o.h}%; width:{o.w}%; border: 5px solid red;"
+          >
+            face
+          </div>
+        {/each}
+      {/if}
+    </div>
+  </div>
+  {/if}
+ 
 </div>
 
 <style>

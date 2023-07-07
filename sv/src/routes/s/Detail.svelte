@@ -68,6 +68,27 @@
         // key = event.key;
         // code = event.code;
     }
+
+    function face_data_to_overlay(f: {bbox:number[]},h: number,w: number) {
+        console.log("fd2o ",f,w,h)
+        let x0 = f.bbox[0]
+        let y0 = f.bbox[1]
+        let x1 = f.bbox[2]
+        let y1 = f.bbox[3]
+        return {
+                        'x':100*x0/w,
+                        'y':100*y0/h,
+                        'w':100*(x1-x0)/w,
+                        'h':100*(y1-y0)/h,
+                        'c':'#f80',
+        }
+    }
+    console.log("results3 ",results);
+    $: h = results.details?.img_data.height
+    $: w = results.details?.img_data.width
+    $: overlay_data = results.details?.face_dat?.map((f: { bbox: number[]; }) => 
+        face_data_to_overlay(f,w,h))
+
 </script>
 
 <svelte:window on:keydown={handleKeydown} />
@@ -112,7 +133,14 @@
             {#if false}
                 <img class="detail_img" src="/i/{d_img}" alt={title} />
             {:else}
-                <Preview b_url="/i/{d_img}" s_url="/t/{d_img}" href={"/d/" + d_img}/>
+                <Preview 
+                b_url="/i/{d_img}" 
+                s_url="/t/{d_img}" 
+                href={"/d/" + d_img}
+                width={results.details?.img_data.width}
+                height={results.details?.img_data.height}
+                overlay_data={overlay_data}
+                />
             {/if}
         </div>
     </div>
