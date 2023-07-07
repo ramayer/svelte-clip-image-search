@@ -69,7 +69,7 @@
         // code = event.code;
     }
 
-    function face_data_to_overlay(f: {bbox:number[]},h: number,w: number) {
+    function face_data_to_overlay(f: {bbox:number[]},w: number,h: number) {
         console.log("fd2o ",f,w,h)
         let x0 = f.bbox[0]
         let y0 = f.bbox[1]
@@ -127,6 +127,7 @@
             <a href={cliplink(d_img)}>More like this</a>
             |
             <a href={cliplink(d_img,'face')}>{results.details?.face_dat?.length} faces</a>
+            {JSON.stringify(results.details?.img_data)}
             
         </div>
         <div class="image-container">

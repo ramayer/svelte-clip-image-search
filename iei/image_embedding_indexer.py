@@ -419,7 +419,8 @@ class ImgHelper:
         img      = Image.open(io.BytesIO(img_bytes))
         mimetype = img.get_format_mimetype() # type: ignore
         sha224   = base64.b85encode(hashlib.sha224(img_bytes).digest()).decode('utf-8')
-        w,h      = img.size
+        # get the size it'l be seen on the screen
+        w,h      = ImageOps.exif_transpose(img).size
         img_data = ImgData(None,sha224,w,h,bytesize,mtime,mimetype)
         return (img, img_data, mtime,img_bytes)
 
@@ -584,6 +585,7 @@ class ImageEmbeddingIndexer:
             CREATE INDEX IF NOT EXISTS img_meta_data__img_id ON img_meta_data(img_id);
         """
         
+        ## TODO - bug - height,width order here doesn't match
         # attributes of the source image itself
         create_img_data_sql="""
           CREATE TABLE IF NOT EXISTS img_data (
@@ -629,8 +631,11 @@ class ImageEmbeddingIndexer:
         """ key can either be an int (img_id) or a str (sha224) """
         db  = self.metadata_db
         col = isinstance(key,int) and "img_id" or "sha224"
-        sql = f"select * from img_data where {col}=?"
+        cols     = [f.name for f in dataclasses.fields(ImgData)]
+        sql_c = ",".join(cols)
+        sql = f"select {sql_c} from img_data where {col}=?"
         for row in db.execute(sql,[key]):
+            print(f"Hey, here row is {row}")
             return ImgData(*row)
     
     def set_img_data(self,data:ImgData):

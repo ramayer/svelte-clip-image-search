@@ -1,6 +1,7 @@
 <script lang="ts">
   import { fade } from "svelte/transition";
   import { browser } from "$app/environment"; // for infinite scroll
+    import { cols_store } from "./stores";
 
   export let b_url: string = "/t/0";
   export let s_url: string = "/t/0?w=60";
@@ -53,8 +54,18 @@
   {/if}
   {#if width & height}
   <div class="overlay overlay-test flex justify-center">
+    <div style="flex-dirction:row; display:relative; display:flex;
+    border: 1px solid red;
+    aspect-ratio: {width}/{height};
+    max-width: 100%; max-height:100%">
+    <!-- https://stackoverflow.com/questions/31869087/how-to-set-two-directions-for-flex-box-css -->
     <div
-      style="aspect-ratio: {height}/{width}; border: 1px solid yellow; max-width:100%; max-height:100%; flex:grow; position:relative"
+      style="border: 1px solid yellow; max-width:100%; max-height:100%; 
+
+      aspect-ratio: {width}/{height};
+      flex-direction: row;
+      flex:grow; position:relative;
+      aspect-ratio: {width}/{height};"
     >
       {#if overlay_data}
         {#each overlay_data as o}
@@ -65,7 +76,7 @@
           </div>
         {/each}
       {/if}
-    </div>
+    </div></div>
   </div>
   {/if}
  
