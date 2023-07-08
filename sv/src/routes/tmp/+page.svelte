@@ -17,8 +17,8 @@
         height: 80vh;
         background: white;
         margin: 30px;
+
         display:flex;
-        align-items: center;
         justify-content: center;
     }
     .c1 {
@@ -26,19 +26,15 @@
         max-width: 100%;
         height: 100%;
         display:flex;
-        flex-direction: column;
         flex-shrink: 1;
-        align-items: center;
+        flex-direction: column;
         justify-content: center;
-
     }
     .c2 {
         border: 1px solid red;
         max-height: 100%;
         width:100%;
         flex-shrink: 1;
-        align-items: center;
-
     }
 
 </style>
