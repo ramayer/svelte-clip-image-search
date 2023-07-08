@@ -42,13 +42,20 @@ async function get_metadata(img_id: number) {
     return resp;
 }
 
-export const load = (async (event) => {
+export const load = (async ({url,setHeaders}) => {
+
     console.log("============== +page.server.ts load")
-    const q = event.url.searchParams.get('q');
-    const ds = event.url.searchParams.get('d');
+    const q = url.searchParams.get('q');
+    const ds = url.searchParams.get('d');
     const d = ds ? parseInt(ds) : undefined;
     const details = d ? await get_metadata(d) : undefined
     console.log('querying backend for q=', q, ' d=', d);
+
+    setHeaders({
+        'Last-Modified': new Date(0).toUTCString(),
+        'Cache-Control': 'public, max-age=600',
+    });
+    
     if (q) {
         let result = query_backend(q)
         let q_results = await result

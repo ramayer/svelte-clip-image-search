@@ -238,12 +238,14 @@
                 {#each c as i}
                     <ResultImg img_id={i} {q} />
                 {/each}
+                {#if c.length > 0}
                 <div
                     class="column_footer text-gray-700 h-[50vh]"
                     style="border:0px"
                 >
                     ...
                 </div>
+                {/if}
             </div>
         {/each}
     {/if}
