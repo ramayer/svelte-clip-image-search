@@ -1,7 +1,7 @@
 <script lang="ts">
   import { fade } from "svelte/transition";
   import { browser } from "$app/environment"; // for infinite scroll
-    import { cols_store } from "./stores";
+  import { cols_store } from "./stores";
 
   export let b_url: string = "/t/0";
   export let s_url: string = "/t/0?w=60";
@@ -53,33 +53,28 @@
     </div>
   {/if}
   {#if width & height}
-  <div class="overlay overlay-test flex justify-center align-middle">
-    <div style="flex-dirction:row; display:relative; display:flex;
-    border: 1px solid red;
-    aspect-ratio: {width}/{height};
-    max-width: 100%; max-height:100%">
-    <!-- https://stackoverflow.com/questions/31869087/how-to-set-two-directions-for-flex-box-css -->
-    <div
-      style="border: 1px solid yellow; max-width:100%; max-height:100%; 
+    <div class="overlay c0">
+      <div style="aspect-ratio: {width}/{height};" class="c1">
+        <!-- https://stackoverflow.com/questions/31869087/how-to-set-two-directions-for-flex-box-css -->
+        <div
+          style="aspect-ratio: {width}/{height};
 
-      aspect-ratio: {width}/{height};
-      flex-direction: row;
-      flex:grow; position:relative;
-      aspect-ratio: {width}/{height};"
-    >
-      {#if overlay_data}
-        {#each overlay_data as o}
-          <div
-            style="position:absolute; top:{o.y}%; left:{o.x}%; height:{o.h}%; width:{o.w}%; border: 5px solid red;"
-          >
-            face
-          </div>
-        {/each}
-      {/if}
-    </div></div>
-  </div>
+      "
+          class="c2"
+        >
+          {#if overlay_data}
+            {#each overlay_data as o}
+              <div
+                class="c3"
+                style="top:{o.y}%; left:{o.x}%; height:{o.h}%; width:{o.w}%; "
+              >
+              </div>
+            {/each}
+          {/if}
+        </div>
+      </div>
+    </div>
   {/if}
- 
 </div>
 
 <style>
@@ -106,5 +101,40 @@
     width: 100%;
     height: 100%;
     object-fit: contain;
+  }
+
+  .c0 { /* a flex box the size of the container of arbitrary space */
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    pointer-events: none;
+  }
+  .c1 {/* a flex box constraining the height, but potentially narrower width */
+    max-width: 100%;
+    height: 100%;
+    display: flex;
+    flex-shrink: 1;
+    flex-direction: column;
+    justify-content: center;
+    pointer-events: none;
+  }
+  .c2 { /* a flex box constraining the width, but potentially shorter height */
+    max-height: 100%;
+    width: 100%;
+    flex-shrink: 1;
+    flex-direction: row;
+    flex-grow: 0;
+    position: relative;
+    pointer-events: none;
+  }
+  .c3 {
+    pointer-events: auto;
+    position: absolute;
+    border: 1px solid rgba(255, 255, 127, 0.5);
+  }
+  .c3:hover {
+    border: 2px solid rgba(255, 255, 127, 1);
+    background-color:rgba(255, 255, 127, 0.25);
   }
 </style>
