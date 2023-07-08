@@ -312,10 +312,8 @@ class FaissHelper:
     
     def search(self,target,k=10) -> list['FaissHelper.SearchResult']:
         idl = self.id_lookup
-        print("SHAPE=",idl.shape)
         if idl.shape == ():
             idl = idl.reshape((1))
-        print("here idl is",type(idl))
         dsts, idxs = self.faiss_index.search(target, k)
         results = []
         for drow,irow in zip(dsts,idxs):

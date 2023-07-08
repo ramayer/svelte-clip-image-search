@@ -130,7 +130,6 @@ async def met(img_id:int, size:int=400):
   clip_emb = to32bit(iei.get_openclip_embedding(img_id))
   face_dat = iei.get_insightface_analysis(img_id)
   face2    = [{k:to_block_fp(v) for k,v in r.items()} for r in (face_dat or [])]
-  print(clip_emb.dtype)
   data = {
      'img_data':img_data,
      'metadata':metadata,
@@ -187,10 +186,8 @@ async def search(q: Optional[str] = None, iid: Optional[int] = None, type: Optio
     # Process the parameters and generate response data
     # Replace this with your actual implementation
     results = None
-    print(q)
     if q and (cids := re.findall(r'^face:(\d+)',q)):
         ia = iei.get_insightface_analysis(cids[0])
-        print("here ia is ",ia)
         if isinstance(ia,list):
             e = np.stack([x['embedding'] for x in ia])
             fh = iei.face_faiss_helper
@@ -206,6 +203,11 @@ async def search(q: Optional[str] = None, iid: Optional[int] = None, type: Optio
        emb = np.stack(embs) # type: ignore
        fh = iei.clip_faiss_helper 
        results = fh.search(emb,k=5000)
+    elif q and (cids := re.findall(r'^randface:(\d+)',q)):
+       print(f"found a clip-like expression for {cids}")
+       e = np.stack([np.array([random.random()-0.5 for i in range(512)])])
+       fh = iei.face_faiss_helper
+       results = fh.search(e,k=5000)
     elif q:
        emb = iei.ocw.txt_embeddings([q])
        fh = iei.clip_faiss_helper 
@@ -244,6 +246,8 @@ async def get_clip_txt_embs(i: ImgModel):
     }    
     return result
 
+# TODO - figure out how to give the user a progress bar
+# and do this async
 @app.get("/reindex")
 async def reindex():
   result = iei.make_all_faiss_indexes()
@@ -263,9 +267,7 @@ async def test(img_id:Optional[int],
     fh = None
     q: list[list[float] | np.ndarray] | None = None
     if t == 'face':
-        print(img_id)
         ia = iei.get_insightface_analysis(img_id)
-        print("here ia is ",ia)
         if isinstance(ia,list):
             q = [x['embedding'] for x in ia]
             fh = iei.face_faiss_helper

@@ -76,15 +76,6 @@
                 break;
             }
         }
-        console.log(
-            "organized ",
-            num_visible_imgs,
-            " of ",
-            imgs.length,
-            " into ",
-            cols,
-            " cols"
-        );
         return ic;
     }
 
@@ -101,7 +92,7 @@
         cf.forEach((f) => {
             observer?.observe(f);
         });
-        console.log("added ", cf.length, " observers");
+        // console.log("added ", cf.length, " observers");
     }
 
     $: img_cols = organize_images_into_columns(imgs, cols, num_visible);
@@ -131,14 +122,6 @@
                     })
             )
         );
-    }
-
-    function wait_for_all_images_to_load(f: () => void) {
-        console.log("waiting for more images to load");
-        get_promise_for_all_loading_images().then(() => {
-            console.log("all images loaded");
-            f();
-        });
     }
 
     function debug_log(s: string) {

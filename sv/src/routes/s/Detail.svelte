@@ -6,7 +6,7 @@
     export let results: PageData;
     import { preview_store, cols_store } from "./stores.js";
 
-    console.log("In Detail - d = ", results.d);
+    // console.log("Detail.svelte for d = ", results.d);
 
     let cols = 7;
     $: d_img = results.d || 0;
@@ -15,9 +15,9 @@
     cols_store.subscribe((x) => (cols = x));
     let ids = results ? results.ids : [];
     $: d_idx = ids.indexOf(d_img ?? 0);
-    $: related_pic_ids = Array.from({ length: 9 }, (_, i) =>
-        idx_to_id(d_idx + i - 4)
-    );
+    // $: related_pic_ids = Array.from({ length: 9 }, (_, i) =>
+    //     idx_to_id(d_idx + i - 4)
+    // );
 
     function idx_to_id(idx: number) {
         return ids[(idx + ids.length) % ids.length];
@@ -45,7 +45,6 @@
     $: title = results?.details?.metadata
         ? results.details.metadata.title
         : "" + d_img;
-    console.log(related_pic_ids);
 
     let key: string;
     let code: string;
@@ -70,7 +69,6 @@
     }
 
     function face_data_to_overlay(f: { bbox: number[] }, w: number, h: number) {
-        console.log("fd2o ", f, w, h);
         let x0 = f.bbox[0];
         let y0 = f.bbox[1];
         let x1 = f.bbox[2];
@@ -83,7 +81,6 @@
             c: "#f80",
         };
     }
-    console.log("results3 ", results);
     $: h = results.details?.img_data.height;
     $: w = results.details?.img_data.width;
     $: overlay_data = results.details?.face_dat?.map((f: { bbox: number[] }) =>
@@ -97,40 +94,7 @@
     <div
         class="detail_container bg-slate-900 p-4 rounded-2xl border-slate-500 border-2"
     >
-        {#if false}
-            <div
-                class="w-full bg-gray-800 py-2 px-4 flex justify-around items-center text-white text-2xl focus:outline-none"
-            >
-                <!-- &#x2AF7; is nicer but missing on old Ubuntu -->
-                <div>
-                    <a href={makelink(idx_to_id(d_idx - 20))}
-                        >&#x22B2;&#xFE0E;</a
-                    >
-                </div>
-                <div class="flex-grow flex justify-around">
-                    {#each related_pic_ids as rid}
-                        <a
-                            href={makelink(rid)}
-                            class="inline-block max-w-[10%]"
-                        >
-                            <img
-                                class="max-w-[100%]"
-                                style="max-height:30px;"
-                                alt={"" + rid}
-                                src="/t/{rid}"
-                            />
-                        </a>
-                    {/each}
-                </div>
-                <div>
-                    <a href={makelink(idx_to_id(d_idx + 20))}
-                        >&#x22B3;&#xFE0E;</a
-                    >
-                </div>
-                <!-- 2AF8 is nicer -->
-                <div><a href={makelink(null)}>&#x2715;&#xFE0E;</a></div>
-            </div>
-        {/if}
+
         <div
             class="w-full border border-red-600 bg-gray-800 flex justify-around items-center text-2xl focus:outline-none whitespace-nowrap"
         >
@@ -177,9 +141,6 @@
 {/if}
 
 <style>
-    .m_1 {
-        border: 1px solid green;
-    }
     .m_2 {
         flex-grow: 1;
         flex-shrink: 1;
@@ -208,15 +169,6 @@
     .detail_img {
         max-width: 100%;
         max-height: 100%;
-    }
-
-    .caption {
-        padding: 8px;
-        font-size: 12pt;
-        text-align: center;
-    }
-    .caption a {
-        text-overflow: ellipsis;
     }
 
     @supports (padding-top: env(safe-area-inset-top)) {

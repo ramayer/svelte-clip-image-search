@@ -34,7 +34,6 @@
     }
 
     async function handle_interaction(r: number) {
-        console.log("setting preview image to ", r);
         preview_store.set(0);
         await tick();
         preview_store.set(r);

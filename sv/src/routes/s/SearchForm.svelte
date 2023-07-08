@@ -9,8 +9,12 @@
 
     import { onMount } from "svelte";
 
+    let q_input: HTMLInputElement;
+
     onMount(() => {
         q = $page.url.searchParams.get("q");
+        console.log("in searchform onMount attempting to set focus")
+        q_input.focus()
     });
 
     let q = $page.url.searchParams.get("q");
@@ -44,6 +48,7 @@
             </div>
             <div class="flex-grow flex w-10">
                 <input
+                    bind:this={q_input}
                     type="search"
                     name="q"
                     bind:value={q}

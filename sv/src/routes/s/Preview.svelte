@@ -16,8 +16,6 @@
     c: string;
   }[] = [];
 
-  console.log("in preview, overlay_data ", overlay_data);
-
   let offset_width: number = 0;
   let offset_height: number = 0;
 
