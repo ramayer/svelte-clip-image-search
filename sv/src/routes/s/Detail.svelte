@@ -9,7 +9,7 @@
     console.log("In Detail - d = ", results.d);
 
     let cols = 7;
-    $:d_img = results.d || 0;
+    $: d_img = results.d || 0;
     let p_img = 0;
     preview_store.subscribe((x) => (p_img = x));
     cols_store.subscribe((x) => (cols = x));
@@ -35,7 +35,7 @@
         return base_url + p;
     }
 
-    function cliplink(new_d: number,model:string='clip') {
+    function cliplink(new_d: number, model: string = "clip") {
         let base_url = "?";
         let new_q = model + ":" + new_d;
         let p = new URLSearchParams({ q: new_q });
@@ -51,7 +51,7 @@
     let code: string;
 
     function handleKeydown(event: KeyboardEvent) {
-        console.log("detail keydown ",event)
+        console.log("detail keydown ", event);
         if (event.code == "Escape") {
             let loc = makelink(null);
             goto(loc);
@@ -69,26 +69,26 @@
         // code = event.code;
     }
 
-    function face_data_to_overlay(f: {bbox:number[]},w: number,h: number) {
-        console.log("fd2o ",f,w,h)
-        let x0 = f.bbox[0]
-        let y0 = f.bbox[1]
-        let x1 = f.bbox[2]
-        let y1 = f.bbox[3]
+    function face_data_to_overlay(f: { bbox: number[] }, w: number, h: number) {
+        console.log("fd2o ", f, w, h);
+        let x0 = f.bbox[0];
+        let y0 = f.bbox[1];
+        let x1 = f.bbox[2];
+        let y1 = f.bbox[3];
         return {
-                        'x':100*x0/w,
-                        'y':100*y0/h,
-                        'w':100*(x1-x0)/w,
-                        'h':100*(y1-y0)/h,
-                        'c':'#f80',
-        }
+            x: (100 * x0) / w,
+            y: (100 * y0) / h,
+            w: (100 * (x1 - x0)) / w,
+            h: (100 * (y1 - y0)) / h,
+            c: "#f80",
+        };
     }
-    console.log("results3 ",results);
-    $: h = results.details?.img_data.height
-    $: w = results.details?.img_data.width
-    $: overlay_data = results.details?.face_dat?.map((f: { bbox: number[]; }) => 
-        face_data_to_overlay(f,w,h))
-
+    console.log("results3 ", results);
+    $: h = results.details?.img_data.height;
+    $: w = results.details?.img_data.width;
+    $: overlay_data = results.details?.face_dat?.map((f: { bbox: number[] }) =>
+        face_data_to_overlay(f, w, h)
+    );
 </script>
 
 <svelte:window on:keydown={handleKeydown} />
@@ -97,50 +97,79 @@
     <div
         class="detail_container bg-slate-900 p-4 rounded-2xl border-slate-500 border-2"
     >
+        {#if false}
+            <div
+                class="w-full bg-gray-800 py-2 px-4 flex justify-around items-center text-white text-2xl focus:outline-none"
+            >
+                <!-- &#x2AF7; is nicer but missing on old Ubuntu -->
+                <div>
+                    <a href={makelink(idx_to_id(d_idx - 20))}
+                        >&#x22B2;&#xFE0E;</a
+                    >
+                </div>
+                <div class="flex-grow flex justify-around">
+                    {#each related_pic_ids as rid}
+                        <a
+                            href={makelink(rid)}
+                            class="inline-block max-w-[10%]"
+                        >
+                            <img
+                                class="max-w-[100%]"
+                                style="max-height:30px;"
+                                alt={"" + rid}
+                                src="/t/{rid}"
+                            />
+                        </a>
+                    {/each}
+                </div>
+                <div>
+                    <a href={makelink(idx_to_id(d_idx + 20))}
+                        >&#x22B3;&#xFE0E;</a
+                    >
+                </div>
+                <!-- 2AF8 is nicer -->
+                <div><a href={makelink(null)}>&#x2715;&#xFE0E;</a></div>
+            </div>
+        {/if}
         <div
-            class="w-full bg-gray-800 py-2 px-4 flex justify-around items-center text-white text-2xl focus:outline-none"
+            class="w-full border border-red-600 bg-gray-800 flex justify-around items-center text-2xl focus:outline-none whitespace-nowrap"
         >
-            <!-- &#x2AF7; is nicer but missing on old Ubuntu -->
-            <div>
-            <a href={makelink(idx_to_id(d_idx - 20))}>&#x22B2;&#xFE0E;</a></div>
-            <div class="flex-grow flex  justify-around">
-            {#each related_pic_ids as rid}
-                <a href={makelink(rid)} class="inline-block max-w-[10%]">
-                    <img
-                    class="max-w-[100%]  "
-                        style="max-height:30px;"
-                        alt={"" + rid}
-                        src="/t/{rid}"
-                    />
-                </a>
-            {/each}
-        </div>
-            <div><a href={makelink(idx_to_id(d_idx + 20))}>&#x22B3;&#xFE0E;</a></div>
-            <!-- 2AF8 is nicer -->
-            <div><a href={makelink(null)}>&#x2715;&#xFE0E;</a></div>
-        </div>
-        <div class="caption">
-            {title}
-            <br />
-            <a href={"/d/" + d_img}>Source</a>
+            <div class="px-4">
+                <a href={makelink(idx_to_id(d_idx - 20))}>&#x22B2;&#xFE0E;</a>
+            </div>
             |
-            <a href={cliplink(d_img)}>More like this</a>
+            <div class="m_2 text-sm px-1">
+                <a href={"/d/" + d_img}>{title}</a>
+            </div>
             |
-            <a href={cliplink(d_img,'face')}>{results.details?.face_dat?.length} faces</a>
-            {JSON.stringify(results.details?.img_data)}
-            
+            <div class="px-2 text-sm">
+                <a href={cliplink(d_img, "face")}
+                    >{results.details?.face_dat?.length} faces</a
+                >
+            </div>
+            |
+            <div class="px-2 text-sm">
+                <a href={cliplink(d_img)}>More like this</a>
+            </div>
+            |
+            <div class="px-2">
+                <a href={makelink(idx_to_id(d_idx + 20))}>&#x22B3;&#xFE0E;</a>
+            </div>
+            |
+            <div class="px-2">
+                <a href={makelink(null)}>&#x2715;&#xFE0E;</a>
+            </div>
         </div>
         <div class="image-container">
             {#if false}
                 <img class="detail_img" src="/i/{d_img}" alt={title} />
             {:else}
-                <Preview 
-                b_url="/i/{d_img}" 
-                s_url="/t/{d_img}" 
-                href={"/d/" + d_img}
-                width={results.details?.img_data.width}
-                height={results.details?.img_data.height}
-                overlay_data={overlay_data}
+                <Preview
+                    b_url="/i/{d_img}"
+                    s_url="/t/{d_img}"
+                    width={results.details?.img_data.width}
+                    height={results.details?.img_data.height}
+                    {overlay_data}
                 />
             {/if}
         </div>
@@ -148,11 +177,20 @@
 {/if}
 
 <style>
+    .m_1 {
+        border: 1px solid green;
+    }
+    .m_2 {
+        flex-grow: 1;
+        flex-shrink: 1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
     .detail_container {
         position: fixed;
         top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
+        right: 0%;
         height: 95vh;
         width: 95vw;
         display: flex;
@@ -173,16 +211,20 @@
     }
 
     .caption {
-        padding: 10px;
+        padding: 8px;
+        font-size: 12pt;
         text-align: center;
+    }
+    .caption a {
+        text-overflow: ellipsis;
     }
 
     @supports (padding-top: env(safe-area-inset-top)) {
         /* annoying phone browsers cover up parts of vh x vw */
         .detail_container {
             top: calc(40px + env(safe-area-inset-top));
-            left: 5vw;
-            width: 90vw;
+            right: 0px;
+            width: 80vw;
             transform: none;
             height: calc(
                 100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom) -

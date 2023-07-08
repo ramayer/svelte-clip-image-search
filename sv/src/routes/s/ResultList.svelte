@@ -67,10 +67,11 @@
         cols: number,
         num_visible_imgs: number
     ) {
+        const cols_used = results.details? 1 : cols;
         let ic: number[][] = [];
         ic = [...Array(cols)].map((_, i) => []);
         for (const [idx, img] of imgs.entries()) {
-            ic[idx % cols].push(img);
+            ic[idx % cols_used].push(img);
             if (idx > num_visible_imgs) {
                 break;
             }
@@ -232,7 +233,7 @@
     {#if imgs}
         {#each img_cols as c}
             <div
-                class="[&>*]:rounded-md [&>*]:border [&>*]:border-black [&>*]:overflow-clip"
+                class="[&>*]:rounded-lg [&>*]:border-2 [&>*]:border-black [&>*]:overflow-clip "
             >
                 {#each c as i}
                     <ResultImg img_id={i} {q} />

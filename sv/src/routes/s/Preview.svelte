@@ -5,6 +5,7 @@
 
   export let b_url: string = "/t/0";
   export let s_url: string = "/t/0?w=60";
+  export let detail_href: string | undefined = undefined;
   export let width = 0;
   export let height = 0;
   export let overlay_data: {
@@ -14,7 +15,6 @@
     h: number;
     c: string;
   }[] = [];
-  export let href: string | null = null;
 
   console.log("in preview, overlay_data ", overlay_data);
 
@@ -41,13 +41,13 @@
 
 <div class="overlay_container">
   <div class="overlay overlay-1">
-    <a {href}>
+    <a href={detail_href}>
       <img class="overlay-image" src={s_url} alt="small" />
     </a>
   </div>
   {#if f_url}
     <div class="overlay overlay-2" in:fade={{ duration: 300 }}>
-      <a {href}>
+      <a href={detail_href}>
         <img class="overlay-image" src={f_url} alt="large" />
       </a>
     </div>
@@ -57,9 +57,7 @@
       <div style="aspect-ratio: {width}/{height};" class="c1">
         <!-- https://stackoverflow.com/questions/31869087/how-to-set-two-directions-for-flex-box-css -->
         <div
-          style="aspect-ratio: {width}/{height};
-
-      "
+          style="aspect-ratio: {width}/{height};"
           class="c2"
         >
           {#if overlay_data}
