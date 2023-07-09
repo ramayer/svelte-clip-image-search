@@ -28,7 +28,7 @@ export const GET = (async ({ setHeaders, url, params, fetch }) => {
     let resp: ResponseData = { imgids: [1, 2, 3], scores: [3, 2, 1] }
     if (resp1.ok) {
         const j = await resp1.json()
-        resp = { imgids: j.imgids, scores: j.scores }
+        resp = { imgids: j?.imgids ||[], scores: j?.scores||[] }
         return json(resp);
     } else {
         throw error(500, `Internal server error ${resp1.statusText}` )

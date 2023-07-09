@@ -20,14 +20,15 @@
     $: q = results?.q || "";
 
     let num_available = 12;
-    let num_visible = 1;
+    let num_visible = 1; // has no effect
     let imgs: number[] = [];
 
     $: num_available = results ? results["ids"].length : 0;
     $: imgs = results ? results["ids"] : [];
     $: gridstyle = `grid-template-columns: ${"1fr ".repeat(cols)}`;
 
-    $: num_visible = q ? cols * 3 : 2;
+    // roughly assume square for people with javascript turned off
+    $: num_visible = q ? cols * Math.min(cols,6) : 2; 
 
     $: console.log("ResultList.svetle imgs length is ", imgs.length);
     // $: console.log("ResultList.svetle results", results && results["ids"]);
@@ -42,9 +43,9 @@
             return 800;
         }
         const float_size = gallery_width / cols;
-        const size_in_units_of_60px = float_size / 60;
-        const exponent = Math.ceil(Math.log2(size_in_units_of_60px));
-        const rounded_value = 60 * Math.pow(2, exponent);
+        const size_in_units_of_30px = float_size / 12;
+        const exponent = Math.ceil(Math.log2(size_in_units_of_30px)/ .5);
+        const rounded_value = 12 * Math.ceil(Math.pow(2, exponent/2));
         console.log(
             "trying thumnail size of ",
             float_size,
@@ -147,7 +148,7 @@
 
         if (is_any_footer_visible()) {
             debug_log("try_adding_images: footer is visible, adding images")
-            num_visible += 10;
+            num_visible += 24;
             await tick; // hopefully they get added to the dom here
             setTimeout(() => {
                 // throttle loading wikipedia images about 10/second
@@ -208,7 +209,7 @@
 <div
     data-sveltekit-preload-data="tap"
     id="grid"
-    class="grid"
+    class="grid iei_result_grid"
     style="{gridstyle};"
     bind:this={result_grid_element}
     bind:clientWidth={gallery_width}
