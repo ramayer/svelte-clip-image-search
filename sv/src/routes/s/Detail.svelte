@@ -53,15 +53,15 @@
         console.log("detail keydown ", event);
         if (event.code == "Escape") {
             let loc = makelink(null);
-            goto(loc);
+            goto(loc,{noScroll:true});
         }
         if (event.code == "ArrowRight") {
             let loc = makelink(idx_to_id(d_idx + 1));
-            goto(loc);
+            goto(loc,{noScroll:true});
         }
         if (event.code == "ArrowLeft") {
             let loc = makelink(idx_to_id(d_idx - 1));
-            goto(loc);
+            goto(loc,{noScroll:true});
         }
         // console.log("key event = ", event);
         // key = event.key;

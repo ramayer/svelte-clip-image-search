@@ -69,7 +69,7 @@
             "in ResultList.svelte, images_was_set and d is " + results.d
         );
         await tick;
-        scrollIntoView("i" + results.d);
+        scrollToMiddle("i" + results.d);
     }
     $: images_was_set(results);
 
@@ -84,6 +84,25 @@
                 behavior: "smooth",
             });
         }
+    }
+
+    function scrollToMiddle(objid: string) {
+        if (!browser) {
+            return;
+        }
+        var element = document.getElementById(objid);
+        if (!element) {
+                console.log("scrollIntoView can't find ", objid);
+                return;
+            }
+        var elementRect = element.getBoundingClientRect();
+        var elementTop = elementRect.top;
+        var elementHeight = elementRect.height;
+        var windowHeight =
+            window.innerHeight || document.documentElement.clientHeight;
+
+        var scrollTo = elementTop - windowHeight / 2 + elementHeight / 2;
+        window.scrollTo({ top: scrollTo, behavior: "smooth" });
     }
     ///////////////////////////////////////////////////////////////////////////////
     // Organize the images into lists-of-lists for a nicer column-oriented output
@@ -251,7 +270,7 @@
                 class="iei_result_col [&>*]:rounded-lg [&>*]:border-2 [&>*]:border-black [&>*]:overflow-clip"
             >
                 {#each c as i}
-                    <ResultImg id="i{i}" img_id={i} {q} selected={i == details_id} />
+                    <ResultImg img_id={i} {q} selected={i == details_id} />
                 {/each}
                 {#if c.length > 0}
                     <div

@@ -49,6 +49,7 @@
         on:mouseenter={(e) => handle_interaction(img_id)}
         on:mousedown={(e) => handle_interaction(img_id)}
         on:touchstart={(e) => handle_interaction(img_id)}
+        data-sveltekit-noscroll
     >
     <!-- 
         Don't add a keydown event here like:
