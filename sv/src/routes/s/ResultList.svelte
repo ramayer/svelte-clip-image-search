@@ -101,6 +101,7 @@
         update_observers(img_cols);
     }, 100);
     $: attempt_reducing_num_visible_images(cols);
+    $: details_id = results.details?.img_data.img_id
 
     ///////////////////////////////////////////////////////////////////////////////
     // Observe if more images are needed
@@ -217,10 +218,10 @@
     {#if imgs}
         {#each img_cols as c}
             <div
-                class="[&>*]:rounded-lg [&>*]:border-2 [&>*]:border-black [&>*]:overflow-clip "
+                class="iei_result_col [&>*]:rounded-lg [&>*]:border-2 [&>*]:border-black [&>*]:overflow-clip "
             >
                 {#each c as i}
-                    <ResultImg img_id={i} {q} />
+                    <ResultImg img_id={i} {q} selected={i == details_id}/>
                 {/each}
                 {#if c.length > 0}
                 <div

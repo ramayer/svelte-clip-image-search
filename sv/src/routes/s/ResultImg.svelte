@@ -1,6 +1,7 @@
 <script lang="ts">
     export let img_id: number;
     export let q: string;
+    export let selected: boolean = false;
 
     import { onMount, tick } from "svelte";
     import { browser } from "$app/environment"; // for infinite scroll
@@ -42,7 +43,7 @@
 
 </script>
 
-<div>
+<div class="i {selected ? 'selected' : ''}">
     <a
         href={make_link(img_id)}
         on:mouseenter={(e) => handle_interaction(img_id)}
@@ -57,3 +58,12 @@
         <img id={"" + img_id} alt={"" + img_id} src="/t/{img_id}?w={thm_size}" />
     </a>
 </div>
+
+<style>
+    .i {
+        border: 2px solid black;
+    }
+    .selected {
+        border: 2px solid yellow;
+    }
+</style>

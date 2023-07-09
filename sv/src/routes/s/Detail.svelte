@@ -92,11 +92,25 @@
 
 {#if d_img != 0}
     <div
-        class="detail_container bg-slate-900 p-4 rounded-2xl border-slate-500 border-2"
+        class="detail_container rounded-none  bg-slate-900 border-slate-500 border-0 "
+        style="width:{100 * (cols-1)/cols}%"
     >
+    <div class="image-container">
+        {#if false}
+            <img class="detail_img" src="/i/{d_img}" alt={title} />
+        {:else}
+            <Preview
+                b_url="/i/{d_img}"
+                s_url="/t/{d_img}"
+                width={results.details?.img_data.width}
+                height={results.details?.img_data.height}
+                {overlay_data}
+            />
+        {/if}
+    </div>
 
         <div
-            class="w-full border border-red-600 bg-gray-800 flex justify-around items-center text-2xl focus:outline-none whitespace-nowrap"
+            class="border-0 w-full flex justify-around items-center text-2xl focus:outline-none whitespace-nowrap"
         >
             <div class="px-4">
                 <a href={makelink(idx_to_id(d_idx - 20))}>&#x22B2;&#xFE0E;</a>
@@ -123,19 +137,6 @@
             <div class="px-2">
                 <a href={makelink(null)}>&#x2715;&#xFE0E;</a>
             </div>
-        </div>
-        <div class="image-container">
-            {#if false}
-                <img class="detail_img" src="/i/{d_img}" alt={title} />
-            {:else}
-                <Preview
-                    b_url="/i/{d_img}"
-                    s_url="/t/{d_img}"
-                    width={results.details?.img_data.width}
-                    height={results.details?.img_data.height}
-                    {overlay_data}
-                />
-            {/if}
         </div>
     </div>
 {/if}
@@ -174,13 +175,14 @@
     @supports (padding-top: env(safe-area-inset-top)) {
         /* annoying phone browsers cover up parts of vh x vw */
         .detail_container {
-            top: calc(40px + env(safe-area-inset-top));
+            top: calc(45px + env(safe-area-inset-top));
+            bottom: env(safe-area-inset-bottom);
             right: 0px;
             width: 80vw;
             transform: none;
             height: calc(
                 100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom) -
-                    50px
+                    45px
             );
         }
     }

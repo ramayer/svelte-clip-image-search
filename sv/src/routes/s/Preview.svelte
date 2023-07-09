@@ -44,7 +44,7 @@
     </a>
   </div>
   {#if f_url}
-    <div class="overlay overlay-2" in:fade={{ duration: 300 }}>
+    <div class="overlay overlay-2" in:fade={{ duration: 100 }}>
       <a href={detail_href}>
         <img class="overlay-image" src={f_url} alt="large" />
       </a>
@@ -87,7 +87,7 @@
     height: 100%;
   }
   .overlay-1 {
-    background-color: rgba(50, 50, 70, 0.5);
+    background-color: rgb(15 23 42 / var(--tw-bg-opacity));
     opacity: 0.9;
   }
   .overlay-2 {
