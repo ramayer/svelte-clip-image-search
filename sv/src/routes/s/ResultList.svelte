@@ -57,9 +57,18 @@
 
     $: thm_size_store.set(nice_thumbnail_size(cols, gallery_width));
 
+    console.log("ResultList")
     onMount(() => {
+        console.log("ResultList onMount()")
         //num_visible = 1
     });
+
+    function images_was_set(imgs) {
+
+        console.log("in ResultList.svelte, images_was_set")
+    }
+    $: images_was_set(imgs);
+
 
     ///////////////////////////////////////////////////////////////////////////////
     // Organize the images into lists-of-lists for a nicer column-oriented output

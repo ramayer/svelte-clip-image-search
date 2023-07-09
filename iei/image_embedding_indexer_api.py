@@ -13,6 +13,7 @@
 #      around:1234
 
 import re
+import os
 from typing import Optional, Union
 from fastapi import FastAPI
 from pydantic import BaseModel
@@ -26,7 +27,7 @@ from fastapi.responses import RedirectResponse
 
 print("Starting")
 
-iei = image_embedding_indexer.ImageEmbeddingIndexer("./data/image_embedding_indexes")
+iei = image_embedding_indexer.ImageEmbeddingIndexer();
 app = FastAPI()
 hdrs = {'Cache-Control': f'public, max-age={60*60*24*365}'}
 hdrs = {'Cache-Control': f'public, max-age={60*5}'}

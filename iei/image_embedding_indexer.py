@@ -551,12 +551,17 @@ class ImageEmbeddingIndexer:
     #######################################
     
     def __init__(self, 
-                 imgidx_path="./data/image_embedding_indexes", 
+                 imgidx_path=None,
                  clip_model=('ViT-B-32-quickgelu','laion400m_e32'),
                  thm_size = (320,640),
                  device='cpu',
                  debug=True):
         #configure_sqlite3()
+        if not imgidx_path:
+            print("no path was specified - trying environment")
+            imgidx_path = os.getenv("IEI_PATH","./data/image_embedding_indexes")
+        print(f"constructing ImageEmbeddingIndexer at {imgidx_path}")
+
         os.makedirs(imgidx_path , exist_ok=True)
         self.imgidx_path       = imgidx_path
         self.clip_model        = clip_model
@@ -633,7 +638,6 @@ class ImageEmbeddingIndexer:
         sql_c = ",".join(cols)
         sql = f"select {sql_c} from img_data where {col}=?"
         for row in db.execute(sql,[key]):
-            print(f"Hey, here row is {row}")
             return ImgData(*row)
     
     def set_img_data(self,data:ImgData):
