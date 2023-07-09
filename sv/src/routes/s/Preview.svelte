@@ -2,10 +2,12 @@
   import { fade } from "svelte/transition";
   import { browser } from "$app/environment"; // for infinite scroll
   import { cols_store } from "./stores";
+    import { goto } from "$app/navigation";
 
   export let b_url: string = "/t/0";
   export let s_url: string = "/t/0?w=60";
   export let detail_href: string | undefined = undefined;
+  export let img_id: number;
   export let width = 0;
   export let height = 0;
   export let overlay_data: {
@@ -35,6 +37,10 @@
   };
 
   $: b_url && preload_image(b_url);
+
+  function clicked(idx: string | number){
+     goto(`/s?q=face:${img_id}.${idx}`)
+  }
 </script>
 
 <div class="overlay_container">
@@ -59,10 +65,12 @@
           class="c2"
         >
           {#if overlay_data}
-            {#each overlay_data as o}
+            {#each overlay_data as o,idx}
               <div
                 class="c3"
                 style="top:{o.y}%; left:{o.x}%; height:{o.h}%; width:{o.w}%; "
+                on:click={()=>clicked(idx)}
+                on:keypress={()=>clicked(idx)}
               >
               </div>
             {/each}

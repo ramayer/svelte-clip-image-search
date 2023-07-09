@@ -102,6 +102,7 @@
             <Preview
                 b_url="/i/{d_img}"
                 s_url="/t/{d_img}"
+                img_id={d_img}
                 width={results.details?.img_data.width}
                 height={results.details?.img_data.height}
                 {overlay_data}

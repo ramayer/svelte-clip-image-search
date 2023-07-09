@@ -186,14 +186,26 @@ async def search(q: Optional[str] = None, iid: Optional[int] = None, type: Optio
     # Process the parameters and generate response data
     # Replace this with your actual implementation
     results = None
-    if q and (cids := re.findall(r'^face:(\d+)',q)):
-        ia = iei.get_insightface_analysis(cids[0])
-        if isinstance(ia,list):
-            e = np.stack([x['embedding'] for x in ia])
+    print("q is "+q)
+    if q and (fids := re.findall(r'^face:((\d+)\.?(\d*))',q)):
+        print(f"fids is {fids}")
+        embeddings = []
+        for _,img_id,idx in fids:
+          ia = iei.get_insightface_analysis(img_id)
+          if idx:
+             row = ia[int(idx)]
+             embeddings.append(row['embedding'])
+             print(f"found one {img_id}.{idx}")
+          else:
+             print(f"getting {len(ia)} for {img_id}")
+             for row in ia:
+              embeddings.append(row['embedding'])               
+        if len(embeddings):
+            e = np.stack(embeddings)
             fh = iei.face_faiss_helper
             results = fh.search(e,k=5000)
         else:
-           print(f"can't find faces in {cids[0]}")
+           print(f"can't find faces in {fids}")
            e = np.stack([np.array([random.random()-0.5 for i in range(512)])])
            fh = iei.face_faiss_helper
            results = fh.search(e,k=5000)

@@ -38,7 +38,7 @@
     class="preview_container fixed rounded-2xl bottom-1  h-[50vh] bg-black p-2"
     style:--leftoffsetstr={leftoffsetstr}
   >
-    <Preview {s_url} {b_url} />
+    <Preview {s_url} {b_url} img_id={p_img}/>
   </div>
 {/if}
 
