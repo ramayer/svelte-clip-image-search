@@ -43,7 +43,7 @@
 
 </script>
 
-<div class="i {selected ? 'selected' : ''}">
+<div id="i{img_id}" class="i {selected ? 'selected' : ''}">
     <a
         href={make_link(img_id)}
         on:mouseenter={(e) => handle_interaction(img_id)}

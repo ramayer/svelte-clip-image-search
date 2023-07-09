@@ -2,11 +2,7 @@
     import ResultImg from "./ResultImg.svelte";
     import { browser } from "$app/environment"; // for infinite scroll
     import { onMount, tick } from "svelte";
-    import {
-        preview_store,
-        cols_store,
-        thm_size_store,
-    } from "./stores.js";
+    import { preview_store, cols_store, thm_size_store } from "./stores.js";
 
     import type { PageData } from "./$types";
     export let results: PageData;
@@ -28,7 +24,7 @@
     $: gridstyle = `grid-template-columns: ${"1fr ".repeat(cols)}`;
 
     // roughly assume square for people with javascript turned off
-    $: num_visible = q ? cols * Math.min(cols,6) : 2; 
+    $: num_visible = q ? cols * Math.min(cols, 6) : 2;
 
     $: console.log("ResultList.svetle imgs length is ", imgs.length);
     // $: console.log("ResultList.svetle results", results && results["ids"]);
@@ -44,8 +40,8 @@
         }
         const float_size = gallery_width / cols;
         const size_in_units_of_30px = float_size / 12;
-        const exponent = Math.ceil(Math.log2(size_in_units_of_30px)/ .5);
-        const rounded_value = 12 * Math.ceil(Math.pow(2, exponent/2));
+        const exponent = Math.ceil(Math.log2(size_in_units_of_30px) / 0.5);
+        const rounded_value = 12 * Math.ceil(Math.pow(2, exponent / 2));
         console.log(
             "trying thumnail size of ",
             float_size,
@@ -57,19 +53,38 @@
 
     $: thm_size_store.set(nice_thumbnail_size(cols, gallery_width));
 
-    console.log("ResultList")
+    console.log("ResultList");
     onMount(() => {
-        console.log("ResultList onMount()")
+        console.log("ResultList onMount()");
         //num_visible = 1
     });
 
-    function images_was_set(imgs) {
-
-        console.log("in ResultList.svelte, images_was_set")
+    async function images_was_set(results: {
+        q: string | null;
+        d: number | undefined;
+        ids: any;
+        details: any;
+    }) {
+        console.log(
+            "in ResultList.svelte, images_was_set and d is " + results.d
+        );
+        await tick;
+        scrollIntoView("i" + results.d);
     }
-    $: images_was_set(imgs);
+    $: images_was_set(results);
 
-
+    function scrollIntoView(objid: string) {
+        if (browser) {
+            const el = document.getElementById(objid);
+            if (!el) {
+                console.log("scrollIntoView can't find ", objid);
+                return;
+            }
+            el.scrollIntoView({
+                behavior: "smooth",
+            });
+        }
+    }
     ///////////////////////////////////////////////////////////////////////////////
     // Organize the images into lists-of-lists for a nicer column-oriented output
     function organize_images_into_columns(
@@ -77,7 +92,7 @@
         cols: number,
         num_visible_imgs: number
     ) {
-        const cols_used = results.details? 1 : cols;
+        const cols_used = results.details ? 1 : cols;
         let ic: number[][] = [];
         ic = [...Array(cols)].map((_, i) => []);
         for (const [idx, img] of imgs.entries()) {
@@ -110,7 +125,7 @@
         update_observers(img_cols);
     }, 100);
     $: attempt_reducing_num_visible_images(cols);
-    $: details_id = results.details?.img_data.img_id
+    $: details_id = results.details?.img_data.img_id;
 
     ///////////////////////////////////////////////////////////////////////////////
     // Observe if more images are needed
@@ -143,21 +158,25 @@
     let already_trying_to_add_images = false;
     async function try_adding_images() {
         if (already_trying_to_add_images) {
-            debug_log("try_adding_images: not adding because already_trying_to_add_images");
+            debug_log(
+                "try_adding_images: not adding because already_trying_to_add_images"
+            );
             return;
         }
         if (num_visible > num_available) {
-            debug_log("try_adding_images: not adding because no more available");
+            debug_log(
+                "try_adding_images: not adding because no more available"
+            );
             return;
         }
         already_trying_to_add_images = true;
-        debug_log("try_adding_images: will try to add some after waiting")
+        debug_log("try_adding_images: will try to add some after waiting");
 
         await get_promise_for_all_loading_images();
-        debug_log("try_adding_images: waited, checking footers")
+        debug_log("try_adding_images: waited, checking footers");
 
         if (is_any_footer_visible()) {
-            debug_log("try_adding_images: footer is visible, adding images")
+            debug_log("try_adding_images: footer is visible, adding images");
             num_visible += 24;
             await tick; // hopefully they get added to the dom here
             setTimeout(() => {
@@ -165,7 +184,9 @@
                 try_adding_images();
             }, 100);
         } else {
-            debug_log("try_adding_images: no footer is visible, not adding images")
+            debug_log(
+                "try_adding_images: no footer is visible, not adding images"
+            );
         }
         already_trying_to_add_images = false;
     }
@@ -227,18 +248,18 @@
     {#if imgs}
         {#each img_cols as c}
             <div
-                class="iei_result_col [&>*]:rounded-lg [&>*]:border-2 [&>*]:border-black [&>*]:overflow-clip "
+                class="iei_result_col [&>*]:rounded-lg [&>*]:border-2 [&>*]:border-black [&>*]:overflow-clip"
             >
                 {#each c as i}
-                    <ResultImg img_id={i} {q} selected={i == details_id}/>
+                    <ResultImg id="i{i}" img_id={i} {q} selected={i == details_id} />
                 {/each}
                 {#if c.length > 0}
-                <div
-                    class="column_footer text-gray-700 h-[50vh]"
-                    style="border:0px"
-                >
-                    ...
-                </div>
+                    <div
+                        class="column_footer text-gray-700 h-[50vh]"
+                        style="border:0px"
+                    >
+                        ...
+                    </div>
                 {/if}
             </div>
         {/each}
