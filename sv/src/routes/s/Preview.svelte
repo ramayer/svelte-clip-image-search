@@ -38,9 +38,6 @@
 
   $: b_url && preload_image(b_url);
 
-  function clicked(idx: string | number){
-     goto(`/s?q=face:${img_id}.${idx}`)
-  }
 </script>
 
 <div class="overlay_container">
@@ -66,13 +63,11 @@
         >
           {#if overlay_data}
             {#each overlay_data as o,idx}
-              <div
+              <a href="/s?q=face:{img_id}.{idx}"><div
                 class="c3"
                 style="top:{o.y}%; left:{o.x}%; height:{o.h}%; width:{o.w}%; "
-                on:click={()=>clicked(idx)}
-                on:keypress={()=>clicked(idx)}
               >
-              </div>
+              </div></a>  
             {/each}
           {/if}
         </div>
