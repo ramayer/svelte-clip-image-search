@@ -113,8 +113,8 @@
         <div
             class="border-0 w-full flex justify-around items-center text-2xl focus:outline-none whitespace-nowrap"
         >
-            <div class="px-4">
-                <a href={makelink(idx_to_id(d_idx - 20))}>&#x22B2;&#xFE0E;</a>
+            <div class="px-2">
+                <a href={makelink(idx_to_id(d_idx - 1))} data-sveltekit-noscroll  title="[Left Arrow]">&#x22B2;&#xFE0E;</a>
             </div>
             |
             <div class="m_2 text-sm px-1">
@@ -123,6 +123,7 @@
             |
             <div class="px-2 text-sm">
                 <a href={cliplink(d_img, "face")}
+                title="Search for any of the {results.details?.face_dat?.length} faces in the image"
                     >{results.details?.face_dat?.length} faces</a
                 >
             </div>
@@ -132,11 +133,11 @@
             </div>
             |
             <div class="px-2">
-                <a href={makelink(idx_to_id(d_idx + 20))}>&#x22B3;&#xFE0E;</a>
+                <a href={makelink(idx_to_id(d_idx + 1))}  data-sveltekit-noscroll title="[Right Arrow]">&#x22B3;&#xFE0E;</a>
             </div>
             |
             <div class="px-2">
-                <a href={makelink(null)}>&#x2715;&#xFE0E;</a>
+                <a href={makelink(null)}  title="[ESC]">&#x2715;&#xFE0E;</a>
             </div>
         </div>
     </div>
@@ -187,4 +188,6 @@
             );
         }
     }
+
+
 </style>

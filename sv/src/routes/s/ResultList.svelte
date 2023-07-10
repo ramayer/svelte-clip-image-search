@@ -73,23 +73,19 @@
     }
     $: images_was_set(results);
 
-    function scrollIntoView(objid: string) {
-        if (browser) {
-            const el = document.getElementById(objid);
-            if (!el) {
-                console.log("scrollIntoView can't find ", objid);
-                return;
-            }
-            el.scrollIntoView({
-                behavior: "smooth",
-            });
-        }
-    }
-
-    function scrollToMiddle(objid: string) {
+    async function scrollToMiddle(objid: string) {
         if (!browser) {
             return;
         }
+        // hack - is this needed - work around some infinite
+        // scroll race condition here.  Better to somehow
+        // wait until the image is actually in its final
+        // resting place in the dom.
+        await tick;
+        await tick;
+        await tick;
+        await tick;
+        await tick;
         var element = document.getElementById(objid);
         if (!element) {
                 console.log("scrollIntoView can't find ", objid);
@@ -101,7 +97,8 @@
         var windowHeight =
             window.innerHeight || document.documentElement.clientHeight;
 
-        var scrollTo = elementTop - windowHeight / 2 + elementHeight / 2;
+        var scrollTo = window.scrollY + elementTop - windowHeight / 2 + elementHeight / 2;
+        console.log("scrollToMiddle attempting to scroll to ",scrollTo, " where it found ",element);
         window.scrollTo({ top: scrollTo, behavior: "smooth" });
     }
     ///////////////////////////////////////////////////////////////////////////////

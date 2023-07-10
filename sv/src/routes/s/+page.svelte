@@ -23,7 +23,8 @@
         console.log("s/+page.svelte onMount()");
         if (data.d) {
             const selectedimg = document.getElementById("" + data.d);
-            selectedimg?.scrollIntoView();
+            //selectedimg?.scrollIntoView();
+            console.log("TODO - consider scrolling into view here, or maybe later")
         }
         //top_element?.scrollIntoView();
     });

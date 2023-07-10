@@ -24,10 +24,8 @@ export const GET = (async ({ setHeaders, url, params, fetch }) => {
         q: q || ''
     })
     let search_url = base_url + search_params;
-    console.log("before fetch in q")
     try {
         let resp1 = await fetch(search_url)
-        console.log("after fetch in q")
         let resp: ResponseData = { imgids: [1, 2, 3], scores: [3, 2, 1] }
         if (resp1.ok) {
             const j = await resp1.json()
