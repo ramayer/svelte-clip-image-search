@@ -24,16 +24,23 @@ export const GET = (async ({ setHeaders, url, params, fetch }) => {
         q: q || ''
     })
     let search_url = base_url + search_params;
-    let resp1 = await fetch(search_url)
-    let resp: ResponseData = { imgids: [1, 2, 3], scores: [3, 2, 1] }
-    if (resp1.ok) {
-        const j = await resp1.json()
-        resp = { imgids: j?.imgids ||[], scores: j?.scores||[] }
-        return json(resp);
-    } else {
-        throw error(500, `Internal server error ${resp1.statusText}` )
+    console.log("before fetch in q")
+    try {
+        let resp1 = await fetch(search_url)
+        console.log("after fetch in q")
+        let resp: ResponseData = { imgids: [1, 2, 3], scores: [3, 2, 1] }
+        if (resp1.ok) {
+            const j = await resp1.json()
+            resp = { imgids: j?.imgids || [], scores: j?.scores || [] }
+            return json(resp);
+        } else {
+            resp = { imgids: [], scores: [] }
+            return (json(resp, { status: 500 }))
+        }
+    } catch (error) {
+        let resp = { imgids: [], scores: [] }
+        return (json(resp, { status: 500 }))
     }
-
 }) satisfies RequestHandler;
 
 // TODO - consider preprocessing tiny thumbnails to data urls like

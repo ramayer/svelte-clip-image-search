@@ -783,8 +783,9 @@ class ImageEmbeddingIndexer:
             return a
     
     def set_insightface_analysis(self,img_id,img):
+        t_img       = ImageOps.exif_transpose(img)
         kvs         = self.face_kvs
-        res         = self.ifw.analyze(img)
+        res         = self.ifw.analyze(t_img)
         r2          = [{k:self.to_float16(v) for k,v in r.items()} for r in res]
         kvs[img_id] = pickle.dumps(r2)
         
@@ -871,7 +872,11 @@ class ImageEmbeddingIndexer:
                              img_id)
             self.set_metadata(metadata)
             metadata = self.get_metadata(img_uri) or metadata
-
+        
+        if idata.height <= 224 and idata.width <= 224:
+            # print("probably already a thumbnail and not worth indexing")
+            return (img_id,time.time()-t0,0,0,0)
+        
         thm  = self.get_thm(img_id)
         clip = self.get_openclip_embedding(img_id)
         face = self.get_insightface_analysis(img_id)

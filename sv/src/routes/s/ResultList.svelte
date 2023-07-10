@@ -212,6 +212,7 @@
 
     function is_any_footer_visible() {
         const divElements = col_footers();
+        console.log(`divElements here is ${divElements}`)
         const v: boolean = Array.from(divElements).some(
             (element: HTMLDivElement) => {
                 const rect: DOMRect = element.getBoundingClientRect();

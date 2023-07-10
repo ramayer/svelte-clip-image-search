@@ -28,7 +28,7 @@ def is_likely_image(file_path):
        'jpg', 'jpeg', 'png', 'gif', 'bmp', 'tiff', 'webp',
        'jfif', 'tga', 'tif', 'heic', 'raw',
     ]
-   pattern = fr'\b\w+\.(?:{"|".join(image_extensions)})\b'
+   pattern = fr'\b\w+\.(?:{"|".join(image_extensions)})$'
    match = re.search(pattern, file_path, re.IGNORECASE)
    return match
         
