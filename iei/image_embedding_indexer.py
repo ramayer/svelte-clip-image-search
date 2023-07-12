@@ -131,6 +131,7 @@ class ImgMetadata():
 
 #os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 #os.environ['CUDA_VISIBLE_DEVICES'] = ''
+import torchvision.transforms.transforms
 class OpenClipWrapper:
     def __init__(self,model_name='ViT-B-32-quickgelu',pretrained='laion400m_e32',device='cpu'):
         """
@@ -154,14 +155,17 @@ class OpenClipWrapper:
         return open_clip.list_pretrained()
     
     def img_embeddings(self,imgs):
-        with torch.no_grad(), torch.cuda.amp.autocast(): # type: ignore
-            preprocessed = torch.stack([self.preprocess(i) for i in imgs]).to(self.device)
+        with torch.no_grad(): # torch.autocast():
+            #print("type of preprocess is ",type(self.preprocess))
+            #torchvision.transforms.transforms.Compose
+            preprocessed_list = [self.preprocess(i) for i in imgs] # type: ignore
+            preprocessed = torch.stack(preprocessed_list).to(self.device) # type: ignore
             features = self.model.encode_image(preprocessed) # type: ignore
             features /= features.norm(dim=-1, keepdim=True)
             return features
     
     def txt_embeddings(self,txts):
-        with torch.no_grad(), torch.cuda.amp.autocast():# type: ignore
+        with torch.no_grad():# , torch.cuda.amp.autocast():# type: ignore
             tokenized = self.tokenize(txts).to(self.device)
             features = self.model.encode_text(tokenized) # type: ignore
             features /= features.norm(dim=-1, keepdim=True)
@@ -210,13 +214,23 @@ import collections
 import collections.abc
 #collections.abc.MutableMapping
 class SimpleSqliteKVStore(collections.abc.MutableMapping):
-    # TODO - add file locking.
-    def __init__(self,imgidx_path):
+    """
+        A simple disk-backed KV store.
+
+        Lighter weight than `import sqlitedict`.
+        This entire index can be reconstructed from source data, so disable
+        synchronous for orders of magnitude faster on spinning hard disks.
+    """
+    def __init__(self,imgidx_path,synchronous='OFF'):
         self.imgidx_path = imgidx_path
         self.lock = filelock.FileLock(imgidx_path + '.lock',timeout=10)
         self.db_conn = sqlite3.connect(imgidx_path)
-        create_kv_sql = "CREATE TABLE IF NOT EXISTS kv (k INTEGER PRIMARY KEY, v BLOB)"
+        create_kv_sql = "CREATE TABLE IF NOT EXISTS kv (k INTEGER PRIMARY KEY, v BLOB);"
         self.db_conn.execute(create_kv_sql)
+        self.db_conn.commit()
+        # can be fully reconstructed from source data. No need to keep.
+        pragma_sql = f"PRAGMA synchronous = {synchronous};"
+        self.db_conn.execute(pragma_sql)
         self.db_conn.commit()
         
     def __getitem__(self,k):
@@ -315,11 +329,12 @@ class FaissHelper:
         if idl.shape == ():
             idl = idl.reshape((1))
         dsts, idxs = self.faiss_index.search(target, k)
+        print("############33 type of idxs is",type(idxs))
         results = []
         for drow,irow in zip(dsts,idxs):
             scores = [float(d) for d in drow]
             imgids = [idl[i] for i in irow]
-            result = FaissHelper.SearchResult(scores=scores,imgids = imgids)
+            result = FaissHelper.SearchResult(scores=scores,imgids = imgids) # type: ignore
             results.append(result)
         return results
         
@@ -385,7 +400,6 @@ class ImgHelper:
     def fetch_img(self,uri,headers=None) -> tuple[Image.Image,ImgData,datetime.datetime,bytes]:
 
         if not headers and  re.match(r'^https?:',uri):
-            raise(Exception("headers were missing"))
             headers = {'User-agent': 
                       "Clip Embedding Calculator/0.01 (https://github.com/ramayer/wikipedia_in_spark; ) generic-library/0.0"}
         
@@ -422,6 +436,23 @@ class ImgHelper:
         img_data = ImgData(None,sha224,w,h,bytesize,mtime,mimetype)
         return (img, img_data, mtime,img_bytes)
 
+    def convert_I_to_L(self,img:Image.Image):
+        """
+        See https://github.com/OCR-D/core/pull/627
+        https://github.com/python-pillow/Pillow/issues/452
+        https://github.com/python-pillow/Pillow/pull/3838#discussion_r292114051
+        https://github.com/python-pillow/Pillow/pull/3838
+
+        and test on
+
+        https://upload.wikimedia.org/wikipedia/commons/thumb/b/b8/Quaternionsche_Mandelbrotmenge_20190830_zbuffer.png/800px-Quaternionsche_Mandelbrotmenge_20190830_zbuffer.png
+
+        which shows many artifacts if you don't /300.
+
+        """
+        array = np.uint8(np.array(img) / 300)
+        return Image.fromarray(array)
+    
     def make_thm(self,img:Image.Image,max_w=2048,max_h=2048) -> Image.Image:
         # TODO - consider if it needs: 
         #  - yes, it does need it.
@@ -555,6 +586,7 @@ class ImageEmbeddingIndexer:
                  clip_model=('ViT-B-32-quickgelu','laion400m_e32'),
                  thm_size = (320,640),
                  device='cpu',
+                 synchronous='OFF',
                  debug=True):
         #configure_sqlite3()
         if not imgidx_path:
@@ -570,6 +602,10 @@ class ImageEmbeddingIndexer:
         self.metadata_db       = sqlite3.connect(f"{imgidx_path}/img_metadata.sqlite3")
         self.img_helper        = ImgHelper()
         self.debug             = debug
+
+        pragma_sql = f"PRAGMA synchronous = {synchronous};"
+        self.metadata_db.execute(pragma_sql)
+        self.metadata_db.commit()
         
         # attributes of pointers to the image
         create_img_metadata_sql="""
@@ -872,7 +908,7 @@ class ImageEmbeddingIndexer:
                              img_id)
             self.set_metadata(metadata)
             metadata = self.get_metadata(img_uri) or metadata
-        
+
         if idata.height <= 224 and idata.width <= 224:
             # print("probably already a thumbnail and not worth indexing")
             return (img_id,time.time()-t0,0,0,0)
@@ -894,6 +930,10 @@ class ImageEmbeddingIndexer:
             print(f"Error: preprocess_img expected img for {img_uri}")
             return img_id
         
+        if img.mode == 'I':
+            img = self.img_helper.convert_I_to_L(img)
+            print("Warning: working around issues for PIL image mode 'I'")
+        
         t1 = time.time()
         if thm is None:   self.set_thm(img_id,img)
         t2 = time.time()
@@ -903,6 +943,21 @@ class ImageEmbeddingIndexer:
         t4 = time.time()
         return (img_id,t1-t0,t2-t1,t3-t2,t4-t3)
     
+
+    def reprocess_image(self,imgid,headers={}):
+        md = self.get_metadata(imgid)
+        if not md:
+            return(f"can't find {imgid}")
+        del(self.clip_kvs[imgid])
+        del(self.thm_kvs[imgid])
+        del(self.face_kvs[imgid])
+        return self.preprocess_img(md.img_uri,
+                        md.src_uri,
+                        md.title,
+                        md.subtitle,
+                        md.metadata,
+                        headers=headers)
+
 #     def encode_pytorch_to_bytes(self,t):
 #         return t.cpu().to(torch.float16).numpy().tobytes()
     

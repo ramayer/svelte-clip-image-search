@@ -187,17 +187,17 @@ async def search(q: Optional[str] = None, iid: Optional[int] = None, type: Optio
     # Process the parameters and generate response data
     # Replace this with your actual implementation
     results = None
-    print("q is "+q)
+    print("q is ",q)
     if q and (fids := re.findall(r'^face:((\d+)\.?(\d*))',q)):
         print(f"fids is {fids}")
         embeddings = []
         for _,img_id,idx in fids:
           ia = iei.get_insightface_analysis(img_id)
-          if idx:
+          if idx and ia:
              row = ia[int(idx)]
              embeddings.append(row['embedding'])
              print(f"found one {img_id}.{idx}")
-          else:
+          elif ia:
              print(f"getting {len(ia)} for {img_id}")
              for row in ia:
               embeddings.append(row['embedding'])               
@@ -217,19 +217,45 @@ async def search(q: Optional[str] = None, iid: Optional[int] = None, type: Optio
        fh = iei.clip_faiss_helper 
        results = fh.search(emb,k=5000)
     elif q and (cids := re.findall(r'^randface:(\d+)',q)):
-       print(f"found a clip-like expression for {cids}")
+       random.seed(int(cids[0]))
+       print(f"looking for random face with seed {cids}")
        e = np.stack([np.array([random.random()-0.5 for i in range(512)])])
        fh = iei.face_faiss_helper
        results = fh.search(e,k=5000)
+    elif q and (cids := re.findall(r'^randclip:(\d+)',q)):
+       random.seed(int(cids[0]))
+       print(f"looking for random clip with seed {cids}")
+       e = np.stack([np.array([random.random()-0.5 for i in range(512)])])
+       fh = iei.face_faiss_helper
+       results = fh.search(e,k=5000)
+    elif q and (cids := re.findall(r'^txt:(.*)',q)):
+       sql = "select img_id from "
+       db  = iei.metadata_db
+       sql = f"select img_id from img_meta_data where title like '%'||?||'%' limit 50"
+       print(sql)
+       ids = [row[0] for row in db.execute(sql,[cids[0]])]
+       results = [SearchResults(imgids= ids,scores=[1 for _ in ids] )]
     elif q:
        emb = iei.ocw.txt_embeddings([q])
        fh = iei.clip_faiss_helper 
        results = fh.search(emb,k=5000)
-    if results:
-        response_data = SearchResults(imgids=results[0].imgids, 
-                                      scores=[max(int(s*1000),-999) for s in results[0].scores])
-        return response_data
+
+
+
+    already_done=set()
+    good_ids=[]
+    good_scores=[]
+
+    for result in results or []:
+      for imgid,score in zip(result.imgids,result.scores):
+         if imgid not in already_done:
+            good_ids.append(imgid)
+            good_scores.append(max(int(score*1000),-999))
+            already_done.add(imgid)
+      
     
+    return SearchResults(imgids=good_ids, 
+                         scores=good_scores)    
 
 #####################################################################
 
@@ -269,6 +295,14 @@ async def reindex():
   if iei.__dict__.get('face_faiss_helper'):
      del iei.face_faiss_helper
   return result
+
+@app.get("/reload")
+async def reload():
+  if iei.__dict__.get('clip_faiss_helper'):
+     del iei.clip_faiss_helper
+  if iei.__dict__.get('face_faiss_helper'):
+     del iei.face_faiss_helper
+  return {'status':'ok'}
 
 #############################
 from fastapi import FastAPI, Response

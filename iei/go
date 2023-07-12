@@ -3,5 +3,13 @@
 source ~/.python/iei/bin/activate
 
 #env WATCHFILES_FORCE_POLLING=true uvicorn  --host=0.0.0.0  --reload image_embedding_indexer_api:app
+
+#export IEI_PATH=./data/home_photos.ie
 export IEI_PATH="./data/image_embedding_indexes"
+
+
 uvicorn  --host=0.0.0.0 --reload image_embedding_indexer_api:app
+
+
+
+

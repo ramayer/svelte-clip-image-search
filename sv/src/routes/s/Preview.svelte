@@ -130,10 +130,11 @@
   .c3 {
     pointer-events: auto;
     position: absolute;
-    border: 1px solid rgba(255, 255, 127, 0.5);
+    border: 1px solid  rgba(0,0,0, 0.75);   
+    outline: 1px solid rgba(255, 255, 127, 0.75);
   }
   .c3:hover {
-    border: 2px solid rgba(255, 255, 127, 1);
-    background-color:rgba(255, 255, 127, 0.25);
+    outline: 4px solid rgba(255,255, 0, 1);
+    background-color:rgba(255, 255, 127, 0.5);
   }
 </style>
