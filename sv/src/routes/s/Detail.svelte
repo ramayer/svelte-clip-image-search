@@ -2,6 +2,7 @@
     import { goto } from "$app/navigation";
     import Preview from "./Preview.svelte";
     import type { PageData } from "./$types";
+    import { browser } from "$app/environment"; // for infinite scroll
 
     export let results: PageData;
     import { preview_store, cols_store } from "./stores.js";
@@ -50,7 +51,7 @@
     let code: string;
 
     function handleKeydown(event: KeyboardEvent) {
-        console.log("detail keydown ", event);
+        //console.log("detail keydown ", event);
         if (event.code == "Escape") {
             let loc = makelink(null);
             goto(loc,{noScroll:true});
@@ -86,6 +87,17 @@
     $: overlay_data = results.details?.face_dat?.map((f: { bbox: number[] }) =>
         face_data_to_overlay(f, w, h)
     );
+
+    let prev_image = browser ? new Image() : undefined
+    let next_image = browser ? new Image() : undefined
+    function prefetch_next_full_sized_images(d_idx: number) {
+        if (browser && prev_image && next_image) {
+            next_image.src='/i/'+idx_to_id(d_idx + 1)
+            prev_image.src='/i/'+idx_to_id(d_idx - 1)
+        }
+    }
+    $: prefetch_next_full_sized_images(d_idx)
+
 </script>
 
 <svelte:window on:keydown={handleKeydown} />
@@ -110,9 +122,17 @@
         {/if}
     </div>
 
+    {#if /.*commons.wikimedia.org.*/.test(results.details.metadata.src_uri)}
         <div
-            class="border-0 w-full flex justify-around items-center text-2xl focus:outline-none whitespace-nowrap"
+            class="border-0 w-full flex justify-around items-center text-sm focus:outline-none whitespace-nowrap"
         >
+        <div><a href={"/d/" + d_img}>From wikimedia commons. Full copyright informaiton here.</a></div>
+        </div>
+    {/if}
+
+    <div
+            class="border-0 w-full flex justify-around items-center text-2xl focus:outline-none whitespace-nowrap"
+    >
             <div class="px-2">
                 <a href={makelink(idx_to_id(d_idx - 1))} data-sveltekit-noscroll  title="[Left Arrow]">&#x22B2;&#xFE0E;</a>
             </div>

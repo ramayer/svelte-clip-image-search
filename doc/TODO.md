@@ -1,15 +1,34 @@
 # TODOs
 
+## Ideas
+
+* quantify errors from encoding normalized vectors as int(999*max(abs(x))).
+* or better, as base64 versions of that.
+
+
 ## api
 
-* Scale embedding vectors so they can be transmitted more compactly (int8 is almost enough precision; maybe 10-bit (+/- 1024) that has a compact json representation for the JSON apis. 
+* Scale embedding vectors so they can be transmitted more compactly
+  (int8 is almost enough precision; maybe 10-bit (+/- 1024) that has a
+  compact json representation for the JSON apis.
 
-## UI
+## UI/UX
 
-* merge the feature that blends thumbnails with the high-res image during loading.
-* mobile phones have no mouseover events, so perhaps use a single click to emulate mouseover.
+* Nginx rate limit,
 
-* this gallery makes better use of space for its details: https://rob-sheridan.com/highlights/1
+  * burst with nodelay https://www.nginx.com/blog/rate-limiting-nginx/
+  * large_client_header_buffers 16 16k; // search for a text clip vector
+
+* support video
+
+* merge the feature that blends thumbnails with the high-res image
+  during loading.
+
+* mobile phones have no mouseover events, so perhaps use a single
+  click to emulate mouseover.  (touch start may be even better)
+
+* this gallery makes better use of space for its details:
+  https://rob-sheridan.com/highlights/1
 
 ## Storage
 
@@ -19,5 +38,13 @@
 
 ## Bugs
 
-* The URLs in the result images need to get their 'q' parameter from the result data. There's a race condition if getting from the url or the store.
-* Height and width are backwards in the indexer.  Only fix it at the same time that data is migrated.
+* The URLs in the result images need to get their 'q' parameter from
+  the result data. There's a race condition if getting from the url or
+  the store.
+
+* DONE: Height and width are backwards in the indexer.  Only fix it at the
+  same time that data is migrated.
+
+* Broken thumbnails: http://localhost:5173/s?q=clip%3A160854
+
+* Some wikimedia thumbnails are 100s of times wider than tall or taller than wide; tweak the thumbnail logic.

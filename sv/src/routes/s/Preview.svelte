@@ -18,6 +18,8 @@
     c: string;
   }[] = [];
 
+  console.log("overlay data is ",overlay_data, " w,h=",width,height)
+
   let offset_width: number = 0;
   let offset_height: number = 0;
 
@@ -53,7 +55,7 @@
       </a>
     </div>
   {/if}
-  {#if width & height}
+  {#if width && height}
     <div class="overlay c0">
       <div style="aspect-ratio: {width}/{height};" class="c1">
         <!-- https://stackoverflow.com/questions/31869087/how-to-set-two-directions-for-flex-box-css -->
@@ -65,7 +67,7 @@
             {#each overlay_data as o,idx}
               <a href="/s?q=face:{img_id}.{idx}"><div
                 class="c3"
-                style="top:{o.y}%; left:{o.x}%; height:{o.h}%; width:{o.w}%; "
+                style="top:{o.y-o.h/6}%; left:{o.x-o.w/6}%; height:{o.h+o.h/3}%; width:{o.w+o.w/3}%; "
               >
               </div></a>  
             {/each}

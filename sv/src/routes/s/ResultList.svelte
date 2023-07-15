@@ -193,7 +193,7 @@
 
         if (is_any_footer_visible()) {
             debug_log("try_adding_images: footer is visible, adding images");
-            num_visible += 24;
+            num_visible += cols || 1;
             await tick; // hopefully they get added to the dom here
             setTimeout(() => {
                 // throttle loading wikipedia images about 10/second

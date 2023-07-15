@@ -24,8 +24,10 @@
     let inv_cols = max_cols - cols + 1;
 
     function q_changed(new_q: string | null) {
-        console.log("q changed from " + q + " to ",new_q);
-        if (q != new_q) {q = new_q;};
+        if (q != new_q) {
+            console.log("q changed from " + q + " to ",new_q);
+            q = new_q;
+        };
     }
     $: q_changed($page.url.searchParams.get("q"));
 

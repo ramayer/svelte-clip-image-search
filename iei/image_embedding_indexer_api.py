@@ -25,6 +25,38 @@ from fastapi.responses import ORJSONResponse
 from fastapi.responses import RedirectResponse
 
 
+
+import pyparsing as pp
+
+class ParserHelper:
+    def get_parser() -> pp.ParserElement:
+        ppu = pp.unicode 
+        greek_word = pp.Word(ppu.Greek.alphas)
+
+        # using pre-release pyparsing==3.0.0rc1 , so I don't need to change APIs later
+        sign = pp.Opt(
+                    pp.Group(
+                        pp.one_of('+ -') +
+                        pp.Opt(pp.pyparsing_common.number.copy(),'1')
+                    )
+              ,['+','1'])
+        #word  = pp.Word(pp.alphanums,exclude_chars='([{}])') # fails on hyphenated words
+        #word  = pp.Word(pp.alphanums,pp.printables,exclude_chars='([{}])') # fails on unicode
+        word  = pp.Word(pp.unicode.alphanums,pp.unicode.printables,exclude_chars='([{}])') # slow
+        words = pp.OneOrMore(word)
+        enclosed        = pp.Forward()
+        quoted_string   = pp.QuotedString('"')
+        nested_parens   = pp.nestedExpr('(', ')', content=enclosed)
+        nested_brackets = pp.nestedExpr('[', ']', content=enclosed)
+        nested_braces   = pp.nestedExpr('{', '}', content=enclosed)
+        enclosed << pp.OneOrMore((pp.Regex(r"[^{(\[\])}]+") | nested_parens | nested_brackets | nested_braces | quoted_string))
+        expr = (sign + 
+                pp.original_text_for((quoted_string | nested_parens | nested_braces | words))
+                )
+        return expr
+
+
+
 print("Starting")
 
 iei = image_embedding_indexer.ImageEmbeddingIndexer();
@@ -57,8 +89,9 @@ async def thm(img_id:int, w:int|None=None,h:int|None=None):
     'Pragma': 'no-cache',
     'Expires': '0',
   }
-
-  #time.sleep(0.1)
+  if debug_performance := False:
+     hdrs = debug_no_cache_hdrs
+     time.sleep(0.1)
   if (h or w) and (thm := iei.get_thm(img_id)):
     #print("recompressing")
     buf = io.BytesIO()

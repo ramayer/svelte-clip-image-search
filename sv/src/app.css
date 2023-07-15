@@ -21,7 +21,7 @@ we of course apply color-scheme: dark, as usual */
   
 
 body {
-    @apply bg-gray-800 text-gray-400;
+    @apply bg-slate-800 text-gray-400;
     scrollbar-width: thin;
     /* scrolbar-color: rgba(0,0,0,0.5) rgba(255,255,255,0.5); */
 }
@@ -38,7 +38,7 @@ body::-webkit-scrollbar-thumb {
 
 @layer base {
     a {
-      @apply hover:underline text-slate-400;
+      @apply hover:underline text-sky-600
     }
     html {
         /*font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;*/
