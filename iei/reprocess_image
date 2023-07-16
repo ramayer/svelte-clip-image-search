@@ -1,0 +1,13 @@
+#!/usr/bin/env python
+
+import image_embedding_indexer
+iei=image_embedding_indexer.ImageEmbeddingIndexer(device='cpu')
+
+
+img_id = 330975
+print(iei.get_metadata(img_id))
+print(iei.get_img_data(img_id))
+
+resp = iei.reprocess_image(img_id)
+print(resp)
+

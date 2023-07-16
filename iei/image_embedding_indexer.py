@@ -414,7 +414,7 @@ class ImgHelper:
             mtime  = email.utils.parsedate_to_datetime(mtime_h) if mtime_h else None
             img_bytes = resp.content
         elif re.match(r'^file://',uri):
-            filepath = self.uri_to_file_path(uri)
+            filepath = self.file_uri_to_file_path(uri)
             #print("reading ",filepath)
             mtime = datetime.datetime.fromtimestamp(os.path.getmtime(filepath),
                                                     tz=datetime.timezone.utc)
@@ -492,7 +492,8 @@ class ImgHelper:
             #b = self.img_bytes(t)
             u = self.bytes_to_data_url(b)
             return u
-        except:
+        except Exception as e:
+            print(f"{e} for {url}")
             return None
         
 
@@ -944,6 +945,7 @@ class ImageEmbeddingIndexer:
     
     def set_metadata(self,data:ImgMetadata):
         """ key can either be an int (img_id) or a str (sha224) """
+        print(data)
         db       = self.metadata_db
         cols     = [f.name for f in dataclasses.fields(data)]
         icols    = cols[1:]

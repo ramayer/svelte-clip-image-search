@@ -6,20 +6,11 @@ import urllib.parse
 
 iei = image_embedding_indexer.ImageEmbeddingIndexer(device="cpu")
 
-
-def get_file_uri(file_path):
-    absolute_path = os.path.abspath(file_path)
-    #uri = urllib.parse.quote(absolute_path)
-    #uri = urllib.parse.urljoin("file:", uri)
-    uri = 'file://' + urllib.parse.quote_from_bytes(os.fsencode(absolute_path))
-    return uri
-
-
 def process_file(f):
     try:
-        src_uri = get_file_uri(f)
+        src_uri = iei.img_helper.file_path_to_file_uri(f)
         img_uri = src_uri
-        title = f
+        title = f.encode('unicode_escape').decode('utf-8')
         x = iei.preprocess_img(img_uri, src_uri, title, None, "{}")
         return x
     except Exception as e:
@@ -68,14 +59,14 @@ def list_files(files, recurse=False, fileformat=None):
                 # avoid the exception 
                 # unicodeEncodeError: 'utf-8' codec can't encode character '\uXXXX' in position YY: surrogates not allowed
                 safe_filepath = filepath.encode('unicode_escape').decode('utf-8')
-                print(result, filepath)
+                print(result, safe_filepath)
         else:
             if os.path.exists(file) and (
                 fileformat is None or file.endswith(f".{fileformat}")
             ):
                 result = process_file(file)
                 safe_filepath = file.encode('unicode_escape').decode('utf-8')
-                print(safe_filepath)
+                print(result, safe_filepath)
 
 
 if __name__ == "__main__":
