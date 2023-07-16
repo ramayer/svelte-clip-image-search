@@ -384,18 +384,23 @@ JpegImagePlugin._getmp = lambda x: None # type: ignore
 
 import urllib.parse
 class ImgHelper:
+        
+    # filenames returned by glob.glob() can have non-utf-8 characters.
+    # ('/tmp/test_file\udca330result.txt')
+    def file_path_to_file_uri(self,filename):
+        file_uri = 'file://' + urllib.parse.quote_from_bytes(os.fsencode(filename))
+        return file_uri
 
-    def uri_to_file_path(self,uri):
-        parsed_uri = urllib.parse.urlparse(uri)
-        if parsed_uri.scheme == "file":
-            file_path = urllib.parse.unquote(parsed_uri.path)
-            if parsed_uri.netloc != "":
-                # Handle Windows paths with network location (e.g., file://hostname/path)
-                file_path = "//" + parsed_uri.netloc + file_path
-            return file_path
-        else:
-            raise ValueError("Not a file URI")
-
+    def file_uri_to_file_path(self,file_uri):
+        parsed_uri = urllib.parse.urlparse(file_uri)
+        if not parsed_uri.scheme == "file":
+            raise ValueError(f"Not a file URI: {file_uri}")
+        file_path_bytes = urllib.parse.unquote_to_bytes(file_uri[7:])
+        file_path = os.fsdecode(file_path_bytes)
+        if parsed_uri.netloc != "":
+            # Handle Windows paths with network location (e.g., file://hostname/path)
+            file_path = "//" + parsed_uri.netloc + file_path
+        return file_path
         
     def fetch_img(self,uri,headers=None) -> tuple[Image.Image,ImgData,datetime.datetime,bytes]:
 
@@ -491,6 +496,232 @@ class ImgHelper:
             return None
         
 
+#####################################################################################
+# Query Parser
+#####################################################################################
+
+
+import pyparsing as pp
+import functools
+import numpy as np
+import toml
+
+class ParserHelper:
+    """Support complex queries like
+       skiing +summer -winter -(winter sports) +(summer sports) +{img:1234} +https://example.com/img.jpg
+    
+    
+       * TODO 
+          Consider if adding and subtracting vectors is really what we want here.
+    
+          Perhaps we should think more in terms of rotating in the direction of a different term.
+          See also:
+              https://www.inference.vc/high-dimensional-gaussian-distributions-are-soap-bubble/
+    
+              "If you want to interpolate between two random
+              without leaving the soap bubble you should instead
+              interpolate in in polar coordinates ... For a more
+              robust spherical interpolation scheme you might want
+              to opt for something like SLERP."
+    
+         Some syntax for "start a zerbra, and rotate 20 dgegrees
+         in the direction of horse" might be interesting.
+    
+    """
+
+    def __init__(self,iei:'ImageEmbeddingIndexer'):
+        self.iei=iei
+
+    @functools.cached_property
+    def parser(self) -> pp.ParserElement:
+        ppu = pp.unicode
+        greek_word = pp.Word(ppu.Greek.alphas)
+
+        # using pre-release pyparsing==3.0.0rc1 , so I don't need to change APIs later
+        sign = pp.Opt(
+            pp.Group(pp.one_of("+ -") + pp.Opt(pp.pyparsing_common.number.copy(), 1)),
+            ["+", 1],
+        )
+        # word  = pp.Word(pp.alphanums,exclude_chars='([{}])') # fails on hyphenated words
+        # word  = pp.Word(pp.alphanums,pp.printables,exclude_chars='([{}])') # fails on unicode
+        word = pp.Word(
+            pp.unicode.alphanums, pp.unicode.printables, exclude_chars="([{}])"
+        )  # slow
+        words = pp.OneOrMore(word)
+        enclosed = pp.Forward()
+        quoted_string = pp.QuotedString('"')
+        nested_parens = pp.nestedExpr("(", ")", content=enclosed)
+        nested_brackets = pp.nestedExpr("[", "]", content=enclosed)
+        nested_braces = pp.nestedExpr("{", "}", content=enclosed)
+        enclosed << pp.OneOrMore(
+            (
+                pp.Regex(r"[^{(\[\])}]+")
+                | nested_parens
+                | nested_brackets
+                | nested_braces
+                | quoted_string
+            )
+        )
+        expr = sign + pp.original_text_for(
+            (quoted_string | nested_parens | nested_braces | words)
+        )
+        return expr
+
+    def parse_structured_term(self,t):
+        """
+           allow json or toml clauses in searches like the json expressions
+              {"image_id":28754} -{"image_id":174054}
+           from v1, or the toml expression
+              {clip=1234}
+           for v2
+        """
+        status = {}
+        try:
+           return json.loads(t)
+        except json.JSONDecodeError as e1:
+            status['json_error'] = e1
+            pass
+        try:
+            return toml.loads(t)
+        except toml.TomlDecodeError as e2:
+            status['toml_error'] = e2
+            pass
+        print(status)
+        return None
+
+
+    
+    
+    def get_query_vectors(self,q):
+        iei = self.iei
+        parsed = self.parser.search_string(q)
+        parsed.pprint()
+        
+        embeddings={
+            'clip':[],
+            'face':[],
+            'text':[],
+        }
+        
+        for (operator,magnitude),term in parsed:
+            print(term)
+            scale_factor = magnitude * float(operator+'1')
+            #print(operator,magnitude,term, " => ", scale_factor)
+        
+            if len(term)>2 and term[0] == '(' and term[-1] == ')': 
+                term=term[1:-1]
+        
+            if term.startswith('{'):
+                d = self.parse_structured_term(term)
+                if d and d.get('img'):
+                    e = iei.get_openclip_embedding(d['img'])
+                    e = e * scale_factor
+                    embeddings['clip'].append(e)
+                continue
+        
+            if fids := re.findall(r"^face:((\d+)\.?(\d*))", term):
+                for _, img_id, idx in fids:
+                    ia = iei.get_insightface_analysis(img_id)
+                    if idx and ia:
+                        row = ia[int(idx)]
+                        embeddings['face'].append(row["embedding"])
+                        print(f"found one {img_id}.{idx}")
+                    elif ia:
+                        print(f"getting {len(ia)} for {img_id}")
+                        for row in ia:
+                            embeddings['face'].append(row["embedding"])
+                continue
+                
+            if cids := re.findall(r"^clip:(\d+)", term):
+                for cid in cids:
+                    e = iei.get_openclip_embedding(cid)
+                    e = e * scale_factor
+                    embeddings['clip'].append(e)
+                continue
+                
+            tembs = iei.ocw.txt_embeddings([term])
+            for e in tembs:
+                e = e * scale_factor
+                embeddings['clip'].append(e)
+        
+        clip_result = face_result = None
+        if len(embeddings['clip'])>0:
+            stacked_clip_embeddings = np.stack(embeddings['clip'])
+            for e in stacked_clip_embeddings:
+                print("emag ",e@e.T)
+            clip_result = functools.reduce(lambda x,y: x+y, stacked_clip_embeddings)
+            clip_result /= np.linalg.norm(clip_result)
+            clip_result = np.stack([clip_result])
+    
+        if len(embeddings['face'])>0:
+            face_result = np.stack(embeddings['face'])
+        
+        return clip_result,face_result
+    
+            
+        
+    def guess_user_intent(self,q) -> np.ndarray:
+        """
+        deprecated, copy&pasted from v1's rclip_server that didn't support faces
+        """
+        raise(DeprecationWarning("guess_user_intent is deprecated"))
+        parser = self.parser
+        parsed = parser.search_string(q)
+        embeddings = []
+        for (operator,magnitude),terms in parsed:
+            if len(terms)>2 and terms[0] == '(' and terms[-1] == ')': terms=terms[1:-1]
+            #print(operator,magnitude,terms)
+            e = self.guess_user_intent_element(terms) * float(magnitude) * float(operator+'1')
+            embeddings.append(e)
+        if len(embeddings) == 0:
+            return None
+        result = functools.reduce(lambda x,y: x+y, embeddings)
+        result /= np.linalg.norm(result)
+        return result
+
+    @functools.lru_cache
+    def guess_user_intent_element(self,q) -> np.ndarray:
+        """
+        deprecated, copy&pasted from v1's rclip_server that didn't support faces
+
+        Keeping here to remember to add https:// query terms and to test for backward compatibility
+        """
+        raise DeprecationWarning("deprecated")
+        if re.match(r'^https?://',q):
+            img = self.download_image(q)
+            return self.get_image_embedding([img])
+
+        if not q.startswith('{'):
+            return self.get_text_embedding(q)
+
+        data = json.loads(q)
+
+        if img_id := data.get('image_id'):
+            return np.asarray([self.image_embeddings[self.imgid_to_idx[img_id]]])
+
+        if embedding := data.get('clip_embedding'):
+            return np.asarray([embedding])
+
+        if seed := data.get('random_img'):
+            return np.asarray([random.choice(self.image_embeddings)])
+
+        if seed := data.get('random_seed'):
+            random.seed(seed)
+            def rand_ndim_unit_vector(dims):
+                """
+                   https://stackoverflow.com/questions/6283080/random-unit-vector-in-multi-dimensional-space 
+                """
+                vec = [random.gauss(0, 1) for i in range(dims)]
+                mag = sum(x**2 for x in vec) ** .5
+                return [x/mag for x in vec]
+            rnd_features = rand_ndim_unit_vector(512)
+            return np.asarray([rnd_features])
+
+
+
+
+#####################################################################################3
+
 # import functools
 
 # class LazyImg():
@@ -521,8 +752,6 @@ class ImgHelper:
 #     def face(self) -> ImgData:
 #         return self.iei.face(self.img_id)
 
-
-
 class ImageEmbeddingIndexer:
     """
       https://www.sqlite.org/fasterthanfs.html
@@ -543,6 +772,10 @@ class ImageEmbeddingIndexer:
     def ifw(self):
         print(f"creating InsightFaceWrapper")
         return InsightFaceWrapper()
+
+    @functools.cached_property
+    def parser_helper(self):
+        return ParserHelper(iei=self)
 
     ######################################################################
     # Cached key value stores
@@ -980,7 +1213,6 @@ class ImageEmbeddingIndexer:
     #     return missing
     
     # def calculate_missing_openclip_embeddings(self):
-    #     batch_size = 100
     #     missing    = list(self.find_missing_openclip_embeddings())
     #     print(f"missing {len(missing)} embeddings")
     #     t0 = time.time()

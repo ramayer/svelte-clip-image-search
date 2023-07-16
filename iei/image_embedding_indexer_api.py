@@ -115,7 +115,9 @@ async def thm(img_id: int, w: int | None = None, h: int | None = None):
     size = 1024
     svg = f"""<svg version="1.1" width="{size}" height="{int(size*3/4)}" xmlns="http://www.w3.org/2000/svg">
               <!--<rect width="100%" height="100%" fill="#333" /> -->
-              <circle cx="50%" cy="50%" r="25%" fill="#222"/>
+              <circle cx="50%" cy="50%" r="50%" fill="#eee"/>
+              <circle cx="50%" cy="50%" r="30%" fill="#88f"/>
+              <circle cx="50%" cy="50%" r="10%" fill="#222"/>
             </svg>"""
     return fastapi.Response(svg, media_type="image/svg+xml", headers=hdrs)
 
@@ -258,6 +260,17 @@ class SearchResults(BaseModel):
 import random
 
 
+def get_face_embeddings(img_id,idx:int):
+    ia = iei.get_insightface_analysis(img_id)
+    if not ia: return None
+    if ia and idx:
+        row = ia[int(idx)]
+        return [row["embedding"]]
+    if ia:
+        return [row["embedding"] for row in ia]
+
+
+
 @app.get("/search")
 async def search(
     q: Optional[str] = None, iid: Optional[int] = None, type: Optional[str] = None
@@ -266,6 +279,32 @@ async def search(
     # Replace this with your actual implementation
     results = None
     print("q is ", q)
+
+    clip_result,face_result = iei.parser_helper.get_query_vectors(q)
+
+    if face_result is not None:
+        fh = iei.face_faiss_helper
+        results = fh.search(face_result, k=5000)
+
+    if clip_result is not None:
+        fh = iei.clip_faiss_helper
+        results = fh.search(clip_result, k=5000)
+
+    already_done = set()
+    good_ids = []
+    good_scores = []
+
+    for result in results or []:
+        for imgid, score in zip(result.imgids, result.scores):
+            if imgid not in already_done:
+                good_ids.append(imgid)
+                good_scores.append(max(int(score * 1000), -999))
+                already_done.add(imgid)
+
+    return SearchResults(imgids=good_ids, scores=good_scores)
+
+    ## the old way
+
     if q and (fids := re.findall(r"^face:((\d+)\.?(\d*))", q)):
         print(f"fids is {fids}")
         embeddings = []

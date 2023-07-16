@@ -9,8 +9,9 @@ iei = image_embedding_indexer.ImageEmbeddingIndexer(device="cpu")
 
 def get_file_uri(file_path):
     absolute_path = os.path.abspath(file_path)
-    uri = urllib.parse.quote(absolute_path)
-    uri = urllib.parse.urljoin("file:", uri)
+    #uri = urllib.parse.quote(absolute_path)
+    #uri = urllib.parse.urljoin("file:", uri)
+    uri = 'file://' + urllib.parse.quote_from_bytes(os.fsencode(absolute_path))
     return uri
 
 
@@ -63,12 +64,18 @@ def list_files(files, recurse=False, fileformat=None):
                     if not is_likely_image(filepath):
                         continue
                 result = process_file(filepath)
+                # filesystems can contain non-utf-8 characters
+                # avoid the exception 
+                # unicodeEncodeError: 'utf-8' codec can't encode character '\uXXXX' in position YY: surrogates not allowed
+                safe_filepath = filepath.encode('unicode_escape').decode('utf-8')
                 print(result, filepath)
         else:
             if os.path.exists(file) and (
                 fileformat is None or file.endswith(f".{fileformat}")
             ):
-                print(file)
+                result = process_file(file)
+                safe_filepath = file.encode('unicode_escape').decode('utf-8')
+                print(safe_filepath)
 
 
 if __name__ == "__main__":

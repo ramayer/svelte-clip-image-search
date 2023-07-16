@@ -56,7 +56,7 @@
         on:keydown={(e) => handle_interaction(img_id)}
         after ctrl-click opens an image in a new tab the old tab will continue listening.
     -->
-        <img id={"" + img_id} alt={"" + img_id} src="/t/{img_id}?w={thm_size}" />
+        <img id={"" + img_id} alt={"" + img_id} src="/t/{img_id}?w={thm_size}&h={thm_size*3}" />
     </a>
 </div>
 
