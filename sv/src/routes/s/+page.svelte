@@ -28,7 +28,7 @@
         }
         //top_element?.scrollIntoView();
     });
-    let cols = 9;
+    let cols = 7; // seems to be ignored
     cols_store.subscribe((x) => (cols = x));
 
     $: console.log("=== +page.svelte");

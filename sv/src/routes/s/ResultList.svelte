@@ -24,7 +24,7 @@
     $: gridstyle = `grid-template-columns: ${"1fr ".repeat(cols)}`;
 
     // roughly assume square for people with javascript turned off
-    $: num_visible = q ? cols * Math.min(cols, 6) : 2;
+    $: num_visible = q ? cols * Math.min(cols, 7) : 2;
 
     $: console.log("ResultList.svetle imgs length is ", imgs.length);
     // $: console.log("ResultList.svetle results", results && results["ids"]);
