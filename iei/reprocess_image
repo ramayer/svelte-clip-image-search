@@ -1,13 +1,15 @@
 #!/usr/bin/env python
 
+import fire
 import image_embedding_indexer
+
 iei=image_embedding_indexer.ImageEmbeddingIndexer(device='cpu')
 
+def reprocess(*img_ids):
+    for img_id in img_ids:
+        print(iei.get_metadata(img_id))
+        print(iei.get_img_data(img_id))
+        print(iei.reprocess_image(img_id))
 
-img_id = 330975
-print(iei.get_metadata(img_id))
-print(iei.get_img_data(img_id))
-
-resp = iei.reprocess_image(img_id)
-print(resp)
-
+if __name__ == '__main__':
+    fire.Fire(reprocess)

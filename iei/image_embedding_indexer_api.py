@@ -28,40 +28,40 @@ from fastapi.responses import RedirectResponse
 import pyparsing as pp
 
 
-class ParserHelper:
-    def get_parser() -> pp.ParserElement:
-        ppu = pp.unicode
-        greek_word = pp.Word(ppu.Greek.alphas)
+# class ParserHelper:
+#     def get_parser() -> pp.ParserElement:
+#         ppu = pp.unicode
+#         greek_word = pp.Word(ppu.Greek.alphas)
 
-        # using pre-release pyparsing==3.0.0rc1 , so I don't need to change APIs later
-        sign = pp.Opt(
-            pp.Group(pp.one_of("+ -") + pp.Opt(pp.pyparsing_common.number.copy(), "1")),
-            ["+", "1"],
-        )
-        # word  = pp.Word(pp.alphanums,exclude_chars='([{}])') # fails on hyphenated words
-        # word  = pp.Word(pp.alphanums,pp.printables,exclude_chars='([{}])') # fails on unicode
-        word = pp.Word(
-            pp.unicode.alphanums, pp.unicode.printables, exclude_chars="([{}])"
-        )  # slow
-        words = pp.OneOrMore(word)
-        enclosed = pp.Forward()
-        quoted_string = pp.QuotedString('"')
-        nested_parens = pp.nestedExpr("(", ")", content=enclosed)
-        nested_brackets = pp.nestedExpr("[", "]", content=enclosed)
-        nested_braces = pp.nestedExpr("{", "}", content=enclosed)
-        enclosed << pp.OneOrMore(
-            (
-                pp.Regex(r"[^{(\[\])}]+")
-                | nested_parens
-                | nested_brackets
-                | nested_braces
-                | quoted_string
-            )
-        )
-        expr = sign + pp.original_text_for(
-            (quoted_string | nested_parens | nested_braces | words)
-        )
-        return expr
+#         # using pre-release pyparsing==3.0.0rc1 , so I don't need to change APIs later
+#         sign = pp.Opt(
+#             pp.Group(pp.one_of("+ -") + pp.Opt(pp.pyparsing_common.number.copy(), "1")),
+#             ["+", "1"],
+#         )
+#         # word  = pp.Word(pp.alphanums,exclude_chars='([{}])') # fails on hyphenated words
+#         # word  = pp.Word(pp.alphanums,pp.printables,exclude_chars='([{}])') # fails on unicode
+#         word = pp.Word(
+#             pp.unicode.alphanums, pp.unicode.printables, exclude_chars="([{}])"
+#         )  # slow
+#         words = pp.OneOrMore(word)
+#         enclosed = pp.Forward()
+#         quoted_string = pp.QuotedString('"')
+#         nested_parens = pp.nestedExpr("(", ")", content=enclosed)
+#         nested_brackets = pp.nestedExpr("[", "]", content=enclosed)
+#         nested_braces = pp.nestedExpr("{", "}", content=enclosed)
+#         enclosed << pp.OneOrMore(
+#             (
+#                 pp.Regex(r"[^{(\[\])}]+")
+#                 | nested_parens
+#                 | nested_brackets
+#                 | nested_braces
+#                 | quoted_string
+#             )
+#         )
+#         expr = sign + pp.original_text_for(
+#             (quoted_string | nested_parens | nested_braces | words)
+#         )
+#         return expr
 
 
 print("Starting")
@@ -373,6 +373,38 @@ async def search(
 
 #####################################################################
 
+class WebcamImgModel(BaseModel):
+    data_uri: str
+    src: str
+
+import base64
+from PIL import Image
+
+@app.post("/handle_webcam_image")
+async def handle_webcam_image(i: WebcamImgModel):
+
+    print(i.src[0:100])
+    print("src:"+i.src+" img:",i.data_uri[0:100])
+    _, base64_data = i.data_uri.split(';base64,')
+    
+    # Decode the base64 data into bytes
+    image_data = base64.b64decode(base64_data)
+    
+    # Create a BytesIO object and write the decoded image data into it
+    image_stream = io.BytesIO(image_data)
+    
+    # Open the image from the BytesIO stream
+    image = Image.open(image_stream)
+    embs = iei.ocw.img_embeddings([image])
+    
+    e2 = image_embedding_indexer.VectorHelper.int8_phase_vec(embs[0]).tolist()
+    print(f"got embs of {e2}")
+    result = {
+        "embs": e2,
+    }
+    return result
+
+########################################
 
 class ImgModel(BaseModel):
     imgs: list[str] | None

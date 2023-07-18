@@ -1,20 +1,51 @@
 <script lang="ts">
-    import {
-        preview_store,
-        cols_store,
-    } from "./stores.js";
+    import { preview_store, cols_store } from "./stores.js";
 
     import { page } from "$app/stores";
     import type { PageData } from "./$types";
+    import Camera from "./Camera.svelte";
 
     import { onMount } from "svelte";
 
     let q_input: HTMLInputElement;
+    let camera_visible = false;
+    let camera_button_visible = false;
+
+    function checkCameraAvailability() {
+        if (navigator.mediaDevices) {
+            navigator.mediaDevices
+                .enumerateDevices()
+                .then((devices) => {
+                    const cameras = devices.filter(
+                        (device) => device.kind === "videoinput"
+                    );
+                    if (cameras.length > 0) {
+                        console.log("found cameras")
+                        camera_button_visible = true
+                        return true;
+                    } else {
+                        console.log("found no cameras")
+                        return false;
+                    }
+                })
+                .catch((error) => {
+                    console.error("Error enumerating devices:", error);
+                    return false;
+                });
+        } else {
+            console.log("MediaDevices or getUserMedia are not supported");
+            return false;
+        }
+        return false;
+    }
 
     onMount(() => {
         q = $page.url.searchParams.get("q");
-        console.log("in searchform onMount attempting to set focus")
-        q_input.focus()
+        console.log("in searchform onMount attempting to set focus");
+        q_input.focus();
+        console.log("before")
+        camera_button_visible = checkCameraAvailability();
+        console.log("COOL - ",camera_button_visible)
     });
 
     let q = $page.url.searchParams.get("q");
@@ -25,9 +56,9 @@
 
     function q_changed(new_q: string | null) {
         if (q != new_q) {
-            console.log("q changed from " + q + " to ",new_q);
+            console.log("q changed from " + q + " to ", new_q);
             q = new_q;
-        };
+        }
     }
     $: q_changed($page.url.searchParams.get("q"));
 
@@ -75,7 +106,16 @@
                     </option>
                 {/each}
             </select>
-            <label class="pt-2 flex-shrink">
+            <button type="submit">
+                <div class="inline-flex">&nbsp;👀&nbsp;</div>
+            </button>
+            {#if camera_button_visible}
+                <button on:click={() => (camera_visible = !camera_visible)}>
+                    <div class="inline-flex">&nbsp;&#128247;&#xFE0E;&nbsp;</div>
+                </button>
+            {/if}
+
+            <label class="pt-2 flex-shrink rounded-r-lg">
                 <input
                     type="range"
                     class="flex-shrink"
@@ -84,12 +124,14 @@
                     max={max_cols}
                 />
             </label>
-            <button type="submit" class="rounded-r-lg">
-                <div class="inline-flex">&nbsp;👀&nbsp;</div>
-            </button>
         </div>
     </form>
 </div>
+{#if camera_visible}
+    <div class="fixed right-4 w-80 top-8 z-50">
+        <Camera />
+    </div>
+{/if}
 
 <style>
     .position_nav_bar_safely {

@@ -127,6 +127,48 @@ class ImgMetadata():
 
 
 # In[323]:
+from typing import Union, List
+NumericType = Union[float, int]
+NestedNumericList = list[Union[NumericType, list[NumericType]]]
+
+class VectorHelper:
+
+    @staticmethod
+    def cast_to_float32_array(data: Union[np.ndarray, torch.Tensor, NestedNumericList]) -> np.ndarray:
+        """                    
+            # Example inputs
+            tensor = torch.tensor([[1, 2], [3, 4]])
+            array = np.array([[5, 6], [7, 8]])
+            nested_list:NestedNumericList = [[9, 10], [11, 12]]
+
+            # Casting to float32 arrays
+            vh = VectorHelper()
+            result_tensor = vh.cast_to_float32_array(tensor)
+            result_array = vh.cast_to_float32_array(array)
+            result_list = vh.cast_to_float32_array(nested_list)
+
+            print(result_tensor.dtype)  # Output: float32
+            print(result_array.dtype)   # Output: float32
+            print(result_list.dtype)    # Output: float32
+        """
+        match data:
+            case torch.Tensor():
+                return data.numpy().astype(np.float32)
+            case list():
+                return np.array(data).astype(np.float32)
+            case np.ndarray():
+                return data.astype(np.float32)
+            case _:
+                raise ValueError("Invalid data type. Expected PyTorch tensor, NumPy array, or nested Python list of numbers.")
+
+    @staticmethod
+    def int8_phase_vec(v):
+        rv = VectorHelper.cast_to_float32_array(v)
+        nrv = rv / np.sqrt(rv @ rv.T)
+        maxabs = max(max(nrv),-min(nrv))
+        n2 = (nrv * 127 / maxabs).astype(np.int32)
+        return n2
+
 
 
 #os.environ['CUDA_VISIBLE_DEVICES'] = '0'
@@ -351,7 +393,7 @@ class FaissHelper:
                       max_index_query_time_ms = 300,
                       min_nearest_neighbors_to_retrieve = 1000,
                       max_index_memory_usage = "3G",
-                      current_memory_available = "8G",
+                      current_memory_available = "3G",
                       should_be_memory_mappable = True,
                       metric_type="ip"
                      )
@@ -546,23 +588,25 @@ class ParserHelper:
         # word  = pp.Word(pp.alphanums,exclude_chars='([{}])') # fails on hyphenated words
         # word  = pp.Word(pp.alphanums,pp.printables,exclude_chars='([{}])') # fails on unicode
         word = pp.Word(
-            pp.unicode.alphanums, pp.unicode.printables, exclude_chars="([{}])"
+            pp.unicode.alphanums, pp.unicode.printables, exclude_chars="({})"
         )  # slow
         words = pp.OneOrMore(word)
         enclosed = pp.Forward()
         quoted_string = pp.QuotedString('"')
         nested_parens = pp.nestedExpr("(", ")", content=enclosed)
-        nested_brackets = pp.nestedExpr("[", "]", content=enclosed)
         nested_braces = pp.nestedExpr("{", "}", content=enclosed)
-        enclosed << pp.OneOrMore(
-            (
-                pp.Regex(r"[^{(\[\])}]+")
-                | nested_parens
-                | nested_brackets
-                | nested_braces
-                | quoted_string
-            )
-        )
+
+        ## If we want to support nested embedding math, something like this would be promising
+        #
+        # enclosed << pp.OneOrMore(
+        #     (
+        #         pp.Regex(r"[^{(\[\])}]+")
+        #         | nested_parens
+        #         | nested_brackets
+        #         | nested_braces
+        #         | quoted_string
+        #     )
+        # )
         expr = sign + pp.original_text_for(
             (quoted_string | nested_parens | nested_braces | words)
         )
@@ -637,6 +681,13 @@ class ParserHelper:
                 for cid in cids:
                     e = iei.get_openclip_embedding(cid)
                     e = e * scale_factor
+                    embeddings['clip'].append(e)
+                continue
+
+            if cids := re.findall(r"^clip:(\[.*?\])", term):
+                print("oooh - got a clip embedding {cids}")
+                for cid in cids:
+                    e = VectorHelper.cast_to_float32_array(json.loads(cid))
                     embeddings['clip'].append(e)
                 continue
                 
@@ -945,7 +996,6 @@ class ImageEmbeddingIndexer:
     
     def set_metadata(self,data:ImgMetadata):
         """ key can either be an int (img_id) or a str (sha224) """
-        print(data)
         db       = self.metadata_db
         cols     = [f.name for f in dataclasses.fields(data)]
         icols    = cols[1:]

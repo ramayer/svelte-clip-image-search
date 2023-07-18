@@ -126,7 +126,7 @@
         <div
             class="border-0 w-full flex justify-around items-center text-sm focus:outline-none whitespace-nowrap"
         >
-        <div><a href={"/d/" + d_img}>From wikimedia commons. Full copyright informaiton here.</a></div>
+        <div><a href={"/d/" + d_img}>From wikimedia commons. Full copyright © informaiton here.</a></div>
         </div>
     {/if}
 
@@ -149,7 +149,7 @@
             </div>
             |
             <div class="px-2 text-sm">
-                <a href={cliplink(d_img)}>More like this</a>
+                <a href={cliplink(d_img)}>Similar images</a>
             </div>
             |
             <div class="px-2">

@@ -68,7 +68,8 @@
     <div in:fade={{ duration: 200 }}
      class=" to-blue-400 text-center absolute bottom-1 img_hover">
         <a href={srchlink(q+" -clip:"+img_id)} title="less like this">▼</a>
-        <a href={"?q=clip:"+img_id}  title="search for this">▣</a>
+        <a href={"?q=clip:"+img_id}  title="similar images">▦</a>
+        <a href={make_link(img_id)}  title="details">▣</a>
         <a href={srchlink(q+" +clip:"+img_id)} title="more like this">▲</a>
     </div>
     {/if}

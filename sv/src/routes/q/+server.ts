@@ -2,6 +2,7 @@ import { error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import config from '../config';
 import { json } from '@sveltejs/kit';
+import type { RequestEvent } from "./$types";
 
 interface ResponseData {
     imgids: number[];
@@ -43,3 +44,25 @@ export const GET = (async ({ setHeaders, url, params, fetch }) => {
 
 // TODO - consider preprocessing tiny thumbnails to data urls like
 // https://stackoverflow.com/questions/71529104/how-to-convert-sveltekit-fetch-response-to-a-buffer
+
+export async function POST({ request } : RequestEvent) 
+{
+    const dataobject : any = await request.json();
+    console.log('dataobject is ',dataobject.src, ' with data of ',dataobject.data_uri.length)
+
+    let base_url = config.app_uri + '/handle_webcam_image';
+    const response = await fetch(base_url, {
+        method: "POST",
+        body: JSON.stringify(dataobject),
+        headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+        }
+    });
+    if (response.ok) {
+        const j = await response.json()
+        console.log("ok and j is ",j)
+        return (json(j, { status: 200 }))
+    }
+    return json({"body":response.body}, { status: 200 })
+}

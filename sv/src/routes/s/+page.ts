@@ -28,7 +28,8 @@ export const load = (async ({ url, setHeaders, fetch }) => {
         'Last-Modified': new Date(0).toUTCString(),
         'Cache-Control': 'public, max-age=600',
     });
-
+    // TOOD - IIRC there's some trick to make the slower parts async
+    // by returning promises?
     return {
         q: q,
         d: d,
