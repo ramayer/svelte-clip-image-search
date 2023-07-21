@@ -166,6 +166,15 @@
         //console.log(s)
     }
 
+    function isNearBottom() {
+      const threshold = 100; // You can adjust this value to set how close to the bottom you want to trigger the action
+      const windowHeight = window.innerHeight || document.documentElement.clientHeight;
+      const bodyHeight = document.body.offsetHeight;
+      const scrollY = window.scrollY || document.documentElement.scrollTop;
+      
+      return bodyHeight - (scrollY + windowHeight) < threshold;
+    }
+
     let already_trying_to_add_images = false;
     async function try_adding_images() {
         if (already_trying_to_add_images) {
@@ -189,6 +198,9 @@
         if (is_any_footer_visible()) {
             debug_log("try_adding_images: footer is visible, adding images");
             num_visible += cols || 1;
+            if (isNearBottom()) { 
+                window.scrollBy(0, -1); // avoid infinite scrolling
+            }
             await tick; // hopefully they get added to the dom here
             setTimeout(() => {
                 // throttle loading wikipedia images about 10/second

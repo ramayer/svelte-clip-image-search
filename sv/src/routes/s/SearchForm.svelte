@@ -41,7 +41,7 @@
 
     onMount(() => {
         q = $page.url.searchParams.get("q");
-        q_input.focus();
+        // q_input.focus();
         camera_button_visible = checkCameraAvailability();
         //console.log("camera avalabile - ",camera_button_visible)
     });
@@ -85,7 +85,6 @@
             </div>
             <div class="flex-grow flex w-10">
                 <input
-                    data-sveltekit-keepfocus
                     bind:this={q_input}
                     type="search"
                     name="q"
@@ -113,10 +112,11 @@
                 </button>
             {/if}
 
-            <label class="pt-2 flex-shrink rounded-r-lg">
+            <label class="pt-2 flex-shrink rounded-r-lg" style="flex-shrink:5">
                 <input
                     type="range"
                     class="flex-shrink"
+                    style="width:4em"
                     bind:value={inv_cols}
                     min={min_cols}
                     max={max_cols}

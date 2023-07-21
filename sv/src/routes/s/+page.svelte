@@ -39,7 +39,9 @@
 </script>
 
 <svelte:window on:keydown={handleEscape} />
+{#if !data.d}
 <SearchForm />
+{/if}
 <div class="h-12" bind:this={top_element} />
 
 <ResultList results={data}>hi</ResultList>

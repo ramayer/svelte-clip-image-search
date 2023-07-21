@@ -134,8 +134,16 @@
         </div>
     {/if}
 
+    <div class="safe-area-menu">
     <div
-            class="border-0 w-full flex justify-around items-center text-2xl focus:outline-none whitespace-nowrap"
+            class="
+            w-full z-50
+            rounded-lg flex 
+            
+            border-3 border-red-400 justify-around items-center text-2xl bg-slate-800
+            focus:outline-none whitespace-nowrap  
+            "
+            style="border: 1px solid red"
     >
             <div class="px-2">
                 <a href={makelink(idx_to_id(d_idx - 1))} data-sveltekit-noscroll  title="[Left Arrow]">&#x22B2;&#xFE0E;</a>
@@ -168,6 +176,7 @@
                 <a href={makelink(null)}  title="[ESC]">&#x2715;&#xFE0E;</a>
             </div>
         </div>
+    </div>
     </div>
 {/if}
 
@@ -216,6 +225,21 @@
             );
         }
     }
+
+
+
+    .safe-area-menu {
+        position: fixed;
+        top: env(safe-area-inset-top);
+        left: env(safe-area-inset-left);
+        right: env(safe-area-inset-right);
+        
+        padding-top: 1mm;
+        padding-left: 2mm;
+        padding-right: 2mm;
+        background-color: transparent;
+    }
+        
 
 
 </style>
