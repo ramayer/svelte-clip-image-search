@@ -2,7 +2,7 @@
     export let img_id: number;
     export let q: string;
     export let selected: boolean = false;
-    import { fade } from "svelte/transition";
+    import { fade, fly, slide  } from "svelte/transition";
 
     import { onMount, tick } from "svelte";
     import { browser } from "$app/environment"; // for infinite scroll
@@ -37,6 +37,10 @@
         return base_url + params;
     }
 
+    async function interaction_ended(r: number) {
+        preview_store.set(0);
+    }
+
     async function handle_interaction(r: number) {
         preview_store.set(0);
         await tick();
@@ -45,7 +49,8 @@
     }
 </script>
 
-<div id="i{img_id}" class="i relative {selected ? 'selected' : ''}">
+<div id="i{img_id}" class="i relative {selected ? 'selected' : ''}"         on:mouseleave={(e) => interaction_ended(img_id)}
+    >
     <a
         href={make_link(img_id,q)}
         on:mouseenter={(e) => handle_interaction(img_id)}
@@ -66,13 +71,16 @@
         />
     </a>
     {#if img_id == p_img}
-    <div in:fade={{ duration: 200 }}
-     class=" to-blue-400 text-center absolute bottom-1 img_hover">
+    {#key img_id}
+    <div in:slide={{ duration: 200 }}
+     class=" to-blue-400 text-center absolute bottom-1 img_hover"
+     style="max-height: 50%; font-size: {Math.round(thm_size/8)}px;">
         <a href={srchlink(q+" -clip:"+img_id)} title="less like this">▼</a>
         <a href={"?q=clip:"+img_id}  title="similar images">▦</a>
         <a href={make_link(img_id,q)}  title="details">▣</a>
         <a href={srchlink(q+" +clip:"+img_id)} title="more like this">▲</a>
     </div>
+    {/key}
     {/if}
 </div>
 
@@ -89,22 +97,22 @@
     .i .img_hover {
         /* transition: all 0.5s ease-in-out; */
         background-color: rgba(0, 0, 0, 0.5);
-        border: 0px solid red;
         width: 100%;
         /*
+        border: 0px solid red;
         color: transparent;
         line-height: 0;
         padding: 0;
         margin: 0;
         height: 0px;
         */
-        display: none;
+        display: block;
     }
-    .i:hover .img_hover {
+    /* .i:hover .img_hover {
         display: block;
         height: auto;
         color: white;
         line-height: 1;
         display: block;
-    }
+    } */
 </style>

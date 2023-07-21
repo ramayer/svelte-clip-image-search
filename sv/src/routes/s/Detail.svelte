@@ -87,6 +87,7 @@
     $: overlay_data = results.details?.face_dat?.map((f: { bbox: number[] }) =>
         face_data_to_overlay(f, w, h)
     );
+    $: numfaces = results.details?.face_dat?.length || 0
 
     let prev_image = browser ? new Image() : undefined
     let next_image = browser ? new Image() : undefined
@@ -140,7 +141,7 @@
             w-full z-50
             rounded-lg flex 
             
-            border-3 border-red-400 justify-around items-center text-2xl bg-slate-800
+            border-3 border-red-400 justify-around items-center text-4xl bg-slate-800
             focus:outline-none whitespace-nowrap  
             "
             style="border: 1px solid red"
@@ -159,13 +160,15 @@
             |
             <div class="px-2 text-sm">
                 <a href={cliplink(d_img, "face")}
-                title="Search for any of the {results.details?.face_dat?.length} faces in the image"
-                    >{results.details?.face_dat?.length} faces</a
+                title="Search for any of the {results.details?.face_dat?.length} faces in the image [f]; or click one of the highlighted faces below"
+                    >{ (numfaces > 10) 
+                    ? ("👤 * " +numfaces)
+                    : "👤".repeat(numfaces%2) + "👥".repeat(numfaces/2)}</a
                 >
             </div>
             |
             <div class="px-2 text-sm">
-                <a href={cliplink(d_img)}>Similar images</a>
+                <a href={cliplink(d_img)} title="Similar images according to a clip model [c]">▦</a>
             </div>
             |
             <div class="px-2">
@@ -173,7 +176,11 @@
             </div>
             |
             <div class="px-2">
-                <a href={makelink(null)}  title="[ESC]">&#x2715;&#xFE0E;</a>
+                <a href='help' title="Help [?]">?</a>
+            </div>
+            |
+            <div class="px-2">
+                <a href={makelink(null)}  title="Back to list [ESC]">&#x2715;&#xFE0E;</a>
             </div>
         </div>
     </div>
