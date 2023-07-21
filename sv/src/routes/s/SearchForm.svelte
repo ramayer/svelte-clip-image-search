@@ -41,17 +41,15 @@
 
     onMount(() => {
         q = $page.url.searchParams.get("q");
-        console.log("in searchform onMount attempting to set focus");
         q_input.focus();
-        console.log("before")
         camera_button_visible = checkCameraAvailability();
-        console.log("COOL - ",camera_button_visible)
+        //console.log("camera avalabile - ",camera_button_visible)
     });
 
     let q = $page.url.searchParams.get("q");
     let min_cols = 1;
     let max_cols = 30;
-    let cols = 7; // has an effect
+    let cols = 9; // has an effect
     let inv_cols = max_cols - cols + 1;
 
     function q_changed(new_q: string | null) {

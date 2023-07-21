@@ -168,6 +168,21 @@ class VectorHelper:
         maxabs = max(max(nrv),-min(nrv))
         n2 = (nrv * 127 / maxabs).astype(np.int32)
         return n2
+    
+    @staticmethod
+    def make_unit_vecs(vecs:np.ndarray):
+        norms = np.sqrt(np.sum(vecs ** 2, axis=1))
+        normalized_array = vecs / norms[:, np.newaxis]
+        return normalized_array
+
+    @staticmethod
+    def recenter_vectors(embs:np.ndarray):
+        unit_vecs  = VectorHelper.make_unit_vecs(embs)
+        median_vec = np.median(unit_vecs,axis=0)
+        recentered = unit_vecs - median_vec
+        final_vecs = VectorHelper.make_unit_vecs(recentered)
+        return final_vecs
+
 
 
 
@@ -386,6 +401,11 @@ class FaissHelper:
 
     def create_index(self,ids,embs):
         embeddings    = np.stack(embs)
+
+        ## makes "zebra -horse +fish" nicer
+        ## but we really need to apply it to text embeddings too
+        #embeddings    = VectorHelper.recenter_vectors(embeddings)
+
         index, index_infos = autofaiss.build_index(
                       embeddings=embeddings,
                       index_path=self.index_path,
@@ -393,7 +413,7 @@ class FaissHelper:
                       max_index_query_time_ms = 300,
                       min_nearest_neighbors_to_retrieve = 1000,
                       max_index_memory_usage = "3G",
-                      current_memory_available = "3G",
+                      current_memory_available = "4G",
                       should_be_memory_mappable = True,
                       metric_type="ip"
                      )
@@ -538,6 +558,21 @@ class ImgHelper:
             print(f"{e} for {url}")
             return None
         
+    def crop_by_pct(self,image:Image.Image, 
+                         x_pct, y_pct, width_pct, height_pct):
+       
+        img_width, img_height = image.size
+
+        x_pixel = int(x_pct * img_width / 100)
+        y_pixel = int(y_pct * img_height / 100)
+        width_pixel = int(width_pct * img_width / 100)
+        height_pixel = int(height_pct * img_height / 100)
+
+        cropped_image = image.crop((x_pixel, y_pixel, x_pixel + width_pixel, y_pixel + height_pixel))
+
+        return cropped_image
+
+        
 
 #####################################################################################
 # Query Parser
@@ -677,6 +712,33 @@ class ParserHelper:
                             embeddings['face'].append(row["embedding"])
                 continue
                 
+            if cids := re.findall(r"^clip:(\d+)@(\d+),(\d+),(\d+),(\d+)", term):
+                for cid,x,y,w,h in cids:
+                    print(f"need the region from {x},{y},{w},{h}")
+                    ua = os.getenv("IEI_USER_AGENT",None)
+                    thm = None
+                    if ua:
+                        headers = {'User-agent': ua}
+                        metadata = iei.get_metadata(int(cid))
+                        if metadata:
+                            print(f"fetching {metadata.img_uri}")
+                            thm,_,_,_ = iei.img_helper.fetch_img(metadata.img_uri,headers=headers)
+                    else:
+                        print("warning, need a user agent for full sized image")
+                        thm = iei.get_thm(cid)
+
+                    if thm: 
+                        print("size before cropping is",thm.size)
+                        cropped = iei.img_helper.crop_by_pct(thm,int(x),int(y),int(w),int(h))
+                        cropped.save('/tmp/debug_1_cropped.jpg')
+                        cropped = ImageOps.pad(cropped, (512,512))
+                        cropped.save('/tmp/debug_2_scaled.jpg')
+                        e = iei.ocw.img_embeddings([cropped])[0]
+                        embeddings['clip'].append(e)
+                    else:
+                        print(f"cant find thm for {cid}")
+                continue
+
             if cids := re.findall(r"^clip:(\d+)", term):
                 for cid in cids:
                     e = iei.get_openclip_embedding(cid)

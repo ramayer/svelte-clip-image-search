@@ -6,7 +6,7 @@ source ~/.python/iei/bin/activate
 
 #export IEI_PATH=./data/home_photos.iei
 export IEI_PATH="./data/image_embedding_indexes"
-
+export IEI_USER_AGENT="Clip Embedding Calculator/0.01 (https://github.com/ramayer/wikipedia_in_spark; ramayer+git@gmail.com) generic-library/0.0"
 
 uvicorn  --host=0.0.0.0 --reload image_embedding_indexer_api:app
 

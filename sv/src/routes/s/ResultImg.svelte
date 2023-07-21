@@ -27,12 +27,12 @@
     let isMobile =
         browser && /iPhone|iPad|iPod|Android/i.test(window.navigator.userAgent);
 
-    function make_link(iid: number) {
+    function make_link(iid: number,new_q: string) {
         let base_url = "?";
-        let new_q = q || "";
+        //let new_q = q || "";
         let params = new URLSearchParams({
             q: new_q,
-            d: "" + img_id,
+            d: "" + iid,
         });
         return base_url + params;
     }
@@ -47,7 +47,7 @@
 
 <div id="i{img_id}" class="i relative {selected ? 'selected' : ''}">
     <a
-        href={make_link(img_id)}
+        href={make_link(img_id,q)}
         on:mouseenter={(e) => handle_interaction(img_id)}
         on:mousedown={(e) => handle_interaction(img_id)}
         on:touchstart={(e) => handle_interaction(img_id)}
@@ -69,7 +69,7 @@
      class=" to-blue-400 text-center absolute bottom-1 img_hover">
         <a href={srchlink(q+" -clip:"+img_id)} title="less like this">▼</a>
         <a href={"?q=clip:"+img_id}  title="similar images">▦</a>
-        <a href={make_link(img_id)}  title="details">▣</a>
+        <a href={make_link(img_id,q)}  title="details">▣</a>
         <a href={srchlink(q+" +clip:"+img_id)} title="more like this">▲</a>
     </div>
     {/if}
@@ -86,21 +86,24 @@
         color: #8cf;
     }
     .i .img_hover {
-        transition: all 0.5s ease-in-out;
+        /* transition: all 0.5s ease-in-out; */
         background-color: rgba(0, 0, 0, 0.5);
         border: 0px solid red;
         width: 100%;
+        /*
         color: transparent;
         line-height: 0;
         padding: 0;
         margin: 0;
         height: 0px;
-        display: block;
+        */
+        display: none;
     }
     .i:hover .img_hover {
         display: block;
         height: auto;
         color: white;
         line-height: 1;
+        display: block;
     }
 </style>

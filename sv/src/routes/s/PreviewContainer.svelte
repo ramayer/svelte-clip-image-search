@@ -12,6 +12,11 @@
     easing:sineInOut
   });
 
+  const tweened_bottom_offset = tweened(1, {
+    duration: 400,
+    easing:sineInOut
+  });
+
   let target_x=-1;
   let target_y=-1;
 
@@ -56,14 +61,16 @@
   
 
   $: leftoffsetstr = $tweened_offset + "vw"
+  $: bottomoffsetstr = $tweened_bottom_offset + "vh"
 </script>
 
 <svelte:window bind:innerWidth={inner_width} />
 
 {#if p_img}
   <div
-    class="preview_container fixed rounded-2xl bottom-1  h-[50vh] bg-black p-2"
+    class="preview_container fixed rounded-2xl bottom-1 h-[33vh] bg-black p-2"
     style:--leftoffsetstr={leftoffsetstr}
+    style:--bottomoffsetstr={bottomoffsetstr}
   >
     <Preview {s_url} {b_url} img_id={p_img}/>
   </div>
@@ -75,7 +82,7 @@
     position: fixed;
     z-index: 99;
     display: flex;
-    width: 33vw;
+    width: 32vw;
     left: var(--leftoffsetstr);
     transition: transform 2s;
   }

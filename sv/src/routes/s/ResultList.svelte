@@ -42,12 +42,7 @@
         const size_in_units_of_30px = float_size / 12;
         const exponent = Math.ceil(Math.log2(size_in_units_of_30px) / 0.5);
         const rounded_value = 12 * Math.ceil(Math.pow(2, exponent / 2));
-        console.log(
-            "trying thumnail size of ",
-            float_size,
-            " => ",
-            rounded_value
-        );
+        //console.log("thm size ",float_size," => ",rounded_value);
         return rounded_value;
     }
 
@@ -74,7 +69,7 @@
     $: images_was_set(results);
 
     async function scrollToMiddle(objid: string) {
-        if (!browser) {
+        if (!browser || !objid) {
             return;
         }
         // hack - is this needed - work around some infinite
@@ -98,7 +93,7 @@
             window.innerHeight || document.documentElement.clientHeight;
 
         var scrollTo = window.scrollY + elementTop - windowHeight / 2 + elementHeight / 2;
-        console.log("scrollToMiddle attempting to scroll to ",scrollTo, " where it found ",element);
+        console.log("scrollToMiddle attempting to scroll to ",scrollTo, " where the selected thumbnail was found ");
         window.scrollTo({ top: scrollTo, behavior: "smooth" });
     }
     ///////////////////////////////////////////////////////////////////////////////
@@ -209,7 +204,7 @@
 
     function is_any_footer_visible() {
         const divElements = col_footers();
-        console.log(`divElements here is ${divElements}`)
+        //console.log(`column footers is ${divElements}`)
         const v: boolean = Array.from(divElements).some(
             (element: HTMLDivElement) => {
                 const rect: DOMRect = element.getBoundingClientRect();
@@ -255,7 +250,7 @@
 </script>
 
 <div
-    data-sveltekit-preload-data="tap"
+    data-sveltekit-preload-data={results.d ? "hover" : "tap"}
     id="grid"
     class="grid iei_result_grid"
     style="{gridstyle};"
@@ -267,8 +262,9 @@
             <div
                 class="iei_result_col [&>*]:rounded-lg [&>*]:border-2 [&>*]:border-black [&>*]:overflow-clip"
             >
+            <div style="display:none">{q} <!-- without this, the below images don't always refresh correctly --></div>
                 {#each c as i}
-                    <ResultImg img_id={i} {q} selected={i == details_id} />
+                    <ResultImg img_id={i} q={q} selected={i == details_id} />
                 {/each}
                 {#if c.length > 0}
                     <div

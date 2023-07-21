@@ -90,10 +90,14 @@
 
     let prev_image = browser ? new Image() : undefined
     let next_image = browser ? new Image() : undefined
+    let prev_thm = browser ? new Image() : undefined
+    let next_thm = browser ? new Image() : undefined
     function prefetch_next_full_sized_images(d_idx: number) {
-        if (browser && prev_image && next_image) {
+        if (browser && prev_image && next_image && next_thm && prev_thm) {
             next_image.src='/i/'+idx_to_id(d_idx + 1)
             prev_image.src='/i/'+idx_to_id(d_idx - 1)
+            next_thm.src='/t/'+idx_to_id(d_idx + 1)
+            prev_thm.src='/t/'+idx_to_id(d_idx - 1)
         }
     }
     $: prefetch_next_full_sized_images(d_idx)
@@ -137,8 +141,12 @@
                 <a href={makelink(idx_to_id(d_idx - 1))} data-sveltekit-noscroll  title="[Left Arrow]">&#x22B2;&#xFE0E;</a>
             </div>
             |
-            <div class="m_2 text-sm px-1">
+            <div class="m_2 text-sm px-1 shrink">
                 <a href={"/d/" + d_img}>{title}</a>
+            </div>
+            |
+            <div class="m_2 text-sm px-1">
+               ctrl-click and drag to select a region
             </div>
             |
             <div class="px-2 text-sm">
