@@ -38,12 +38,12 @@
     }
 
     async function interaction_ended(r: number) {
-        preview_store.set(0);
+        //preview_store.set(0);
     }
 
     async function handle_interaction(r: number) {
-        preview_store.set(0);
-        await tick();
+        //preview_store.set(0);
+        //await tick();
         preview_store.set(r);
         return true;
     }
@@ -73,7 +73,7 @@
     {#if img_id == p_img}
     {#key img_id}
     <div in:slide={{ duration: 200 }}
-     class=" to-blue-400 text-center absolute bottom-1 img_hover"
+     class=" to-blue-400 text-center absolute bottom-0 img_hover"
      style="max-height: 50%; font-size: {Math.round(thm_size/8)}px;">
         <a href={srchlink(q+" -clip:"+img_id)} title="less like this">▼</a>
         <a href={"?q=clip:"+img_id}  title="similar images">▦</a>
@@ -95,6 +95,7 @@
         color: #8cf;
     }
     .i .img_hover {
+        line-height: 1;
         /* transition: all 0.5s ease-in-out; */
         background-color: rgba(0, 0, 0, 0.5);
         width: 100%;
