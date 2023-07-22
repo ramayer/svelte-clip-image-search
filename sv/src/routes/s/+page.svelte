@@ -24,7 +24,9 @@
         if (data.d) {
             const selectedimg = document.getElementById("" + data.d);
             //selectedimg?.scrollIntoView();
-            console.log("TODO - consider scrolling into view here, or maybe later")
+            console.log(
+                "TODO - consider scrolling into view here, or maybe later"
+            );
         }
         //top_element?.scrollIntoView();
     });
@@ -39,9 +41,7 @@
 </script>
 
 <svelte:window on:keydown={handleEscape} />
-{#if !data.d}
-<SearchForm />
-{/if}
+<SearchForm {data} />
 <div class="h-12" bind:this={top_element} />
 
 <ResultList results={data}>hi</ResultList>

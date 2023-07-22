@@ -16,7 +16,7 @@ interface ResponseData {
 
 export const load = (async ({ url, setHeaders, fetch }) => {
 
-    console.log("============== +page.ts load for ",url.searchParams)
+    console.log("============== +page.ts load for ", url.searchParams)
     const q = url.searchParams.get('q');
     const ds = url.searchParams.get('d');
     const d = ds ? parseInt(ds) : undefined;
@@ -30,11 +30,18 @@ export const load = (async ({ url, setHeaders, fetch }) => {
     });
     // TOOD - IIRC there's some trick to make the slower parts async
     // by returning promises?
-    return {
-        q: q,
-        d: d,
-        ids: q_results.imgids,
-        details: details
+    if (d) {
+        return {
+            q: q,
+            d: d,
+            ids: q_results.imgids,
+            details: details
+        }
+    } else {
+        return {
+            q: q,
+            ids: q_results.imgids,
+        }
     }
 
 }) satisfies PageLoad;

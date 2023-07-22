@@ -1,5 +1,6 @@
 <script lang="ts">
     import { preview_store, cols_store } from "./stores.js";
+    export let data: PageData;
 
     import { page } from "$app/stores";
     import type { PageData } from "./$types";
@@ -20,11 +21,11 @@
                         (device) => device.kind === "videoinput"
                     );
                     if (cameras.length > 0) {
-                        console.log("found cameras")
-                        camera_button_visible = true
+                        console.log("found cameras");
+                        camera_button_visible = true;
                         return true;
                     } else {
-                        console.log("found no cameras")
+                        console.log("found no cameras");
                         return false;
                     }
                 })
@@ -122,6 +123,19 @@
                     max={max_cols}
                 />
             </label>
+
+            |
+            <div class="px-2">
+                <a href="help" title="Help [?]">?</a>
+            </div>
+            {#if data.d}
+                <div class="px-2">
+                    <a
+                        href={"?" + new URLSearchParams({ q: data.q || "" })}
+                        title="Back to list [ESC]">&#x2715;&#xFE0E;</a
+                    >
+                </div>
+            {/if}
         </div>
     </form>
 </div>
