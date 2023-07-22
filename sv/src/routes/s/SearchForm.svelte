@@ -71,28 +71,33 @@
     let answer = "";
 </script>
 
-<div class="position_nav_bar_safely fixed top-1 left-1 w-full pr-2 z-50">
+<div class="safe_header_area">
     <form>
         <div
-            class="p-1 pr-3 rounded-2xl flex w-full bg-transparent [&>*]:bg-gray-900 [&>*]:border-gray-500 [&>*]:border"
-            style="z-index:999"
+            class="m-0 text-2xl rounded-xl border border-gray-500 
+            flex w-full bg-transparent
+            justify-center align-middle object-center
+            overflow-clip
+            bg-gray-800 header"
         >
-            <div class="rounded-l-lg p-1">
+            <div class="header-item">
                 <a
                     href="/"
-                    class="inline-block"
-                    style="transform: rotate(45deg);">⚲</a
+                    class="block p-1 hover:bg-slate-400">
+                    <div style="transform: rotate(45deg);">⚲</div></a
                 >
-            </div>
-            <div class="flex-grow flex w-10">
+            </div>            
+
+            <div class="flex-grow flex w-10 basis-2/6 text-xl header-item">
                 <input
                     bind:this={q_input}
                     type="search"
                     name="q"
                     bind:value={q}
-                    class="inline-flex flex-grow p-1 bg-gray-800"
+                    class="inline-flex flex-grow p-1 bg-gray-800 text-s"
                 />
             </div>
+            {#if false}
             <select
                 bind:value={selected}
                 on:change={() => (answer = "")}
@@ -104,16 +109,17 @@
                     </option>
                 {/each}
             </select>
-            <button type="submit">
+            {/if}
+            <button type="submit" class="header-item">
                 <div class="inline-flex">&nbsp;👀&nbsp;</div>
             </button>
             {#if camera_button_visible}
-                <button on:click={() => (camera_visible = !camera_visible)}>
+                <button on:click={() => (camera_visible = !camera_visible)} class="header-item">
                     <div class="inline-flex">&nbsp;&#128247;&#xFE0E;&nbsp;</div>
                 </button>
             {/if}
 
-            <label class="pt-2 flex-shrink rounded-r-lg" style="flex-shrink:5">
+            <label class="p-1 flex-shrink block header-item content-center" style="flex-shrink:5">
                 <input
                     type="range"
                     class="flex-shrink"
@@ -124,12 +130,11 @@
                 />
             </label>
 
-            |
-            <div class="px-2">
+            <div class="px-2 header-item">
                 <a href="help" title="Help [?]">?</a>
             </div>
-            {#if data.d}
-                <div class="px-2">
+            {#if data && data.d}
+                <div class="px-2 header-item">
                     <a
                         href={"?" + new URLSearchParams({ q: data.q || "" })}
                         title="Back to list [ESC]">&#x2715;&#xFE0E;</a
@@ -146,14 +151,45 @@
 {/if}
 
 <style>
-    .position_nav_bar_safely {
+    .safe_header_area {
         position: fixed;
+        background-color: rgba(0, 0, 0, 0.5);
+        padding: 1mm;
         top: 10px; /* Fallback value */
+        left: 10px;
+        right: 10px;
+        z-index: 50;
+
+    }
+
+    .header-item {
+     border-right: 1px solid #666;
+    }
+
+    .header-item:last-child {
+        border-right: none;
+    }
+
+
+    .header-item a {
+      display:block;
+      padding: 0.25rem/* 4px */;
     }
 
     @supports (padding-top: env(safe-area-inset-top)) {
-        .position_nav_bar_safely {
-            top: env(safe-area-inset-top); /* Uses env() if supported */
-        }
+        .safe_header_area {
+        position: fixed;
+        top: env(safe-area-inset-top);
+        left: env(safe-area-inset-left);
+        right: env(safe-area-inset-right);
+        background-color: rgba(0, 0, 0, 0.5);
+        padding-top: 1mm;
+        padding-bottom: 1mm;
+        padding-left: 1mm;
+        padding-right: 1mm;
+        z-index: 50;
+    }        
     }
+
+
 </style>

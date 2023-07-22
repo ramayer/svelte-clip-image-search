@@ -150,12 +150,14 @@
                 </div>
                 |
                 {#if /.*commons.wikimedia.org.*/.test(results.details.metadata.src_uri)}
-                    <div class="m_2 text-sm px-1">
-                        <a href={"/d/" + d_img}
-                            >Copyright © info on wikimedia commons here.</a
-                        >
-                    </div>
-                    |
+
+                <div class="m_2 text-sm px-1">
+              
+                                <a href={"/d/" + d_img}
+                                    >Copyright © info on wikimedia commons here.</a
+                                >
+                </div>
+                |
                 {/if}
 
                 <div class="px-2 text-sm">
@@ -185,6 +187,7 @@
                         title="[Right Arrow]">&#x22B3;&#xFE0E;</a
                     >
                 </div>
+
             </div>
         </div>
     </div>
@@ -243,10 +246,11 @@
         bottom: env(safe-area-inset-bottom);
         left: env(safe-area-inset-left);
         right: env(safe-area-inset-right);
-        background-color: rgba(0, 0, 0, 0.5);
+        background-color: rgba(0,0,0,0.5);
         padding-top: 1mm;
         padding-bottom: 1mm;
         padding-left: 2mm;
         padding-right: 2mm;
     }
+
 </style>
