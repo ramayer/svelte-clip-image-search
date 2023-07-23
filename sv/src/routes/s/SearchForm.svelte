@@ -5,6 +5,7 @@
     import { page } from "$app/stores";
     import type { PageData } from "./$types";
     import Camera from "./Camera.svelte";
+    import Help from "./Help.svelte";
 
     import { onMount } from "svelte";
 
@@ -69,81 +70,86 @@
 
     let selected = 0;
     let answer = "";
+
+    /* help */
+    let help = false;
 </script>
 
 <div class="safe_header_area">
     <form>
         <div
-            class="m-0 text-2xl rounded-xl border border-gray-500 
-            flex w-full bg-transparent
+            class="m-0 text-3xl rounded-xl border border-gray-500
+            flex w-full
             justify-center align-middle object-center
             overflow-clip
-            bg-gray-800 header"
+            bg-slate-800 header
+            whitespace-nowrap
+            items-stretch
+            "
         >
-            <div class="header-item">
-                <a
-                    href="/"
-                    class="block p-1 hover:bg-slate-400">
-                    <div style="transform: rotate(45deg);">⚲</div></a
-                >
-            </div>            
+            <a href="/" class="header-item block p-2 hover:bg-slate-400">⌂</a>
 
-            <div class="flex-grow flex w-10 basis-2/6 text-xl header-item">
+
+            <div class="flex-grow flex w-10 basis-2/6 text-xl header-item p-1">
                 <input
                     bind:this={q_input}
                     type="search"
                     name="q"
                     bind:value={q}
-                    class="inline-flex flex-grow p-1 bg-gray-800 text-s"
+                    class="inline-flex focus:outline-none focus flex-grow p-1 bg-black border border-slate-700 text-s"
                 />
             </div>
-            {#if false}
-            <select
-                bind:value={selected}
-                on:change={() => (answer = "")}
-                class=""
-            >
-                {#each questions as question}
-                    <option value={question}>
-                        {question.text}
-                    </option>
-                {/each}
-            </select>
-            {/if}
-            <button type="submit" class="header-item">
-                <div class="inline-flex">&nbsp;👀&nbsp;</div>
+            <button type="submit" class="header-item p-2">
+                <!--<div class="inline-flex">&nbsp;👀&nbsp;</div>-->
+                <div style="transform: rotate(45deg);">⚲</div>
             </button>
+
             {#if camera_button_visible}
-                <button on:click={() => (camera_visible = !camera_visible)} class="header-item">
+                <button
+                    on:click={() => (camera_visible = !camera_visible)}
+                    class="header-item"
+                >
                     <div class="inline-flex">&nbsp;&#128247;&#xFE0E;&nbsp;</div>
                 </button>
             {/if}
 
-            <label class="p-1 flex-shrink block header-item content-center" style="flex-shrink:5">
+            <label
+                class="flex-shrink header-item content-center pt-2"
+                style="flex-shrink:5"
+            >
                 <input
                     type="range"
                     class="flex-shrink"
-                    style="width:4em"
+                    style="max-width:3em"
                     bind:value={inv_cols}
                     min={min_cols}
                     max={max_cols}
                 />
             </label>
 
-            <div class="px-2 header-item">
-                <a href="help" title="Help [?]">?</a>
-            </div>
+            <a
+                class="header-item p-2 {help ? 'bg-slate-500' : ''}"
+                on:click={() => {
+                    help = !help;
+                }}
+                href="#help"
+                title="Help [?]">?</a>
+
             {#if data && data.d}
-                <div class="px-2 header-item">
-                    <a
-                        href={"?" + new URLSearchParams({ q: data.q || "" })}
-                        title="Back to list [ESC]">&#x2715;&#xFE0E;</a
-                    >
-                </div>
+                <a
+                    class="header-item p-2"
+                    href={"?" + new URLSearchParams({ q: data.q || "" })}
+                    title="Back to list [ESC]">&#x2715;&#xFE0E;</a
+                >
             {/if}
         </div>
     </form>
+
 </div>
+
+<Help bind:enabled={help}/>
+
+
 {#if camera_visible}
     <div class="fixed right-4 w-80 top-8 z-50">
         <Camera />
@@ -159,37 +165,39 @@
         left: 10px;
         right: 10px;
         z-index: 50;
-
     }
 
     .header-item {
-     border-right: 1px solid #666;
+        border-right: 1px solid #666;
+        font-weight: bolder;
     }
 
     .header-item:last-child {
         border-right: none;
     }
-
-
-    .header-item a {
-      display:block;
-      padding: 0.25rem/* 4px */;
+    *.header-item:hover {
+        background: rgba(0, 0, 200, 0.8);
+        color: #ccf;
+    }
+    a.header-item {
+        display: block;
+        /*background-color: rgba(0, 0, 0, 0.5);*/
+        text-align: center;
+        color: rgb(2 132 199 / var(--tw-text-opacity));
     }
 
     @supports (padding-top: env(safe-area-inset-top)) {
         .safe_header_area {
-        position: fixed;
-        top: env(safe-area-inset-top);
-        left: env(safe-area-inset-left);
-        right: env(safe-area-inset-right);
-        background-color: rgba(0, 0, 0, 0.5);
-        padding-top: 1mm;
-        padding-bottom: 1mm;
-        padding-left: 1mm;
-        padding-right: 1mm;
-        z-index: 50;
-    }        
+            position: fixed;
+            top: env(safe-area-inset-top);
+            left: env(safe-area-inset-left);
+            right: env(safe-area-inset-right);
+            background-color: rgba(0, 0, 0, 0.5);
+            padding-top: 1mm;
+            padding-bottom: 1mm;
+            padding-left: 1mm;
+            padding-right: 1mm;
+            z-index: 50;
+        }
     }
-
-
 </style>

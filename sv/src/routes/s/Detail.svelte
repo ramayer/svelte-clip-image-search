@@ -126,42 +126,42 @@
             {/if}
         </div>
 
-        <div class="safe-area-menu">
+        <div class="safe_footer_area">
             <div
-                class="
-            w-full z-50
-            rounded-lg flex
-            
-            border-3 border-red-400 justify-around items-center text-4xl bg-slate-800
-            focus:outline-none whitespace-nowrap
-            "
-                style="border: 1px solid red"
+                class=" items-stretch
+                m-0 text-3xl rounded-xl border border-gray-500
+                flex w-full
+                justify-center align-middle object-center
+                overflow-clip
+                bg-slate-800 header
+                whitespace-nowrap
+                footer"
             >
-                <div class="px-2">
-                    <a
-                        href={makelink(idx_to_id(d_idx - 1))}
-                        data-sveltekit-noscroll
-                        title="[Left Arrow]">&#x22B2;&#xFE0E;</a
-                    >
-                </div>
-                |
-                <div class="m_2 text-sm px-1 shrink">
-                    <a href={"/d/" + d_img}>{title}</a>
-                </div>
-                |
-                {#if /.*commons.wikimedia.org.*/.test(results.details.metadata.src_uri)}
+                <a
+                    class="footer-item p-1"
+                    href={makelink(idx_to_id(d_idx - 1))}
+                    data-sveltekit-noscroll
+                    title="[Left Arrow]">&#x22B2;&#xFE0E;</a
+                >
 
-                <div class="m_2 text-sm px-1">
-              
-                                <a href={"/d/" + d_img}
-                                    >Copyright © info on wikimedia commons here.</a
-                                >
-                </div>
-                |
+                <a
+                    class="footer-item text-sm shrink grow align-middle pt-2.5 truncate"
+                    href={"/d/" + d_img}
+                    >{title}
+                </a>
+
+
+                {#if /.*commons.wikimedia.org.*/.test(results.details.metadata.src_uri)}
+                        <a href={"/d/" + d_img}
+                        class="footer-item text-lg align-middle p-2.5"
+                        title="Copyright © information for this image on wikimedia commons here."
+                            >©</a
+                        >
+                    
                 {/if}
 
-                <div class="px-2 text-sm">
-                    <a
+                <a  class="footer-item text-sm align-middle p-1 pt-3"
+
                         href={cliplink(d_img, "face")}
                         title="Search for any of the {results.details?.face_dat
                             ?.length} faces in the image [f]; or click one of the highlighted faces below"
@@ -170,23 +170,23 @@
                             : "👤".repeat(numfaces % 2) +
                               "👥".repeat(numfaces / 2)}</a
                     >
-                </div>
-                |
-                <div class="px-2 text-sm">
-                    <a
+            
+
+                <a
                         href={cliplink(d_img)}
+                        class="footer-item text-lg shrink align-middle p-2"
                         title="Similar images according to a clip model [c]"
                         >▦</a
                     >
-                </div>
-                |
-                <div class="px-2">
+                
+
                     <a
                         href={makelink(idx_to_id(d_idx + 1))}
+                        class="footer-item p-1"
+
                         data-sveltekit-noscroll
                         title="[Right Arrow]">&#x22B3;&#xFE0E;</a
                     >
-                </div>
 
             </div>
         </div>
@@ -241,16 +241,48 @@
         }
     }
 
-    .safe-area-menu {
+    .safe_footer_area {
         position: fixed;
-        bottom: env(safe-area-inset-bottom);
-        left: env(safe-area-inset-left);
-        right: env(safe-area-inset-right);
-        background-color: rgba(0,0,0,0.5);
-        padding-top: 1mm;
-        padding-bottom: 1mm;
-        padding-left: 2mm;
-        padding-right: 2mm;
+        background-color: rgba(0, 0, 0, 0.5);
+        padding: 1mm;
+        bottom: 10px; /* Fallback value */
+        left: 10px;
+        right: 10px;
+        z-index: 50;
+    }
+    @supports (padding-top: env(safe-area-inset-top)) {
+        .safe_footer_area {
+            position: fixed;
+            bottom: env(safe-area-inset-bottom);
+            left: env(safe-area-inset-left);
+            right: env(safe-area-inset-right);
+            background-color: rgba(0, 0, 0, 0.5);
+            padding-top: 1mm;
+            padding-bottom: 1mm;
+            padding-left: 1mm;
+            padding-right: 1mm;
+            z-index: 50;
+        }
+    }
+    .footer {
+        display: flex;
+    }
+    .footer-item {
+        border-right: 1px solid #666;
+        font-weight: bolder;
     }
 
+    .footer-item:last-child {
+        border-right: none;
+    }
+    *.footer-item:hover {
+        background: rgba(0, 0, 200, 0.8);
+        color: #ccf;
+    }
+    a.footer-item {
+        display: block;
+        /*background-color: rgba(0, 0, 0, 0.5);*/
+        text-align: center;
+        color: rgb(2 132 199 / var(--tw-text-opacity));
+    }
 </style>
