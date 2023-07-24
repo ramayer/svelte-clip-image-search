@@ -168,21 +168,35 @@ class VectorHelper:
         maxabs = max(max(nrv),-min(nrv))
         n2 = (nrv * 127 / maxabs).astype(np.int32)
         return n2
+
+    @staticmethod
+    def normalize(v):
+        n = np.linalg.norm(v,axis=-1,keepdims=True) + np.finfo(v.dtype).eps
+        return v/n
     
     @staticmethod
-    def make_unit_vecs(vecs:np.ndarray):
-        norms = np.sqrt(np.sum(vecs ** 2, axis=1))
-        normalized_array = vecs / norms[:, np.newaxis]
-        return normalized_array
-
-    @staticmethod
     def recenter_vectors(embs:np.ndarray):
-        unit_vecs  = VectorHelper.make_unit_vecs(embs)
+        unit_vecs  = VectorHelper.normalize(embs)
         median_vec = np.median(unit_vecs,axis=0)
         recentered = unit_vecs - median_vec
-        final_vecs = VectorHelper.make_unit_vecs(recentered)
+        final_vecs = VectorHelper.normalize(recentered)
         return final_vecs
-
+    
+    @staticmethod
+    def slerp(a:np.ndarray, b:np.ndarray, t: float) -> np.ndarray:
+        """
+        https://en.wikipedia.org/wiki/Slerp
+        """
+        au = a/np.linalg.norm(a)
+        bu = b/np.linalg.norm(b)
+        adotb = np.dot(au,bu)
+        omega = np.arccos(adotb)
+        print(f"in slerp, vectors and b were {180/3.1416*omega}° apart")
+        somega = np.sin(omega)
+        if somega == 0:
+            return (au * (1-t) + bu * t)
+        s = (np.sin((1-t)*omega) * au + np.sin(t*omega)*bu) / somega
+        return s
 
 
 
@@ -617,7 +631,7 @@ class ParserHelper:
 
         # using pre-release pyparsing==3.0.0rc1 , so I don't need to change APIs later
         sign = pp.Opt(
-            pp.Group(pp.one_of("+ -") + pp.Opt(pp.pyparsing_common.number.copy(), 1)),
+            pp.Group(pp.one_of("+ -") + pp.Opt(pp.pyparsing_common.fnumber.copy(), 1)),
             ["+", 1],
         )
         # word  = pp.Word(pp.alphanums,exclude_chars='([{}])') # fails on hyphenated words
@@ -679,6 +693,7 @@ class ParserHelper:
         
         embeddings={
             'clip':[],
+            'clip_scale_factors':[],
             'face':[],
             'text':[],
         }
@@ -695,8 +710,9 @@ class ParserHelper:
                 d = self.parse_structured_term(term)
                 if d and d.get('img'):
                     e = iei.get_openclip_embedding(d['img'])
-                    e = e * scale_factor
+                    #e = e * scale_factor
                     embeddings['clip'].append(e)
+                    embeddings['clip_scale_factors'].append(scale_factor)
                 continue
         
             if fids := re.findall(r"^face:((\d+)\.?(\d*))", term):
@@ -735,6 +751,7 @@ class ParserHelper:
                         cropped.save('/tmp/debug_2_scaled.jpg')
                         e = iei.ocw.img_embeddings([cropped])[0]
                         embeddings['clip'].append(e)
+                        embeddings['clip_scale_factors'].append(scale_factor)
                     else:
                         print(f"cant find thm for {cid}")
                 continue
@@ -742,8 +759,9 @@ class ParserHelper:
             if cids := re.findall(r"^clip:(\d+)", term):
                 for cid in cids:
                     e = iei.get_openclip_embedding(cid)
-                    e = e * scale_factor
+                    #e = e * scale_factor
                     embeddings['clip'].append(e)
+                    embeddings['clip_scale_factors'].append(scale_factor)
                 continue
 
             if cids := re.findall(r"^clip:(\[.*?\])", term):
@@ -751,21 +769,33 @@ class ParserHelper:
                 for cid in cids:
                     e = VectorHelper.cast_to_float32_array(json.loads(cid))
                     embeddings['clip'].append(e)
+                    embeddings['clip_scale_factors'].append(scale_factor)
                 continue
                 
             tembs = iei.ocw.txt_embeddings([term])
             for e in tembs:
-                e = e * scale_factor
+                #e = e * scale_factor
+                e = VectorHelper.cast_to_float32_array(e)
                 embeddings['clip'].append(e)
+                embeddings['clip_scale_factors'].append(scale_factor)
+
         
         clip_result = face_result = None
+        for e in embeddings['clip']:
+            print(type(e))
         if len(embeddings['clip'])>0:
-            stacked_clip_embeddings = np.stack(embeddings['clip'])
-            for e in stacked_clip_embeddings:
-                print("emag ",e@e.T)
-            clip_result = functools.reduce(lambda x,y: x+y, stacked_clip_embeddings)
-            clip_result /= np.linalg.norm(clip_result)
-            clip_result = np.stack([clip_result])
+            clip_direction = embeddings['clip'][0] * embeddings['clip_scale_factors'][0]
+            denominator = 2.0
+            for e,s in zip(embeddings['clip'][1:],embeddings['clip_scale_factors'][1:]):
+                clip_direction = VectorHelper.slerp(clip_direction,e,s/denominator)
+               # denominator += 1
+            clip_result = np.stack([clip_direction])
+            # stacked_clip_embeddings = np.stack(embeddings['clip'])
+            # for e in stacked_clip_embeddings:
+            #     print("emag ",e@e.T)
+            # clip_result = functools.reduce(lambda x,y: x+y, stacked_clip_embeddings)
+            # clip_result /= np.linalg.norm(clip_result)
+            # clip_result = np.stack([clip_result])
     
         if len(embeddings['face'])>0:
             face_result = np.stack(embeddings['face'])
