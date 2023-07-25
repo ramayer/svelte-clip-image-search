@@ -4,6 +4,7 @@
     import ResultList from "./ResultList.svelte";
     import Detail from "./Detail.svelte";
     import PreviewContainer from "./PreviewContainer.svelte";
+    import Header from "./Header.svelte";
     import SearchForm from "./SearchForm.svelte";
     import type { PageData } from "./$types";
     import { onMount } from "svelte";
@@ -41,8 +42,8 @@
 </script>
 
 <svelte:window on:keydown={handleEscape} />
-<SearchForm {data} />
-<div class="h-12" bind:this={top_element} />
+<Header {data} />
+<div class="h-16" bind:this={top_element} />
 
 <ResultList results={data}>hi</ResultList>
 

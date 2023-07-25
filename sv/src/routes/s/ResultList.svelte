@@ -54,12 +54,7 @@
         //num_visible = 1
     });
 
-    async function images_was_set(results: {
-        q: string | null;
-        d: number | undefined;
-        ids: any;
-        details: any;
-    }) {
+    async function images_was_set(results: PageData) {
         console.log(
             "in ResultList.svelte, images_was_set and d is " + results.d
         );

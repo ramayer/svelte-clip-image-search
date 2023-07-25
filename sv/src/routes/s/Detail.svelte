@@ -5,7 +5,7 @@
     import { browser } from "$app/environment"; // for infinite scroll
 
     export let results: PageData;
-    import { preview_store, cols_store } from "./stores.js";
+    import { preview_store, cols_store, split_header_store } from "./stores.js";
 
     // console.log("Detail.svelte for d = ", results.d);
 
@@ -102,6 +102,9 @@
         }
     }
     $: prefetch_next_full_sized_images(d_idx);
+
+    let split_header = false;
+    split_header_store.subscribe((x)=>(split_header = x))
 </script>
 
 <svelte:window on:keydown={handleKeydown} />
@@ -109,7 +112,7 @@
 {#if d_img != 0}
     <div
         class="detail_container rounded-none bg-slate-900 border-slate-500 border-0"
-        style="width:{(100 * (cols - 1)) / cols}%; padding-bottom:50px"
+        style="width:{(100 * (cols - 1)) / cols}%; --detail-container-bottom:{split_header ? 2 : 70}px; --detail-container-top:{split_header ? 2 : 70}px"
     >
         <div class="image-container">
             {#if false}
@@ -130,22 +133,23 @@
             <div
                 class=" items-stretch
                 m-0 text-3xl rounded-xl border border-gray-500
+                
                 flex w-full
                 justify-center align-middle object-center
                 overflow-clip
-                bg-slate-800 header
+                 header
                 whitespace-nowrap
                 footer"
             >
                 <a
-                    class="footer-item p-1"
+                    class="footer-item p-1 bg-slate-800"
                     href={makelink(idx_to_id(d_idx - 1))}
                     data-sveltekit-noscroll
                     title="[Left Arrow]">&#x22B2;&#xFE0E;</a
                 >
 
                 <a
-                    class="footer-item text-sm shrink grow align-middle pt-2.5 truncate"
+                    class="footer-item text-sm shrink grow align-middle pt-2.5 truncate hover:bg-black bg-slate-800 bg-opacity-30 hover:bg-opacity-100"
                     href={"/d/" + d_img}
                     >{title}
                 </a>
@@ -153,14 +157,14 @@
 
                 {#if /.*commons.wikimedia.org.*/.test(results.details.metadata.src_uri)}
                         <a href={"/d/" + d_img}
-                        class="footer-item text-lg align-middle p-2.5"
+                        class="footer-item text-lg align-middle p-2.5 bg-slate-800"
                         title="Copyright © information for this image on wikimedia commons here."
                             >©</a
                         >
                     
                 {/if}
 
-                <a  class="footer-item text-sm align-middle p-1 pt-3"
+                <a  class="footer-item text-sm align-middle p-1 pt-3 bg-slate-800"
 
                         href={cliplink(d_img, "face")}
                         title="Search for any of the {results.details?.face_dat
@@ -174,7 +178,7 @@
 
                 <a
                         href={cliplink(d_img)}
-                        class="footer-item text-lg shrink align-middle p-2"
+                        class="footer-item text-lg shrink align-middle p-2 bg-slate-800"
                         title="Similar images according to a clip model [c]"
                         >▦</a
                     >
@@ -182,7 +186,7 @@
 
                     <a
                         href={makelink(idx_to_id(d_idx + 1))}
-                        class="footer-item p-1"
+                        class="footer-item p-1 bg-slate-800"
 
                         data-sveltekit-noscroll
                         title="[Right Arrow]">&#x22B3;&#xFE0E;</a
@@ -203,9 +207,8 @@
     }
     .detail_container {
         position: fixed;
-        top: 50%;
+        top: 0;
         right: 0%;
-        height: 95vh;
         width: 95vw;
         display: flex;
         flex-direction: column;
@@ -227,8 +230,10 @@
     @supports (padding-top: env(safe-area-inset-top)) {
         /* annoying phone browsers cover up parts of vh x vw */
         .detail_container {
-            top: calc(45px + env(safe-area-inset-top));
-            bottom: calc(45px + env(safe-area-inset-bottom));
+            zbottom: calc(var(--detail-container-bottom) + env(safe-area-inset-bottom));
+            top:  calc(var(--detail-container-top) + env(safe-area-inset-top));
+            /*bottom: calc(2px + env(safe-area-inset-bottom));*/
+            bottom: 0px;
             right: 0px;
             width: 80vw;
             transform: none;
@@ -243,7 +248,7 @@
 
     .safe_footer_area {
         position: fixed;
-        background-color: rgba(0, 0, 0, 0.5);
+        /* background-color: rgba(0, 0, 0, 0.5); */
         padding: 1mm;
         bottom: 10px; /* Fallback value */
         left: 10px;
@@ -256,7 +261,7 @@
             bottom: env(safe-area-inset-bottom);
             left: env(safe-area-inset-left);
             right: env(safe-area-inset-right);
-            background-color: rgba(0, 0, 0, 0.5);
+            /*background-color: rgba(0, 0, 0, 0.5);*/
             padding-top: 1mm;
             padding-bottom: 1mm;
             padding-left: 1mm;
