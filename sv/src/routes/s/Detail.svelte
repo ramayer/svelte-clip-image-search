@@ -3,6 +3,7 @@
     import Preview from "./Preview.svelte";
     import type { PageData } from "./$types";
     import { browser } from "$app/environment"; // for infinite scroll
+    // import { swipe } from 'svelte-gestures'; // consider https://www.npmjs.com/package/svelte-gestures
 
     export let results: PageData;
     import { preview_store, cols_store, split_header_store } from "./stores.js";
@@ -104,7 +105,7 @@
     $: prefetch_next_full_sized_images(d_idx);
 
     let split_header = false;
-    split_header_store.subscribe((x)=>(split_header = x))
+    split_header_store.subscribe((x) => (split_header = x));
 </script>
 
 <svelte:window on:keydown={handleKeydown} />
@@ -112,7 +113,10 @@
 {#if d_img != 0}
     <div
         class="detail_container rounded-none bg-slate-900 border-slate-500 border-0"
-        style="width:{(100 * (cols - 1)) / cols}%; --detail-container-bottom:{split_header ? 2 : 70}px; --detail-container-top:{split_header ? 2 : 70}px"
+        style="width:{(100 * (cols - 1)) /
+            cols}%; --detail-container-bottom:{split_header
+            ? 2
+            : 70}px; --detail-container-top:{split_header ? 2 : 70}px"
     >
         <div class="image-container">
             {#if false}
@@ -128,8 +132,43 @@
                 />
             {/if}
         </div>
-
-        <div class="safe_footer_area">
+        <div
+            class=" mr-20 text-center flex flex-nowrap whitespace-nowrap justify-center"
+        >
+            <div class="grow" />
+            <a
+                class="shrink block grow whitespace-nowrap text-clip overflow-clip"
+                href={"/d/" + d_img}>{title}</a
+            >
+            {#if /.*commons.wikimedia.org.*/.test(results.details.metadata.src_uri)}
+                <a
+                    href={"/d/" + d_img}
+                    class="grow whitespace-nowrap"
+                    title="Copyright © information for this image on wikimedia commons here."
+                    >© copyright</a
+                >
+            {/if}
+            <div class="grow" ></div>
+            {#if numfaces}
+                <a
+                    class="whitespace-nowrap"
+                    href={cliplink(d_img, "face")}
+                    title="Search for any of the {results.details?.face_dat
+                        ?.length} faces in the image [f]; or click one of the highlighted faces below"
+                    >{numfaces > 10
+                        ? "👤 * " + numfaces
+                        : "👤".repeat(numfaces % 2) +
+                          "👥".repeat(numfaces / 2)}</a
+                >
+            {/if}
+            <div class="grow" ></div>
+            <a
+                href={cliplink(d_img)}
+                title="Similar images according to a clip model [c]">▦</a
+            >
+            <div class="grow" />
+        </div>
+        <div class="safe_footer_area_l">
             <div
                 class=" items-stretch
                 m-0 text-3xl rounded-xl border border-gray-500
@@ -147,51 +186,27 @@
                     data-sveltekit-noscroll
                     title="[Left Arrow]">&#x22B2;&#xFE0E;</a
                 >
+            </div>
+        </div>
 
+        <div class="safe_footer_area_r">
+            <div
+                class=" items-stretch
+                        m-0 text-3xl rounded-xl border border-gray-500
+                        
+                        flex w-full
+                        justify-center align-middle object-center
+                        overflow-clip
+                         header
+                        whitespace-nowrap
+                        footer"
+            >
                 <a
-                    class="footer-item text-sm shrink grow align-middle pt-2.5 truncate hover:bg-black bg-slate-800 bg-opacity-30 hover:bg-opacity-100"
-                    href={"/d/" + d_img}
-                    >{title}
-                </a>
-
-
-                {#if /.*commons.wikimedia.org.*/.test(results.details.metadata.src_uri)}
-                        <a href={"/d/" + d_img}
-                        class="footer-item text-lg align-middle p-2.5 bg-slate-800"
-                        title="Copyright © information for this image on wikimedia commons here."
-                            >©</a
-                        >
-                    
-                {/if}
-
-                <a  class="footer-item text-sm align-middle p-1 pt-3 bg-slate-800"
-
-                        href={cliplink(d_img, "face")}
-                        title="Search for any of the {results.details?.face_dat
-                            ?.length} faces in the image [f]; or click one of the highlighted faces below"
-                        >{numfaces > 10
-                            ? "👤 * " + numfaces
-                            : "👤".repeat(numfaces % 2) +
-                              "👥".repeat(numfaces / 2)}</a
-                    >
-            
-
-                <a
-                        href={cliplink(d_img)}
-                        class="footer-item text-lg shrink align-middle p-2 bg-slate-800"
-                        title="Similar images according to a clip model [c]"
-                        >▦</a
-                    >
-                
-
-                    <a
-                        href={makelink(idx_to_id(d_idx + 1))}
-                        class="footer-item p-1 bg-slate-800"
-
-                        data-sveltekit-noscroll
-                        title="[Right Arrow]">&#x22B3;&#xFE0E;</a
-                    >
-
+                    href={makelink(idx_to_id(d_idx + 1))}
+                    class="footer-item p-1 bg-slate-800"
+                    data-sveltekit-noscroll
+                    title="[Right Arrow]">&#x22B3;&#xFE0E;</a
+                >
             </div>
         </div>
     </div>
@@ -216,7 +231,6 @@
 
     .image-container {
         flex: 1;
-        display: flex;
         justify-content: center;
         align-items: center;
         overflow: hidden;
@@ -230,8 +244,10 @@
     @supports (padding-top: env(safe-area-inset-top)) {
         /* annoying phone browsers cover up parts of vh x vw */
         .detail_container {
-            zbottom: calc(var(--detail-container-bottom) + env(safe-area-inset-bottom));
-            top:  calc(var(--detail-container-top) + env(safe-area-inset-top));
+            zbottom: calc(
+                var(--detail-container-bottom) + env(safe-area-inset-bottom)
+            );
+            top: calc(var(--detail-container-top) + env(safe-area-inset-top));
             /*bottom: calc(2px + env(safe-area-inset-bottom));*/
             bottom: 0px;
             right: 0px;
@@ -256,10 +272,20 @@
         z-index: 50;
     }
     @supports (padding-top: env(safe-area-inset-top)) {
-        .safe_footer_area {
+        .safe_footer_area_l {
             position: fixed;
             bottom: env(safe-area-inset-bottom);
             left: env(safe-area-inset-left);
+            /*background-color: rgba(0, 0, 0, 0.5);*/
+            padding-top: 1mm;
+            padding-bottom: 1mm;
+            padding-left: 1mm;
+            padding-right: 1mm;
+            z-index: 50;
+        }
+        .safe_footer_area_r {
+            position: fixed;
+            bottom: env(safe-area-inset-bottom);
             right: env(safe-area-inset-right);
             /*background-color: rgba(0, 0, 0, 0.5);*/
             padding-top: 1mm;

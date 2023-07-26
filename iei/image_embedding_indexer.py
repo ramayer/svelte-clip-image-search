@@ -242,6 +242,43 @@ class OpenClipWrapper:
             features /= features.norm(dim=-1, keepdim=True)
             return features
 
+import torchvision.transforms.transforms
+if include_openai_clip := True:
+    import clip
+    class OpenAIClipWrapper:
+
+        def __init__(self,model_name="ViT-B/32",device='cpu'):
+            """
+                Try open_clip.list_pretrained() to see the list of models.
+                This cheap GPU can only handle batches of ~10 images with laion400m_e32
+                but it seems quite fast.
+                * On CPU - 10 embeddings = 698 ms 
+                * On GPU - 10 embeddings =  13 ms 
+            """
+            self.model_name = model_name
+            self.device = device
+            m,p = clip.load(model_name, device=device)
+            self.model, self.preprocess = m,p
+                
+        def get_pretrained_models(self):
+            return clip.available_models()
+        
+        def img_embeddings(self,imgs):
+            with torch.no_grad(): # torch.autocast():
+                #print("type of preprocess is ",type(self.preprocess))
+                #torchvision.transforms.transforms.Compose
+                preprocessed_list = [self.preprocess(i) for i in imgs] # type: ignore
+                preprocessed = torch.stack(preprocessed_list).to(self.device) # type: ignore
+                features = self.model.encode_image(preprocessed) # type: ignore
+                features /= features.norm(dim=-1, keepdim=True)
+                return features
+        
+        def txt_embeddings(self,txts):
+            with torch.no_grad():# , torch.cuda.amp.autocast():# type: ignore
+                tokenized = clip.tokenize(txts).to(self.device)
+                features = self.model.encode_text(tokenized) # type: ignore
+                features /= features.norm(dim=-1, keepdim=True)
+                return features
 
 # In[324]:
 
@@ -683,9 +720,6 @@ class ParserHelper:
         print(status)
         return None
 
-
-    
-    
     def get_query_vectors(self,q):
         iei = self.iei
         parsed = self.parser.search_string(q)
@@ -706,7 +740,7 @@ class ParserHelper:
             if len(term)>2 and term[0] == '(' and term[-1] == ')': 
                 term=term[1:-1]
         
-            if term.startswith('{'):
+            if term.startswith('{'): # v1 img
                 d = self.parse_structured_term(term)
                 if d and d.get('img'):
                     e = iei.get_openclip_embedding(d['img'])
@@ -770,6 +804,16 @@ class ParserHelper:
                     e = VectorHelper.cast_to_float32_array(json.loads(cid))
                     embeddings['clip'].append(e)
                     embeddings['clip_scale_factors'].append(scale_factor)
+                continue
+            
+            if cids := re.findall(r"^(https?:\S*)", term):
+                print("oooh - got a url {cids}")
+                for cid in cids:
+                    img,imgdata,dttm,imgbytes = iei.img_helper.fetch_img(cid)
+                    tembs = iei.ocw.img_embeddings([img])
+                    for e in tembs:
+                        embeddings['clip'].append(e)
+                        embeddings['clip_scale_factors'].append(scale_factor)
                 continue
                 
             tembs = iei.ocw.txt_embeddings([term])
