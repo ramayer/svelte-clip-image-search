@@ -137,21 +137,21 @@
         >
             <div class="grow" />
             <a
-                class="shrink block grow whitespace-nowrap text-clip overflow-clip"
+                class="shrink block grow whitespace-nowrap text-clip overflow-clip mr-4"
                 href={"/d/" + d_img}>{title}</a
             >
             {#if /.*commons.wikimedia.org.*/.test(results.details.metadata.src_uri)}
                 <a
                     href={"/d/" + d_img}
-                    class="grow whitespace-nowrap"
+                    class="grow whitespace-nowrap mx-4"
                     title="Copyright © information for this image on wikimedia commons here."
-                    >© copyright</a
+                    >copyright © info on wikimedia</a
                 >
             {/if}
-            <div class="grow" ></div>
+            <div class="grow" />
             {#if numfaces}
                 <a
-                    class="whitespace-nowrap"
+                    class="whitespace-nowrap mx-2"
                     href={cliplink(d_img, "face")}
                     title="Search for any of the {results.details?.face_dat
                         ?.length} faces in the image [f]; or click one of the highlighted faces below"
@@ -161,18 +161,46 @@
                           "👥".repeat(numfaces / 2)}</a
                 >
             {/if}
-            <div class="grow" ></div>
+            <div class="grow" />
             <a
+                class="whitespace-nowrap mx-2"
                 href={cliplink(d_img)}
                 title="Similar images according to a clip model [c]">▦</a
             >
             <div class="grow" />
         </div>
         <div class="safe_footer_area_l">
+            <a
+                href={makelink(idx_to_id(d_idx - 1))}
+                data-sveltekit-noscroll
+                title="[Left Arrow]"
+                class="text-white bg-blue-800 hover:bg-blue-800
+                focus:ring-4 focus:outline-none focus:ring-blue-300
+                font-medium rounded-lg text-sm p-2.5
+                text-center inline-flex items-center mr-2
+                dark:bg-slate-700 dark:hover:bg-blue-900 dark:focus:ring-blue-800"
+            >
+                <svg
+                    class="w-5 h-5"
+                    aria-hidden="true"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 14 10"
+                >
+                    <path
+                        stroke="currentColor"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M12 1 L 1 5 L 12 9"
+                    />
+                </svg>
+                <span class="sr-only">Icon description</span>
+            </a>
+<!--
             <div
                 class=" items-stretch
                 m-0 text-3xl rounded-xl border border-gray-500
-                
                 flex w-full
                 justify-center align-middle object-center
                 overflow-clip
@@ -187,9 +215,38 @@
                     title="[Left Arrow]">&#x22B2;&#xFE0E;</a
                 >
             </div>
+        -->
         </div>
 
         <div class="safe_footer_area_r">
+            <a
+                href={makelink(idx_to_id(d_idx + 1))}
+                data-sveltekit-noscroll
+                    title="[Right Arrow]"
+                class="text-white bg-blue-800 hover:bg-blue-800
+            focus:ring-4 focus:outline-none focus:ring-blue-300
+            font-medium rounded-lg text-sm p-2.5
+            text-center inline-flex items-center mr-2
+            dark:bg-slate-700 dark:hover:bg-blue-900 dark:focus:ring-blue-800"
+            >
+                <svg
+                    class="w-5 h-5"
+                    aria-hidden="true"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 14 10"
+                >
+                    <path
+                        stroke="currentColor"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M1 1 L 12 5 L 1 9"
+                    />
+                </svg>
+                <span class="sr-only">Icon description</span>
+            </a>
+            <!--
             <div
                 class=" items-stretch
                         m-0 text-3xl rounded-xl border border-gray-500
@@ -207,7 +264,10 @@
                     data-sveltekit-noscroll
                     title="[Right Arrow]">&#x22B3;&#xFE0E;</a
                 >
+
+
             </div>
+            -->
         </div>
     </div>
 {/if}
