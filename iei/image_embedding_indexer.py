@@ -243,7 +243,7 @@ class OpenClipWrapper:
             return features
 
 import torchvision.transforms.transforms
-if include_openai_clip := True:
+if include_openai_clip := False:
     import clip
     class OpenAIClipWrapper:
 
