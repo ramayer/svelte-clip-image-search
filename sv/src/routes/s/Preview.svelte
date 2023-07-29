@@ -173,7 +173,8 @@
             {#each overlay_data as o,idx}
               <a href="/s?q=face:{img_id}.{idx}"><div
                 class="c3"
-                style="top:{o.y-o.h/6}%; left:{o.x-o.w/6}%; height:{o.h+o.h/3}%; width:{o.w+o.w/3}%; "
+                style="top:{o.y-o.h/6}%; left:{o.x-o.w/6}%; height:{o.h+o.h/3}%; width:{o.w+o.w/3}%; 
+                outline: 1px solid {o.c}"
               >
               </div></a>  
             {/each}

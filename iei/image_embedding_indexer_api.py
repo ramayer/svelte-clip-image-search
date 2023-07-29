@@ -255,6 +255,7 @@ async def instightface_analysis(img_id: int, size: Optional[int] = 400):
 class SearchResults(BaseModel):
     imgids: list[int]
     scores: list[int]
+    target: list[int]
 
 
 import random
@@ -278,17 +279,22 @@ async def search(
     # Process the parameters and generate response data
     # Replace this with your actual implementation
     results = None
+    target = None
     print("q is ", q)
 
     clip_result,face_result = iei.parser_helper.get_query_vectors(q)
 
     if face_result is not None:
         fh = iei.face_faiss_helper
+        target = face_result
         results = fh.search(face_result, k=5000)
 
     if clip_result is not None:
         fh = iei.clip_faiss_helper
-        results = fh.search(clip_result, k=5000)
+        target = clip_result
+
+    print(f"fh is {fh}")
+    results = fh.search(target, k=5000)
 
     already_done = set()
     good_ids = []
@@ -301,7 +307,12 @@ async def search(
                 good_scores.append(max(int(score * 1000), -999))
                 already_done.add(imgid)
 
-    return SearchResults(imgids=good_ids, scores=good_scores)
+
+    target_ints = image_embedding_indexer.VectorHelper.int8_phase_vec(target[0]).tolist()
+
+    return SearchResults(imgids=good_ids, 
+                         scores=good_scores,
+                         target=target_ints)
 
     ## the old way
 

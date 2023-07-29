@@ -35,6 +35,8 @@ export const load = (async ({ url, setHeaders, fetch }) => {
             q: q,
             d: d,
             ids: q_results.imgids,
+            scores: q_results.scores,
+            target: q_results.target,
             details: details
         }
     } else {

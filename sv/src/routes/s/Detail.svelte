@@ -70,7 +70,12 @@
         // code = event.code;
     }
 
-    function face_data_to_overlay(f: { bbox: number[] }, w: number, h: number) {
+    interface FaceData {
+        bbox: number[];
+        embedding: number[];
+    }
+
+    function face_data_to_overlay(f: FaceData, w: number, h: number, clr: string) {
         let x0 = f.bbox[0];
         let y0 = f.bbox[1];
         let x1 = f.bbox[2];
@@ -80,14 +85,98 @@
             y: (100 * y0) / h,
             w: (100 * (x1 - x0)) / w,
             h: (100 * (y1 - y0)) / h,
-            c: "#f80",
+            c: clr, // "#f80",
         };
     }
+
+    /* This vector math should move to a different javascript file */
+    function dotProduct(vector1: number[], vector2: number[]): number {
+        if (vector1.length !== vector2.length) {
+            throw new Error("Vectors must have the same length");
+        }
+
+        return vector1.reduce(
+            (acc, val, index) => acc + val * vector2[index],
+            0
+        );
+    }
+
+    function magnitude(vector: number[]): number {
+        return Math.sqrt(vector.reduce((acc, val) => acc + val * val, 0));
+    }
+
+    function cosineSimilarity(vectorX: number[], vectorY: number[]): number {
+        if (!Array.isArray(vectorX) || !Array.isArray(vectorY)) {
+            throw new Error("Input must be arrays");
+        }
+
+        const dotProd = dotProduct(vectorX, vectorY);
+        const magX = magnitude(vectorX);
+        const magY = magnitude(vectorY);
+
+        if (magX === 0 || magY === 0) {
+            throw new Error("One or both vectors have zero magnitude");
+        }
+
+        return dotProd / (magX * magY);
+    }
+    /*  end of vector math */
+
+    /* nice color */
+    function floatToColor(hue: number): string {
+        // Ensure the value is within the valid range [0, 1]
+        //value = Math.min(1, Math.max(0, value));
+
+        // Calculate hue based on the value
+        //const hue: number = (1 - value) * 240; // 0 represents green, 240 represents red
+
+        // Convert HSL to RGB
+        const h: number = hue / 360;
+        const s: number = 1;
+        const l: number = 0.5;
+        const c: number = (1 - Math.abs(2 * l - 1)) * s;
+        const x: number = c * (1 - Math.abs(((h * 6) % 2) - 1));
+        const m: number = l - c / 2;
+
+        let r: number, g: number, b: number;
+
+        if (h < 1 / 6) {
+            [r, g, b] = [c, x, 0];
+        } else if (h < 2 / 6) {
+            [r, g, b] = [x, c, 0];
+        } else if (h < 3 / 6) {
+            [r, g, b] = [0, c, x];
+        } else if (h < 4 / 6) {
+            [r, g, b] = [0, x, c];
+        } else if (h < 5 / 6) {
+            [r, g, b] = [x, 0, c];
+        } else {
+            [r, g, b] = [c, 0, x];
+        }
+
+        // Convert RGB to hexadecimal color code
+        const toHex = (c: number): string => {
+            const hex = Math.round(c * 255).toString(16);
+            return hex.length === 1 ? "0" + hex : hex;
+        };
+
+        const color: string = `#${toHex(r + m)}${toHex(g + m)}${toHex(b + m)}`;
+        return color;
+    }
+
+    function calculate_box_color(f: FaceData, r: PageData) {
+        var cos_sim = cosineSimilarity(f.embedding, r.target);
+        var clr = floatToColor((cos_sim + 1)/2*360/3);
+        console.log("cos_sim = ", cos_sim , " giving ", clr);
+        return clr
+    }
+
     $: h = results.details?.img_data.height;
     $: w = results.details?.img_data.width;
-    $: overlay_data = results.details?.face_dat?.map((f: { bbox: number[] }) =>
-        face_data_to_overlay(f, w, h)
-    );
+    $: overlay_data = results.details?.face_dat?.map((f: FaceData) => {
+        let clr = calculate_box_color(f, results);
+        return face_data_to_overlay(f, w, h, clr);
+    });
     $: numfaces = results.details?.face_dat?.length || 0;
 
     let prev_image = browser ? new Image() : undefined;
@@ -197,7 +286,7 @@
                 </svg>
                 <span class="sr-only">Icon description</span>
             </a>
-<!--
+            <!--
             <div
                 class=" items-stretch
                 m-0 text-3xl rounded-xl border border-gray-500
@@ -222,7 +311,7 @@
             <a
                 href={makelink(idx_to_id(d_idx + 1))}
                 data-sveltekit-noscroll
-                    title="[Right Arrow]"
+                title="[Right Arrow]"
                 class="text-white bg-blue-800 hover:bg-blue-800
             focus:ring-4 focus:outline-none focus:ring-blue-300
             font-medium rounded-lg text-sm p-2.5
