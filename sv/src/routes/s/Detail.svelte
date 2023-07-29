@@ -222,17 +222,22 @@
             {/if}
         </div>
         <div
-            class=" mr-20 text-center flex flex-nowrap whitespace-nowrap justify-center"
+            class=" mr-20 text-center flex flex-nowrap whitespace-nowrap justify-center"          
         >
             <div class="grow" />
+            {#if false}
+            <!-- firefox and chrome differ about "min-width"-->
+            {/if}
             <a
-                class="shrink block grow whitespace-nowrap text-clip overflow-clip mr-4"
+                class="shrink grow whitespace-nowrap text-clip overflow-clip mr-4"
+                style="min-width:10%; max-width:50%"
                 href={"/d/" + d_img}>{title}</a
             >
             {#if /.*commons.wikimedia.org.*/.test(results.details.metadata.src_uri)}
                 <a
                     href={"/d/" + d_img}
                     class="grow whitespace-nowrap mx-4"
+                    style="min-width:10%; max-width:50%"
                     title="Copyright © information for this image on wikimedia commons here."
                     >copyright © info on wikimedia</a
                 >
