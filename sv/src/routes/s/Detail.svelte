@@ -205,12 +205,14 @@
     let prev_thm = browser ? new Image() : undefined;
     let next_thm = browser ? new Image() : undefined;
     function prefetch_next_full_sized_images(d_idx: number) {
+        setTimeout( () => {
         if (browser && prev_image && next_image && next_thm && prev_thm) {
             next_image.src = "/i/" + idx_to_id(d_idx + 1);
             prev_image.src = "/i/" + idx_to_id(d_idx - 1);
             next_thm.src = "/t/" + idx_to_id(d_idx + 1);
             prev_thm.src = "/t/" + idx_to_id(d_idx - 1);
-        }
+            console.log("attempting to prefetch",next_image.src, " and ", prev_image.src)
+        }},1000);
     }
     $: prefetch_next_full_sized_images(d_idx);
 

@@ -37,7 +37,10 @@
 
   let image_preloader = browser ? new Image() : null;
   const preload_image = (img_url: string) => {
-    if (!image_preloader) return;
+    if (!image_preloader) {
+      f_url = img_url;
+      return;
+    }
     f_url = null;
     image_preloader.onload = async () => {
       await tick;
@@ -228,7 +231,7 @@
   }
   .overlay-1 {
     background: linear-gradient(45deg, rgb(0 0 0), rgb(15 23 42));
-    opacity: 0.95;
+    opacity:0.92;
   }
   .overlay-2 {
     background: linear-gradient(-45deg, rgb(0 0 0), rgb(15 23 42));

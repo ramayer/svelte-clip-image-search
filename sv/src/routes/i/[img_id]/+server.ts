@@ -14,7 +14,7 @@ export const GET = (async ({ setHeaders, url, params }) => {
     const img_url = config.app_uri + `/img/${img_id}`
 
     const img_res = await fetch(img_url, { redirect: 'manual' })
-    console.log('i',img_res)
+    //console.log('i',img_res)
     const loc = img_res.headers.get('Location');
     if (loc) {
         setHeaders({
@@ -32,7 +32,7 @@ export const GET = (async ({ setHeaders, url, params }) => {
         // https://www.w3.org/TR/resource-timing/
         // https://fetch.spec.whatwg.org/
         // img_res has that info in a timing struct
-        console.log('i',img_res)
+        // console.log('i',img_res)
 
         //console.log(img_res)
         //const img_buf = Buffer.from(new Uint8Array(img_abuf));
