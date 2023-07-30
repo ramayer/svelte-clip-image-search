@@ -245,16 +245,19 @@
             {/if}
         </div>
         <div
-            class=" mr-20 text-center flex flex-nowrap whitespace-nowrap justify-center"          
+            class="mr-20 text-center flex flex-nowrap whitespace-nowrap justify-center"
         >
             <div class="grow" />
             {#if false}
-            <!-- firefox and chrome differ about "min-width"-->
+            <!-- 
+                firefox and chrome differ about the default "min-width"
+
+            -->
             {/if}
             <a
                 class="shrink grow whitespace-nowrap text-clip overflow-clip mr-4"
-                style="min-width:10%; max-width:50%"
-                href={"/d/" + d_img}>{title}</a
+                style="min-width:10%; max-width:50%; direction:rtl;  text-overflow: ellipsis; "
+                href={"/d/" + d_img}><span style="direction:ltr; unicode-bidi: bidi-override;">{title}</span></a
             >
             {#if /.*commons.wikimedia.org.*/.test(results.details.metadata.src_uri)}
                 <a
