@@ -75,7 +75,7 @@
         embedding: number[];
     }
 
-    function face_data_to_overlay(f: FaceData, w: number, h: number, clr: string) {
+    function face_data_to_overlay(f: FaceData, w: number, h: number, clr: number[]) {
         let x0 = f.bbox[0];
         let y0 = f.bbox[1];
         let x1 = f.bbox[2];
@@ -123,7 +123,7 @@
     /*  end of vector math */
 
     /* nice color */
-    function floatToColor(hue: number): string {
+    function floatToColor(hue: number): number[] {
         // Ensure the value is within the valid range [0, 1]
         //value = Math.min(1, Math.max(0, value));
 
@@ -153,14 +153,34 @@
         } else {
             [r, g, b] = [c, 0, x];
         }
-
-        // Convert RGB to hexadecimal color code
+        return ([r,g,b]);
+        //console.log("RRRRRRRRRRRRRGBAA ",r,g,b)
+        //return rgb_to_hex(0,0,1);
+        /*
+        return rgb_to_rgb(1,0,1,0.5);
+        return rgb_to_rgba(r,g,b,0.5);
+        return "rgb("+r*255+" "+g*255+" "+b*255+")"
+        return rgb_to_hex(r+m,g+m,b+m);
+        */
+    }
+    function rgb_to_rgb(r: number,g: number,b: number,a: string | number) {
+        return("rgb(" +
+        [r,g,b].map((x)=>Math.round(x*255)).join(" ") +
+        ")");
+    }
+    function rgb_to_rgba(r: number,g: number,b: number,a: string | number) {
+        return("rgba(" +
+        [r,g,b].map((x)=>Math.round(x*255)).join(" ") +
+        " "+a+")");
+    }
+    function rgb_to_hex(r: number,g: number,b: number) {
+     // Convert RGB to hexadecimal color code
         const toHex = (c: number): string => {
             const hex = Math.round(c * 255).toString(16);
             return hex.length === 1 ? "0" + hex : hex;
         };
 
-        const color: string = `#${toHex(r + m)}${toHex(g + m)}${toHex(b + m)}`;
+        const color: string = `#${toHex(r)}${toHex(g)}${toHex(b)}`;
         return color;
     }
 
