@@ -166,7 +166,8 @@
 
     function calculate_box_color(f: FaceData, r: PageData) {
         var cos_sim = cosineSimilarity(f.embedding, r.target);
-        var clr = floatToColor((cos_sim + 1)/2*360/3);
+        var hsl_degrees = (360 + 120 - (Math.acos(cos_sim) * 180/Math.PI))%360
+        var clr = floatToColor(hsl_degrees);
         console.log("cos_sim = ", cos_sim , " giving ", clr);
         return clr
     }
