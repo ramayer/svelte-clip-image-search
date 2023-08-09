@@ -75,10 +75,10 @@
     <div in:slide={{ duration: 200 }}
      class=" to-blue-400 text-center absolute bottom-0 img_hover"
      style="max-height: 50%; font-size: {Math.round(thm_size/8)}px;">
-        <a href={srchlink(q+" -clip:"+img_id)} title="less like this">▼</a>
+        <a rel="ugc nofollow" href={srchlink(q+" -clip:"+img_id)} title="less like this">▼</a>
         <a href={"?q=clip:"+img_id}  title="similar images">▦</a>
         <a href={make_link(img_id,q)}  title="details">▣</a>
-        <a href={srchlink(q+" +clip:"+img_id)} title="more like this">▲</a>
+        <a rel="ugc nofollow" href={srchlink(q+" +clip:"+img_id)} title="more like this">▲</a>
     </div>
     {/key}
     {/if}

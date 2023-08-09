@@ -92,7 +92,7 @@ import time
 
 
 @app.get("/thm/{img_id}")
-async def thm(img_id: int, w: int | None = None, h: int | None = None):
+async def thm(img_id: int, w: Union[int, None] = None, h: Union[int, None] = None): # "int | None" would be cleaner for python 3.10+
     hdrs = {"Cache-Control": "public, max-age=300"}
     debug_no_cache_hdrs = {
         "Cache-Control": "no-cache, no-store, must-revalidate",
@@ -228,7 +228,7 @@ async def similar_images(
 
 
 @app.get("/clip_img_emb/{img_id}")
-async def clip_img_emb(img_id: int, size: Optional[int] = 400) -> list[float] | None:
+async def clip_img_emb(img_id: int, size: Optional[int] = 400) ->  Union[list[float], None]:   # "list[float] | None" for 3.10
     res = iei.get_openclip_embedding(img_id)
     if res:
         return res.tolist()
@@ -418,11 +418,13 @@ async def handle_webcam_image(i: WebcamImgModel):
 ########################################
 
 class ImgModel(BaseModel):
-    imgs: list[str] | None
+    imgs:  Union[list[str] , None] # 3.9
+    # imgs: list[str] | None  # python 3.10
 
 
 class EmbModel(BaseModel):
-    embs: list[list[float]] | None
+    embs: Union[ list[list[float]] , None ] # 3.9
+    #embs: list[list[float]] | None  # python 3.10
 
 
 @app.post("/insightface_analysis")
@@ -479,7 +481,8 @@ async def test(
     img_id: Optional[int], k: Optional[int] = 400, t: Optional[str] = "clip"
 ):
     fh = None
-    q: list[list[float] | np.ndarray] | None = None
+    #q: list[list[float] | np.ndarray] | None = None # 3.10
+    q: Union[list[list[float] | np.ndarray] , None] = None  # 3.9
     if t == "face":
         ia = iei.get_insightface_analysis(img_id)
         if isinstance(ia, list):
