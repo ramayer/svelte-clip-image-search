@@ -243,17 +243,13 @@ class OpenClipWrapper:
             return features
 
 import torchvision.transforms.transforms
-if include_openai_clip := False:
+if include_openai_clip := True:
     import clip
-    class OpenAIClipWrapper:
+    class OpenAIWrapper:
 
         def __init__(self,model_name="ViT-B/32",device='cpu'):
             """
-                Try open_clip.list_pretrained() to see the list of models.
-                This cheap GPU can only handle batches of ~10 images with laion400m_e32
-                but it seems quite fast.
-                * On CPU - 10 embeddings = 698 ms 
-                * On GPU - 10 embeddings =  13 ms 
+            OpenAI's CLIP takes fewer parameters than LAION's openclip
             """
             self.model_name = model_name
             self.device = device
@@ -412,6 +408,7 @@ class FaissHelper:
     def __init__(self,prefix:str):
         self.index_path = f"{prefix}.faiss"
         self.id_path    = f"{self.index_path}.id_lookup.txt.gz"
+        print("FaissHelper",self.index_path, self.id_path)
         if os.path.exists(self.index_path) and os.path.exists(self.id_path):
             self.load()
 
@@ -461,7 +458,7 @@ class FaissHelper:
                       embeddings=embeddings,
                       index_path=self.index_path,
                       index_infos_path=f"{self.index_path}.infos",
-                      max_index_query_time_ms = 300,
+                      max_index_query_time_ms = 500,
                       min_nearest_neighbors_to_retrieve = 1000,
                       max_index_memory_usage = "3G",
                       current_memory_available = "4G",
@@ -589,6 +586,19 @@ class ImgHelper:
         #i2 = img.convert("RGBA")
         #return ImageOps.pad(i2,(w,h),Image.Resampling.LANCZOS,color=(127,127,127,0))
     
+    def make_5_tiles(self,img:Image.Image):
+        """
+        Useful for indexing multiple tiles for different parts of an image.
+        """
+        width, height = img.size
+        mid_x = width // 2
+        mid_y = height // 2
+        q1 = img.crop((0, 0, mid_x, mid_y))
+        q2 = img.crop((mid_x, 0, width, mid_y))
+        q3 = img.crop((0, mid_y, mid_x, height))
+        q4 = img.crop((mid_x, mid_y, width, height))
+        return [img,q1,q2,q3,q4]
+
     def img_bytes(self,img,quality=85):
         buf = io.BytesIO()
         img.save(buf,format="WebP",quality=quality)
@@ -658,8 +668,9 @@ class ParserHelper:
     
     """
 
-    def __init__(self,iei:'ImageEmbeddingIndexer'):
-        self.iei=iei
+    def __init__(self,iei:'ImageEmbeddingIndexer',use_openai_clip):
+        self.use_openai_clip = use_openai_clip
+        self.iei = iei
 
     @functools.cached_property
     def parser(self) -> pp.ParserElement:
@@ -731,6 +742,13 @@ class ParserHelper:
             'face':[],
             'text':[],
         }
+
+        if self.use_openai_clip:
+            clipmeth = iei.get_openai_clip_embedding
+            clipwrap = iei.oiw
+        else:
+            clipmeth = iei.get_openclip_embedding
+            clipwrap = iei.ocw
         
         for (operator,magnitude),term in parsed:
             print(term)
@@ -743,7 +761,7 @@ class ParserHelper:
             if term.startswith('{'): # v1 img
                 d = self.parse_structured_term(term)
                 if d and d.get('img'):
-                    e = iei.get_openclip_embedding(d['img'])
+                    e = clipmeth(d['img'])
                     #e = e * scale_factor
                     embeddings['clip'].append(e)
                     embeddings['clip_scale_factors'].append(scale_factor)
@@ -783,7 +801,7 @@ class ParserHelper:
                         cropped.save('/tmp/debug_1_cropped.jpg')
                         cropped = ImageOps.pad(cropped, (512,512))
                         cropped.save('/tmp/debug_2_scaled.jpg')
-                        e = iei.ocw.img_embeddings([cropped])[0]
+                        e = clipwrap.img_embeddings([cropped])[0]
                         embeddings['clip'].append(e)
                         embeddings['clip_scale_factors'].append(scale_factor)
                     else:
@@ -792,7 +810,7 @@ class ParserHelper:
 
             if cids := re.findall(r"^clip:(\d+)", term):
                 for cid in cids:
-                    e = iei.get_openclip_embedding(cid)
+                    e = clipmeth(cid)
                     #e = e * scale_factor
                     embeddings['clip'].append(e)
                     embeddings['clip_scale_factors'].append(scale_factor)
@@ -810,13 +828,13 @@ class ParserHelper:
                 print("oooh - got a url {cids}")
                 for cid in cids:
                     img,imgdata,dttm,imgbytes = iei.img_helper.fetch_img(cid)
-                    tembs = iei.ocw.img_embeddings([img])
+                    tembs = clipwrap.img_embeddings([img])
                     for e in tembs:
                         embeddings['clip'].append(e)
                         embeddings['clip_scale_factors'].append(scale_factor)
                 continue
                 
-            tembs = iei.ocw.txt_embeddings([term])
+            tembs = clipwrap.txt_embeddings([term])
             for e in tembs:
                 #e = e * scale_factor
                 e = VectorHelper.cast_to_float32_array(e)
@@ -960,10 +978,16 @@ class ImageEmbeddingIndexer:
     def ifw(self):
         print(f"creating InsightFaceWrapper")
         return InsightFaceWrapper()
+    
+    @functools.cached_property
+    def oiw(self) -> OpenAIWrapper:
+        print(f"creating OpenAIWrapper")
+        device = self.device
+        return OpenAIWrapper(device=device)
 
     @functools.cached_property
     def parser_helper(self):
-        return ParserHelper(iei=self)
+        return ParserHelper(iei=self,use_openai_clip=self.use_openai_clip)
 
     ######################################################################
     # Cached key value stores
@@ -999,7 +1023,16 @@ class ImageEmbeddingIndexer:
     @functools.cached_property
     def face_faiss_helper(self) -> FaissHelper:
         return self.get_faiss_helper(f'insightface')
-
+    
+    @functools.cached_property
+    def openai_clip5_kvs(self) -> SimpleSqliteKVStore:
+        safename = self.oiw.model_name.replace('/','_')
+        return self.get_kvs(f'openaiclip_5_{safename}')
+    
+    @functools.cached_property
+    def openai_clip_faiss_helper(self) -> FaissHelper:
+        safename = self.oiw.model_name.replace('/','_')
+        return self.get_faiss_helper(f'openaiclip_5_{safename}')
     #######################################
     
     def __init__(self, 
@@ -1008,7 +1041,8 @@ class ImageEmbeddingIndexer:
                  thm_size = (320,640),
                  device='cpu',
                  synchronous='OFF',
-                 debug=True):
+                 debug=True,
+                 use_openai_clip=True):
         #configure_sqlite3()
         if not imgidx_path:
             print("no path was specified - trying environment")
@@ -1023,6 +1057,7 @@ class ImageEmbeddingIndexer:
         self.metadata_db       = sqlite3.connect(f"{imgidx_path}/img_metadata.sqlite3")
         self.img_helper        = ImgHelper()
         self.debug             = debug
+        self.use_openai_clip   = use_openai_clip
 
         pragma_sql = f"PRAGMA synchronous = {synchronous};"
         self.metadata_db.execute(pragma_sql)
@@ -1188,6 +1223,52 @@ class ImageEmbeddingIndexer:
         return v/n
     
     ################
+    # openai clip
+    #
+    # Attempt improving results by cropping the image 4 ways before saving.
+    # 
+    ################
+
+    def get_openai_clip_embedding(self,img_id) -> np.ndarray|None:
+        b = self.openai_clip5_kvs.get(img_id)
+        ce = b and pickle.loads(b)
+        if isinstance(ce,np.ndarray):
+            # the first embedding is for the whole image
+            return ce[0] 
+        else:
+            return None
+        
+    def get_all_openai_clip_embeddings(self):
+        " for autofaiss "
+        ids = []
+        emb = []
+        for k,v in self.openai_clip5_kvs.iter_with_values():
+            es = pickle.loads(v)
+            for e in es:
+                en = self.normalize(e)
+                ids.append(k)
+                emb.append(en)
+                if only_use_one_clip_embedding := True:
+                    break;
+        return (ids,emb)
+    
+    def set_openai_clip_embedding(self,img_id:int,img:Image.Image):
+        kvs = self.openai_clip5_kvs
+        if done := self.openai_clip5_kvs[img_id]:
+            print(f"already had {img_id}")
+            pass
+        thms = self.img_helper.make_5_tiles(img)
+        emb_t = self.oiw.img_embeddings(thms)
+        emb_np = emb_t.cpu().to(torch.float16).numpy()
+        kvs[img_id] = pickle.dumps(emb_np)
+
+    def make_openai_clip_faiss_index(self):
+        ids,embs = self.get_all_openai_clip_embeddings()
+        embs = np.stack(embs)
+        fh = self.openai_clip_faiss_helper
+        return fh.create_index(ids,embs)
+    
+    ################
     # openclip
     #
     # Note, caching these as numpy float16
@@ -1215,7 +1296,7 @@ class ImageEmbeddingIndexer:
             e = pickle.loads(v)
             en = self.normalize(e)
             ids.append(k)
-            emb.append(e)
+            emb.append(en)
         return (ids,emb)
     
     def make_openclip_faiss_index(self):
@@ -1271,8 +1352,12 @@ class ImageEmbeddingIndexer:
     def make_all_faiss_indexes(self):
         print("making insightface's index")
         i1 = self.make_insightface_faiss_index()
-        print("making openclip's index")
-        i2 = self.make_openclip_faiss_index()
+        if self.use_openai_clip:
+            print("making openai clip's index")
+            i2 = self.make_openai_clip_faiss_index()
+        else:
+            print("making openclip's index")
+            i2 = self.make_openclip_faiss_index()
         return (i1,i2)
         
     ######################

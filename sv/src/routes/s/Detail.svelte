@@ -455,7 +455,7 @@
         .safe_footer_area_l {
             position: fixed;
             bottom: env(safe-area-inset-bottom);
-            left: env(safe-area-inset-left);
+            left: calc(1em + env(safe-area-inset-left));
             /*background-color: rgba(0, 0, 0, 0.5);*/
             padding-top: 1mm;
             padding-bottom: 1mm;
@@ -465,8 +465,12 @@
         }
         .safe_footer_area_r {
             position: fixed;
-            bottom: env(safe-area-inset-bottom);
-            right: env(safe-area-inset-right);
+            bottom: calc(env(safe-area-inset-bottom));
+            right: calc(1em + env(safe-area-inset-right));
+            /* in landscape mode on a Samsung S21, 
+               "env(safe-area-inset-right)" 
+               isn't enough
+            */
             /*background-color: rgba(0, 0, 0, 0.5);*/
             padding-top: 1mm;
             padding-bottom: 1mm;

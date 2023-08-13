@@ -184,7 +184,7 @@ def to_block_fp(a):
         and a.dtype == np.dtype("float16")
         and a.shape[0] > 100
     ):
-        return (999 * a / np.max(a)).astype(np.int16)
+        return (a / np.max(a) * 999).astype(np.int16)
     else:
         return a.astype(np.float32)
 
@@ -283,16 +283,19 @@ async def search(
     print("q is ", q)
 
     clip_result,face_result = iei.parser_helper.get_query_vectors(q)
-
+    fh = None
     if face_result is not None:
         fh = iei.face_faiss_helper
         target = face_result
         results = fh.search(face_result, k=5000)
 
     if clip_result is not None:
-        fh = iei.clip_faiss_helper
+        fh = iei.openai_clip_faiss_helper # iei.clip_faiss_helper
         target = clip_result
 
+    if fh is None or target is None:
+        return SearchResults(imgids=[],scores=[],target=[])
+    
     print(f"fh is {fh}")
     results = fh.search(target, k=5000)
 
@@ -315,72 +318,72 @@ async def search(
                          target=target_ints)
 
     ## the old way
-
-    if q and (fids := re.findall(r"^face:((\d+)\.?(\d*))", q)):
-        print(f"fids is {fids}")
-        embeddings = []
-        for _, img_id, idx in fids:
-            ia = iei.get_insightface_analysis(img_id)
-            if idx and ia:
-                row = ia[int(idx)]
-                embeddings.append(row["embedding"])
-                print(f"found one {img_id}.{idx}")
-            elif ia:
-                print(f"getting {len(ia)} for {img_id}")
-                for row in ia:
-                    embeddings.append(row["embedding"])
-        if len(embeddings):
-            e = np.stack(embeddings)
-            fh = iei.face_faiss_helper
-            results = fh.search(e, k=5000)
-        else:
-            print(f"can't find faces in {fids}")
-            e = np.stack([np.array([random.random() - 0.5 for i in range(512)])])
-            fh = iei.face_faiss_helper
-            results = fh.search(e, k=5000)
-    elif q and (cids := re.findall(r"^clip:(\d+)", q)):
-        print(f"found a clip-like expression for {cids}")
-        embs = [iei.get_openclip_embedding(e) for e in cids]
-        emb = np.stack(embs)  # type: ignore
-        fh = iei.clip_faiss_helper
-        results = fh.search(emb, k=5000)
-    elif q and (cids := re.findall(r"^randface:(\d+)", q)):
-        random.seed(int(cids[0]))
-        print(f"looking for random face with seed {cids}")
-        e = np.stack([np.array([random.random() - 0.5 for i in range(512)])])
-        fh = iei.face_faiss_helper
-        results = fh.search(e, k=5000)
-    elif q and (cids := re.findall(r"^randclip:(\d+)", q)):
-        random.seed(int(cids[0]))
-        print(f"looking for random clip with seed {cids}")
-        e = np.stack([np.array([random.random() - 0.5 for i in range(512)])])
-        fh = iei.face_faiss_helper
-        results = fh.search(e, k=5000)
-    elif q and (cids := re.findall(r"^txt:(.*)", q)):
-        sql = "select img_id from "
-        db = iei.metadata_db
-        sql = f"select img_id from img_meta_data where title like '%'||?||'%' limit 50"
-        print(sql)
-        ids = [row[0] for row in db.execute(sql, [cids[0]])]
-        results = [SearchResults(imgids=ids, scores=[1 for _ in ids])]
-    elif q:
-        emb = iei.ocw.txt_embeddings([q])
-        fh = iei.clip_faiss_helper
-        results = fh.search(emb, k=5000)
-
-    already_done = set()
-    good_ids = []
-    good_scores = []
-
-    for result in results or []:
-        for imgid, score in zip(result.imgids, result.scores):
-            if imgid not in already_done:
-                good_ids.append(imgid)
-                good_scores.append(max(int(score * 1000), -999))
-                already_done.add(imgid)
-
-    return SearchResults(imgids=good_ids, scores=good_scores)
-
+#
+#    if q and (fids := re.findall(r"^face:((\d+)\.?(\d*))", q)):
+#        print(f"fids is {fids}")
+#        embeddings = []
+#        for _, img_id, idx in fids:
+#            ia = iei.get_insightface_analysis(img_id)
+#            if idx and ia:
+#                row = ia[int(idx)]
+#                embeddings.append(row["embedding"])
+#                print(f"found one {img_id}.{idx}")
+#            elif ia:
+#                print(f"getting {len(ia)} for {img_id}")
+#                for row in ia:
+#                    embeddings.append(row["embedding"])
+#        if len(embeddings):
+#            e = np.stack(embeddings)
+#            fh = iei.face_faiss_helper
+#            results = fh.search(e, k=5000)
+#        else:
+#            print(f"can't find faces in {fids}")
+#            e = np.stack([np.array([random.random() - 0.5 for i in range(512)])])
+#            fh = iei.face_faiss_helper
+#            results = fh.search(e, k=5000)
+#    elif q and (cids := re.findall(r"^clip:(\d+)", q)):
+#        print(f"found a clip-like expression for {cids}")
+#        embs = [iei.get_openclip_embedding(e) for e in cids]
+#        emb = np.stack(embs)  # type: ignore
+#        fh = iei.clip_faiss_helper
+#        results = fh.search(emb, k=5000)
+#    elif q and (cids := re.findall(r"^randface:(\d+)", q)):
+#        random.seed(int(cids[0]))
+#        print(f"looking for random face with seed {cids}")
+#        e = np.stack([np.array([random.random() - 0.5 for i in range(512)])])
+#        fh = iei.face_faiss_helper
+#        results = fh.search(e, k=5000)
+#    elif q and (cids := re.findall(r"^randclip:(\d+)", q)):
+#        random.seed(int(cids[0]))
+#        print(f"looking for random clip with seed {cids}")
+#        e = np.stack([np.array([random.random() - 0.5 for i in range(512)])])
+#        fh = iei.face_faiss_helper
+#        results = fh.search(e, k=5000)
+#    elif q and (cids := re.findall(r"^txt:(.*)", q)):
+#        sql = "select img_id from "
+#        db = iei.metadata_db
+#        sql = f"select img_id from img_meta_data where title like '%'||?||'%' limit 50"
+#        print(sql)
+#        ids = [row[0] for row in db.execute(sql, [cids[0]])]
+#        results = [SearchResults(imgids=ids, scores=[1 for _ in ids])]
+#    elif q:
+#        emb = iei.ocw.txt_embeddings([q])
+#        fh = iei.clip_faiss_helper
+#        results = fh.search(emb, k=5000)
+#
+#    already_done = set()
+#    good_ids = []
+#    good_scores = []
+#
+#    for result in results or []:
+#        for imgid, score in zip(result.imgids, result.scores):
+#            if imgid not in already_done:
+#                good_ids.append(imgid)
+#                good_scores.append(max(int(score * 1000), -999))
+#                already_done.add(imgid)
+#
+#    return SearchResults(imgids=good_ids, scores=good_scores)
+#
 
 #####################################################################
 
