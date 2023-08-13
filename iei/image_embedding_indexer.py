@@ -747,7 +747,7 @@ class ParserHelper:
             clipmeth = iei.get_openai_clip_embedding
             clipwrap = iei.oiw
         else:
-            clipmeth = iei.get_openclip_embedding
+            clipmeth = iei.get_laion_clip_embedding
             clipwrap = iei.ocw
         
         for (operator,magnitude),term in parsed:
@@ -1016,7 +1016,7 @@ class ImageEmbeddingIndexer:
         return self.get_kvs(f'insightface')
 
     @functools.cached_property
-    def clip_faiss_helper(self) -> FaissHelper:
+    def laion_clip_faiss_helper(self) -> FaissHelper:
         model_name,pretrained = self.clip_model
         return self.get_faiss_helper(f'openclip__{model_name}__{pretrained}')
     
@@ -1033,6 +1033,13 @@ class ImageEmbeddingIndexer:
     def openai_clip_faiss_helper(self) -> FaissHelper:
         safename = self.oiw.model_name.replace('/','_')
         return self.get_faiss_helper(f'openaiclip_5_{safename}')
+    
+    @functools.cached_property
+    def current_clip_faiss_helper(self) -> FaissHelper:
+        if self.use_openai_clip:
+            return self.openai_clip_faiss_helper
+        else:
+            return self.laion_clip_faiss_helper
     #######################################
     
     def __init__(self, 
@@ -1042,7 +1049,7 @@ class ImageEmbeddingIndexer:
                  device='cpu',
                  synchronous='OFF',
                  debug=True,
-                 use_openai_clip=True):
+                 use_openai_clip=False):
         #configure_sqlite3()
         if not imgidx_path:
             print("no path was specified - trying environment")
@@ -1224,9 +1231,6 @@ class ImageEmbeddingIndexer:
     
     ################
     # openai clip
-    #
-    # Attempt improving results by cropping the image 4 ways before saving.
-    # 
     ################
 
     def get_openai_clip_embedding(self,img_id) -> np.ndarray|None:
@@ -1269,12 +1273,10 @@ class ImageEmbeddingIndexer:
         return fh.create_index(ids,embs)
     
     ################
-    # openclip
-    #
-    # Note, caching these as numpy float16
+    # LAION openclip
     ################
     
-    def get_openclip_embedding(self,img_id) -> np.ndarray|None:
+    def get_laion_clip_embedding(self,img_id) -> np.ndarray|None:
         b = self.clip_kvs.get(img_id)
         ce = b and pickle.loads(b)
         if isinstance(ce,np.ndarray):
@@ -1282,13 +1284,13 @@ class ImageEmbeddingIndexer:
         else:
             return None
         
-    def set_openclip_embedding(self,img_id:int,img:Image.Image):
+    def set_laion_clip_embedding(self,img_id:int,img:Image.Image):
         kvs         = self.clip_kvs
         emb_t       = self.ocw.img_embeddings([img])[0]
         emb_np      = emb_t.cpu().to(torch.float16).numpy()
         kvs[img_id] = pickle.dumps(emb_np)
         
-    def get_all_openclip_embeddings(self):
+    def get_all_laion_clip_embeddings(self):
         " for autofaiss "
         ids = []
         emb = []
@@ -1299,11 +1301,40 @@ class ImageEmbeddingIndexer:
             emb.append(en)
         return (ids,emb)
     
-    def make_openclip_faiss_index(self):
-        ids,embs = self.get_all_openclip_embeddings()
+    def make_laion_clip_faiss_index(self):
+        ids,embs = self.get_all_laion_clip_embeddings()
         embs = np.stack(embs)
-        fh = self.clip_faiss_helper
+        fh = self.laion_clip_faiss_helper
         return fh.create_index(ids,embs)
+
+    ################
+    # allow switching CLIP libraries more easily.
+    ################
+
+    def get_current_clip_embedding(self,img_id) -> np.ndarray|None:
+        if self.use_openai_clip:
+            return self.get_openai_clip_embedding(img_id)
+        else:
+            return self.get_laion_clip_embedding(img_id)
+        
+    def set_current_clip_embedding(self,img_id:int,img:Image.Image):
+        if self.use_openai_clip:
+            return self.set_openai_clip_embedding(img_id,img)
+        else:
+            return self.set_laion_clip_embedding(img_id,img)
+        
+    def get_all_current_clip_embeddings(self):
+        if self.use_openai_clip:
+            return self.get_all_openai_clip_embeddings()
+        else:
+            return self.get_all_laion_clip_embeddings()
+        
+    def make_current_clip_faiss_index(self):
+        if self.use_openai_clip:
+            return self.make_openai_clip_faiss_index()
+        else:
+            return self.make_laion_clip_faiss_index()
+        
 
 
     ################
@@ -1357,7 +1388,7 @@ class ImageEmbeddingIndexer:
             i2 = self.make_openai_clip_faiss_index()
         else:
             print("making openclip's index")
-            i2 = self.make_openclip_faiss_index()
+            i2 = self.make_laion_clip_faiss_index()
         return (i1,i2)
         
     ######################
@@ -1420,7 +1451,7 @@ class ImageEmbeddingIndexer:
             return (img_id,time.time()-t0,0,0,0)
         
         thm  = self.get_thm(img_id)
-        clip = self.get_openclip_embedding(img_id)
+        clip = self.get_current_clip_embedding(img_id)
         face = self.get_insightface_analysis(img_id)
         need_image = (thm is None) or (clip is None) or (face is None)
         if not need_image:
@@ -1443,7 +1474,7 @@ class ImageEmbeddingIndexer:
         t1 = time.time()
         if thm is None:   self.set_thm(img_id,img)
         t2 = time.time()
-        if clip is None:  self.set_openclip_embedding(img_id,img)
+        if clip is None:  self.set_current_clip_embedding(img_id,img)
         t3 = time.time()
         if face is None:  self.set_insightface_analysis(img_id,img)
         t4 = time.time()

@@ -194,7 +194,7 @@ async def met(img_id: int, size: int = 400):
     img_data = iei.get_img_data(img_id)
     metadata = iei.get_metadata(img_id)
     to32bit = lambda x: to_block_fp(x) if isinstance(x, np.ndarray) else x
-    clip_emb = to32bit(iei.get_openclip_embedding(img_id))
+    clip_emb = to32bit(iei.get_current_clip_embedding(img_id))
     face_dat = iei.get_insightface_analysis(img_id)
     face2 = [{k: to_block_fp(v) for k, v in r.items()} for r in (face_dat or [])]
     data = {
@@ -218,9 +218,9 @@ async def similar_images(
     print(f"here response headers is {response.headers}")
     response.headers.update(hdrs)
     print(f"here response headers is {response.headers}")
-    query = iei.get_openclip_embedding(img_id)
+    query = iei.get_current_clip_embedding(img_id)
     if query and query.any():
-        res = iei.clip_faiss_helper.search(np.stack([query]), k or 400)
+        res = iei.current_clip_faiss_helper.search(np.stack([query]), k or 400)
         r3 = orjson.loads(orjson.dumps(res, option=orjson.OPT_SERIALIZE_NUMPY))
         return r3
     else:
@@ -229,7 +229,7 @@ async def similar_images(
 
 @app.get("/clip_img_emb/{img_id}")
 async def clip_img_emb(img_id: int, size: Optional[int] = 400) -> list[float] | None:
-    res = iei.get_openclip_embedding(img_id)
+    res = iei.get_current_clip_embedding(img_id)
     if res:
         return res.tolist()
     else:
@@ -290,7 +290,7 @@ async def search(
         results = fh.search(face_result, k=5000)
 
     if clip_result is not None:
-        fh = iei.openai_clip_faiss_helper # iei.clip_faiss_helper
+        fh = iei.current_clip_faiss_helper # iei.clip_faiss_helper
         target = clip_result
 
     if fh is None or target is None:
@@ -457,8 +457,12 @@ async def get_clip_txt_embs(i: ImgModel):
 @app.get("/reindex")
 async def reindex():
     result = iei.make_all_faiss_indexes()
-    if iei.__dict__.get("clip_faiss_helper"):
-        del iei.clip_faiss_helper
+    if iei.__dict__.get("current_clip_faiss_helper"):
+        del iei.current_clip_faiss_helper
+    if iei.__dict__.get("laion_clip_faiss_helper"):
+        del iei.laion_clip_faiss_helper
+    if iei.__dict__.get("openai_clip_faiss_helper"):
+        del iei.openai_clip_faiss_helper
     if iei.__dict__.get("face_faiss_helper"):
         del iei.face_faiss_helper
     return result
@@ -466,8 +470,12 @@ async def reindex():
 
 @app.get("/reload")
 async def reload():
-    if iei.__dict__.get("clip_faiss_helper"):
-        del iei.clip_faiss_helper
+    if iei.__dict__.get("current_clip_faiss_helper"):
+        del iei.current_clip_faiss_helper
+    if iei.__dict__.get("laion_clip_faiss_helper"):
+        del iei.laion_clip_faiss_helper
+    if iei.__dict__.get("openai_clip_faiss_helper"):
+        del iei.openai_clip_faiss_helper
     if iei.__dict__.get("face_faiss_helper"):
         del iei.face_faiss_helper
     return {"status": "ok"}
@@ -493,10 +501,10 @@ async def test(
             t = "clip"
 
     if t == "clip":
-        e = iei.get_openclip_embedding(img_id)
+        e = iei.get_current_clip_embedding(img_id)
         if e is not None and e.any():
             q = [e]
-        fh = iei.clip_faiss_helper
+        fh = iei.current_clip_faiss_helper
 
     if not fh or not q:
         return """<div>nothing found</div>"""

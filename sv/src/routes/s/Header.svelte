@@ -98,7 +98,7 @@
             <a href="/" class="header-item block hover:bg-slate-400">⌂</a>
             <div class="flex-grow flex-shrink w-10 basis-2/6 text-xl header-item p-1"
             style="flex-wrap: nowrap; display:flex">
-                <SearchForm {data} />
+                <SearchForm />
             </div>
         </div>
     </div>
@@ -164,7 +164,7 @@
         >
             <a href="/" class="header-item block hover:bg-slate-400">⌂</a>
             <div class="flex-grow flex w-10 basis-2/6 text-xl header-item p-1">
-                <SearchForm {data} />
+                <SearchForm />
             </div>
 
             {#if camera_button_visible}
