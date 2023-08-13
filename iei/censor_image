@@ -1,0 +1,15 @@
+#!/usr/bin/env python
+
+import fire
+import image_embedding_indexer
+
+iei=image_embedding_indexer.ImageEmbeddingIndexer(device='cpu')
+
+def reprocess(*img_ids):
+    for img_id in img_ids:
+        del(iei.clip_kvs[img_id])
+        del(iei.face_kvs[img_id])
+
+if __name__ == '__main__':
+    fire.Fire(reprocess)
+
