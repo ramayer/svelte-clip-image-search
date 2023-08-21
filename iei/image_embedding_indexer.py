@@ -95,6 +95,11 @@ import time
 import torch
 import zlib
 
+
+# Python3.9 compatibility
+from typing import Optional, Union
+# end of Python3.9 compatibility
+
 # Avoid the error
 # OSError: image file is truncated (45 bytes not processed)
 # from some buggy jpeg encoders
@@ -106,7 +111,7 @@ ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 @dataclasses.dataclass
 class ImgData():
-    img_id   :int|None
+    img_id   :Union[int, None]    # int|None   # when we don't need python3.9 anymore
     sha224   :str
     width    :int
     height   :int
@@ -116,7 +121,7 @@ class ImgData():
     
 @dataclasses.dataclass
 class ImgMetadata():
-    meta_id  :int|None
+    meta_id  :Union[int, None]    # int|None   # when we don't need python3.9 anymore
     img_uri  :str
     src_uri  :str
     title    :str
@@ -151,15 +156,13 @@ class VectorHelper:
             print(result_array.dtype)   # Output: float32
             print(result_list.dtype)    # Output: float32
         """
-        match data:
-            case torch.Tensor():
-                return data.numpy().astype(np.float32)
-            case list():
-                return np.array(data).astype(np.float32)
-            case np.ndarray():
-                return data.astype(np.float32)
-            case _:
-                raise ValueError("Invalid data type. Expected PyTorch tensor, NumPy array, or nested Python list of numbers.")
+        if isinstance(data,torch.Tensor):
+            return data.numpy().astype(np.float32)
+        if isinstance(data,list):
+            return np.array(data).astype(np.float32)
+        if isinstance(data,np.ndarray):
+            return data.astype(np.float32)
+        raise ValueError("Invalid data type. Expected PyTorch tensor, NumPy array, or nested Python list of numbers.")
 
     @staticmethod
     def int8_phase_vec(v):
@@ -626,7 +629,7 @@ class ImgHelper:
         e = base64.b64encode(b).decode('utf-8')
         return f'data:image/jpg;base64,{e}'
     
-    def get_data_url(self,url: str,headers=None) -> str|None:
+    def get_data_url(self,url: str,headers=None) -> Union[str, None]: # str|None:  # python3.9 hack
         try:
             i,d,m,b = self.fetch_img(url,headers=headers)
             #t = self.make_thm(i)
@@ -1300,7 +1303,7 @@ class ImageEmbeddingIndexer:
     # LAION openclip
     ################
     
-    def get_laion_clip_embedding(self,img_id) -> np.ndarray|None:
+    def get_laion_clip_embedding(self,img_id) -> Union[np.ndarray, None]: # np.ndarray|None: # 3.9 hack
         b = self.clip_kvs.get(img_id)
         ce = b and pickle.loads(b)
         if isinstance(ce,np.ndarray):
