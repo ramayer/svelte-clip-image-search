@@ -50,7 +50,7 @@ import sys
 #import torch.nn
 #import filelock
 #lock = filelock.FileLock('/tmp/index_wikipedia.lock',timeout=10)
-
+import json
 # get db
 parser                    = argparse.ArgumentParser()
 
@@ -205,11 +205,16 @@ if cat:
             name         = mwimg.name
             image_url    = mwimg.imageinfo['url']
             descr_url    = mwimg.imageinfo['descriptionurl']
-            thm_url = get_thm_url(image_url,descr_url)
+            thm_url      = get_thm_url(image_url,descr_url)
+            metadata     = json.dumps({
+                'source':"Wikimedia Commons",
+                'copyright':"Copyright © details on Wikimedia Commons."
+            })
+
             if not thm_url:
                 continue
             try:
-                x = iei.preprocess_img(thm_url,descr_url,title,name,"{}",headers=wikimedia_api_headers)
+                x = iei.preprocess_img(thm_url,descr_url,title,name,metadata,headers=wikimedia_api_headers)
                 print(f"{datetime.datetime.now().isoformat()} {x}")
             except pillow.UnidentifiedImageError as e:
                 print(e)

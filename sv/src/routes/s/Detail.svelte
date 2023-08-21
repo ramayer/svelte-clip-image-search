@@ -7,6 +7,7 @@
 
     export let results: PageData;
     import { preview_store, cols_store, split_header_store } from "./stores.js";
+    import { component_subscribe } from "svelte/internal";
 
     // console.log("Detail.svelte for d = ", results.d);
 
@@ -216,6 +217,13 @@
     }
     $: prefetch_next_full_sized_images(d_idx);
 
+    interface DetailMetadata {
+        source: string|undefined;
+        copyright: string|undefined;
+    }
+
+    let detail_metadata: DetailMetadata = JSON.parse(results.details.metadata.metadata);
+    
     let split_header = false;
     split_header_store.subscribe((x) => (split_header = x));
 </script>
@@ -244,6 +252,23 @@
                 />
             {/if}
         </div>
+        
+
+        {#if detail_metadata.copyright}
+        <div    class="mr-20 text-center flex flex-nowrap whitespace-nowrap justify-center">
+        <a
+            href={"/d/" + d_img}
+            class="shrink grow whitespace-nowrap flex-nowrap mx-4 text-clip overflow-clip credits"
+            style="min-width:10%; max-width:50%; text-overflow: ellipsis;"
+            title="{detail_metadata.copyright}"
+            >{@html detail_metadata.copyright}</a
+
+        ></div>
+        <style>
+            .credits img {max-height:20px;margin: auto}
+        </style>
+        {/if}
+
         <div
             class="mr-20 text-center flex flex-nowrap whitespace-nowrap justify-center"
         >
@@ -251,7 +276,6 @@
             {#if false}
             <!-- 
                 firefox and chrome differ about the default "min-width"
-
             -->
             {/if}
             <a
@@ -259,13 +283,14 @@
                 style="min-width:10%; max-width:50%; direction:rtl;  text-overflow: ellipsis; "
                 href={"/d/" + d_img}><span style="direction:ltr; unicode-bidi: bidi-override;">{title}</span></a
             >
-            {#if /.*commons.wikimedia.org.*/.test(results.details.metadata.src_uri)}
+            {#if false && detail_metadata.copyright}
                 <a
                     href={"/d/" + d_img}
-                    class="grow whitespace-nowrap mx-4"
-                    style="min-width:10%; max-width:50%"
-                    title="Copyright © information for this image on wikimedia commons here."
-                    >copyright © info on wikimedia</a
+                    class="shrink grow whitespace-nowrap flex-nowrap mx-4 text-clip overflow-clip"
+                    style="min-width:10%; max-width:50%;  text-overflow: ellipsis;"
+                    title="{detail_metadata.copyright}"
+                    >{@html detail_metadata.copyright}</a
+
                 >
             {/if}
             <div class="grow" />
@@ -499,5 +524,8 @@
         /*background-color: rgba(0, 0, 0, 0.5);*/
         text-align: center;
         color: rgb(2 132 199 / var(--tw-text-opacity));
+    }
+    .credits img {
+        max-height:8px;
     }
 </style>

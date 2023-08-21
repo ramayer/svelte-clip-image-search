@@ -201,8 +201,8 @@
               <a href="/s?q=face:{img_id}.{idx}"
                 ><div
                   class="c3"
-                  style="top:{o.y - o.h / 6}%; left:{o.x -
-                    o.w / 6}%; height:{o.h + o.h / 3}%; width:{o.w + o.w / 3}%; 
+                  style="top:{o.y - o.h / 4}%; left:{o.x -
+                    o.w / 4}%; height:{o.h + o.h / 3}%; width:{o.w + o.w / 3}%; 
                     --outline-color: {rgb_to_rgb(o.c[0],o.c[1],o.c[2])};
                     --overlay-color: {rgb_to_rgba(o.c[0],o.c[1],o.c[2],0.33)}
                     "
@@ -275,6 +275,7 @@
     position: absolute;
     border: 1px solid rgba(0, 0, 0, 0.75);
     outline: 1px solid var(--outline-color);
+    border-radius: 4em;
   }
   .c3:hover {
     outline: 4px solid var(--outline-color);

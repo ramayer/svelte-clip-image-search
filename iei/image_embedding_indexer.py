@@ -494,6 +494,10 @@ JpegImagePlugin._getmp = lambda x: None # type: ignore
 
 import urllib.parse
 class ImgHelper:
+
+    def __init__(self,throttle_max_rate=0.0):
+        self.throttle_max_rate = throttle_max_rate
+        self.t0 = 0
         
     # filenames returned by glob.glob() can have non-utf-8 characters.
     # ('/tmp/test_file\udca330result.txt')
@@ -512,7 +516,21 @@ class ImgHelper:
             file_path = "//" + parsed_uri.netloc + file_path
         return file_path
         
+    def wait_for_throttle(self):
+        t1 = time.time()
+        if t1 < self.throttle_max_rate + self.t0:
+            print(f"throttling beacause {self.throttle_max_rate + self.t0 - t1} > 0")
+            time.sleep(self.throttle_max_rate + self.t0 - t1)
+        #else:
+        #    print(f"not throttling beacause {self.throttle_max_rate + self.t0 - t1} < 0")
+        t1 = time.time()
+        self.t0 = t1
+            
+
     def fetch_img(self,uri,headers=None) -> tuple[Image.Image,ImgData,datetime.datetime,bytes]:
+
+        #print("will fetch:",uri)
+        self.wait_for_throttle()
 
         if not headers and  re.match(r'^https?:',uri):
             headers = {'User-agent': 
@@ -684,9 +702,12 @@ class ParserHelper:
         )
         # word  = pp.Word(pp.alphanums,exclude_chars='([{}])') # fails on hyphenated words
         # word  = pp.Word(pp.alphanums,pp.printables,exclude_chars='([{}])') # fails on unicode
-        word = pp.Word(
-            pp.unicode.alphanums, pp.unicode.printables, exclude_chars="({})"
-        )  # slow
+        # word = pp.Word(
+        #    pp.unicode.alphanums, pp.unicode.printables, exclude_chars="({})"
+        # )  # slow
+        ## pp.Word really doesn't like search tems like '🐱 🐈'
+        ## Trying a regex instead
+        word = pp.Regex(r'[^-+ ]+')
         words = pp.OneOrMore(word)
         enclosed = pp.Forward()
         quoted_string = pp.QuotedString('"')
@@ -1049,20 +1070,24 @@ class ImageEmbeddingIndexer:
                  device='cpu',
                  synchronous='OFF',
                  debug=True,
-                 use_openai_clip=False):
+                 use_openai_clip=False,
+                 throttle_max_rate=0.0,
+                 create_if_missing=False,
+                 ):
         #configure_sqlite3()
         if not imgidx_path:
             print("no path was specified - trying environment")
             imgidx_path = os.getenv("IEI_PATH","./data/image_embedding_indexes")
         print(f"constructing ImageEmbeddingIndexer at {imgidx_path}")
 
-        os.makedirs(imgidx_path , exist_ok=True)
+        if create_if_missing:
+            os.makedirs(imgidx_path , exist_ok=True)
         self.imgidx_path       = imgidx_path
         self.clip_model        = clip_model
         self.device            = device
         self.thm_size          = thm_size
         self.metadata_db       = sqlite3.connect(f"{imgidx_path}/img_metadata.sqlite3")
-        self.img_helper        = ImgHelper()
+        self.img_helper        = ImgHelper(throttle_max_rate = throttle_max_rate)
         self.debug             = debug
         self.use_openai_clip   = use_openai_clip
 
@@ -1164,14 +1189,13 @@ class ImageEmbeddingIndexer:
         for row in db.execute(sql,[key]):
             return ImgMetadata(*row)
 
-    def get_all_metadata(self,key)  -> Generator[ImgMetadata, None, None]:
+    def get_all_metadata(self,key) -> Generator[ImgMetadata, None, None]:
         """ key can either be an int (img_id) or a str (img_uri) """
         db  = self.metadata_db
-        col = isinstance(key,int) and "img_id" or "img_uri"
-        sql = f"select * from img_meta_data where {col}=?"
-        for row in db.execute(sql,[key]):
+        sql = f"select * from img_meta_data"
+        for row in db.execute(sql):
             yield ImgMetadata(*row)
-    
+        
     def set_metadata(self,data:ImgMetadata):
         """ key can either be an int (img_id) or a str (sha224) """
         db       = self.metadata_db
@@ -1470,7 +1494,7 @@ class ImageEmbeddingIndexer:
         if img.mode == 'I':
             img = self.img_helper.convert_I_to_L(img)
             print("Warning: working around issues for PIL image mode 'I'")
-        
+
         t1 = time.time()
         if thm is None:   self.set_thm(img_id,img)
         t2 = time.time()

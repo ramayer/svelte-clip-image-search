@@ -5,11 +5,13 @@
 * quantify errors from encoding normalized vectors as int(999*max(abs(x))).
 * or better, as base64 versions of that.
 
-* Clip4 or Clip9
+* Clip5 or Clip10 - test if it's worth the disk space and/or RAM.
 
 * GIS
 
 * Text
+
+* remove deprecated pieces 
 
 ## api
 
