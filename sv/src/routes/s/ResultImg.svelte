@@ -72,7 +72,7 @@
     </a>
     {#if img_id == p_img}
     {#key img_id}
-    <div in:slide={{ duration: 200 }}
+    <div in:slide|global={{ duration: 200 }}
      class=" to-blue-400 text-center absolute bottom-0 img_hover"
      style="max-height: 50%; font-size: {Math.round(thm_size/8)}px;">
         <a rel="ugc nofollow" href={srchlink(q+" -clip:"+img_id)} title="less like this">▼</a>

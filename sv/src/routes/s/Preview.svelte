@@ -163,7 +163,7 @@
     </a>
   </div>
   {#if f_url}
-    <div class="overlay overlay-2" in:fade={{ duration: 333 }}>
+    <div class="overlay overlay-2" in:fade|global={{ duration: 333 }}>
       <a href={detail_href}>
         <img class="overlay-image" src={f_url} alt="large" />
       </a>
