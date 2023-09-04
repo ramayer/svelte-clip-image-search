@@ -7,6 +7,10 @@
     import { useTexture } from "@threlte/extras";
     import { randFloat } from "three/src/math/MathUtils";
 
+    // Note, NPM buid may fail with:
+    // https://stackoverflow.com/questions/68462419/three-js-breaks-when-trying-to-import-orbitcontrols-js
+
+
     //// Note that useTexture is much cleaner than useLoader(TextureLoader)
     // 
     // const mytexture = useTexture("/t/1");

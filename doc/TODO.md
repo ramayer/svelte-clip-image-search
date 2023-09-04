@@ -62,3 +62,44 @@
 * Broken thumbnails: http://localhost:5173/s?q=clip%3A160854
 
 * Some wikimedia thumbnails are 100s of times wider than tall or taller than wide; tweak the thumbnail logic.
+
+* OOM
+
+FATAL ERROR: Reached heap limit Allocation failed - JavaScript heap out of memory
+ 1: 0xb675b4 node::Abort() [node]
+ 2: 0xa8afbc void node::FPrintF<>(_IO_FILE*, char const*) [node]
+ 3: 0xd3ac00 v8::Utils::ReportOOMFailure(v8::internal::Isolate*, char const*, bool) [node]
+ 4: 0xd3add0 v8::internal::V8::FatalProcessOutOfMemory(v8::internal::Isolate*, char const*, bool) [node]
+ 5: 0xf1935c  [node]
+ 6: 0xf2b2fc v8::internal::Heap::CollectGarbage(v8::internal::AllocationSpace, v8::internal::GarbageCollectionReason, v8::GCCallbackFlags) [node]
+ 7: 0xf96458 v8::internal::ScavengeJob::Task::RunInternal() [node]
+ 8: 0xe145a0 non-virtual thunk to v8::internal::CancelableTask::Run() [node]
+ 9: 0xbca134  [node]
+10: 0xbcd568 node::PerIsolatePlatformData::FlushForegroundTasksInternal() [node]
+11: 0x15df7ec  [node]
+12: 0x15f1928  [node]
+13: 0x15e0254 uv_run [node]
+14: 0xab8fe8 node::SpinEventLoop(node::Environment*) [node]
+15: 0xba6bf8 node::NodeMainInstance::Run() [node]
+16: 0xb27458 node::LoadSnapshotDataAndRun(node::SnapshotData const**, node::InitializationResult const*) [node]
+17: 0xb2ac34 node::Start(int, char**) [node]
+18: 0xfffc05eb46a4 __libc_start_main [/lib64/libc.so.6]
+19: 0xab75b8  [node]
+
+
+* document npm build process.  Something like:
+
+    export IEI_PATH=$HOME/data/wikipedia.iei/
+    export IEI_USER_AGENT="[your user agent]"
+    (cd iei; nohup uvicorn --reload image_embedding_indexer_api:app --port=8001) &
+    # (cd sv; nohup npm run dev -- --host=127.0.0.1 --port=5172 )&
+    # (cd sv; nohup env PORT=5172 node build/index.js > node.out 2>&1) &
+    (cd sv; npm run build)
+    (cd sv; nohup env PORT=5172 pm2 start build/index.js > node.out 2>&1) &
+
+
+
+* consider pm2 for restarting after memory leaks
+
+  https://pm2.keymetrics.io/
+
