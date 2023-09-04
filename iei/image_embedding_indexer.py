@@ -1260,7 +1260,7 @@ class ImageEmbeddingIndexer:
     # openai clip
     ################
 
-    def get_openai_clip_embedding(self,img_id) -> np.ndarray|None:
+    def get_openai_clip_embedding(self,img_id) -> Union[np.ndarray, None]: # np.ndarray|None: # 3.9 hack
         b = self.openai_clip5_kvs.get(img_id)
         ce = b and pickle.loads(b)
         if isinstance(ce,np.ndarray):
@@ -1338,7 +1338,7 @@ class ImageEmbeddingIndexer:
     # allow switching CLIP libraries more easily.
     ################
 
-    def get_current_clip_embedding(self,img_id) -> np.ndarray|None:
+    def get_current_clip_embedding(self,img_id) -> Union[np.ndarray, None]: # np.ndarray|None: # 3.9 hack
         if self.use_openai_clip:
             return self.get_openai_clip_embedding(img_id)
         else:
