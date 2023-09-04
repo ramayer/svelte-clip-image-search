@@ -1,19 +1,22 @@
 <script lang="ts">
-    import { T } from "@threlte/core";
-    import { OrbitControls } from "@threlte/extras";
-    import { Grid } from "@threlte/extras";
-    //import { THREE } from "three"
-
     import * as Three from "three";
-
-    import { useTexture } from "@threlte/extras";
+    import { T } from "@threlte/core";
     import { watch } from "@threlte/core";
-    const mytexture = useTexture("/t/1");
-    $: console.log("tex", $mytexture); // eventually THREE.Texture
-    import { useLoader } from "@threlte/core";
-    import { TextureLoader } from "three";
-    const { load } = useLoader(TextureLoader);
+    import { Grid } from "@threlte/extras";
+    import { OrbitControls } from "@threlte/extras";
+    import { useTexture } from "@threlte/extras";
+    import { randFloat } from "three/src/math/MathUtils";
 
+    //// Note that useTexture is much cleaner than useLoader(TextureLoader)
+    // 
+    // const mytexture = useTexture("/t/1");
+    // $: console.log("tex", $mytexture); // eventually THREE.Texture
+    //
+    //// vs 
+    // 
+    // import { useLoader } from "@threlte/core";
+    // import { TextureLoader } from "three";
+    // const { load } = useLoader(TextureLoader);
     // function get_tex(path:string) {
     //     load(path).then((tex)=>{
     //         tex.colorSpace = Three.SRGBColorSpace;
@@ -28,20 +31,15 @@
             console.log("can't fix cs");
         }
     }
-    /*
-    // this works
-    $: fixcolorspace($mytexture)
+
+    /* 
+      lazily load textures, and fix their colorspace, before
+      putting them in the array of textures.
     */
-    let myactualtexture: Three.Texture | undefined;
-
-    watch(mytexture, (t) => {
-        fixcolorspace(t);
-        myactualtexture = t;
-    });
-
     let nboxes = 100;
     let texids = Array.from({ length: nboxes }, (x, i) => i);
-    let texes = Array.from({ length: nboxes });
+    let texes: (Three.Texture | undefined)[] = Array.from({ length: nboxes });
+
     texids.map((texid) => {
         const ut = useTexture("/t/" + texid);
         watch(ut, (t) => {
@@ -50,19 +48,6 @@
         });
         return ut;
     });
-
-    import { BoxGeometry } from "three";
-    import { randFloat } from "three/src/math/MathUtils";
-    const boxColors = [
-        "#3c42c4",
-        "#6e51c8",
-        "#a065cd",
-        "#ce79d2",
-        "#d68fb8",
-        "#dda2a3",
-        "#eac4ae",
-        "#f4dfbe",
-    ];
 
     let boxen = Array(nboxes)
         .fill(0)
@@ -97,7 +82,6 @@
     <OrbitControls />
 </T.PerspectiveCamera>
 
-<!-- Make a box in every second cell to show aligment -->
 <Grid
     axes={"xzy"}
     cellColor={"#000077"}
@@ -112,68 +96,15 @@
     fadeStrength={0.5}
     gridSize={[1, 10]}
 />
-{#await mytexture then value}
-    <T.Mesh>
-        <T.BoxGeometry />
-        <T.MeshBasicMaterial map={value} />
-    </T.Mesh>
-{/await}
 
-{#await mytexture then value}
-    <T.Mesh position={[5, 2, 3]}>
-        <T.SphereGeometry />
-        <T.MeshBasicMaterial map={value} />
-    </T.Mesh>
-{/await}
-{#if myactualtexture}
-    <T.Mesh position={[5, 5, 3]}>
-        <T.SphereGeometry />
-        <T.MeshBasicMaterial map={myactualtexture} />
-    </T.Mesh>
-{/if}
 
 {#each { length: nboxes } as _h, x}
-{#if texes[x]}
-    {#await useTexture("/t/2") then value}
-        <T.Mesh position={boxen[x].p}>
-            <T.BoxGeometry />
-            <T.MeshBasicMaterial map={texes[x]} />
-        </T.Mesh>
-    {/await}
-{/if}
-    {#if false}
-        {#await mytexture then value}
-            <T.Group position={boxen[x].p}>
-                <T.Mesh>
-                    <T.BoxGeometry />
-                    {#if false}
-                        <T.MeshBasicMaterial
-                            args={[
-                                {
-                                    color: boxColors[
-                                        Math.floor(
-                                            Math.random() * boxColors.length
-                                        )
-                                    ],
-                                    opacity: 0.9,
-                                    transparent: true,
-                                },
-                            ]}
-                        />
-                    {/if}
-                    <T.MeshBasicMaterial {value} />
-                </T.Mesh>
-                <T.LineSegments>
-                    <T.EdgesGeometry args={[new BoxGeometry()]} />
-                    <T.MeshBasicMaterial
-                        args={[
-                            {
-                                color: 0x000000,
-                            },
-                        ]}
-                    />
-                </T.LineSegments>
-            </T.Group>
+    {#if texes[x]}
+        {#await useTexture("/t/2") then value}
+            <T.Mesh position={boxen[x].p}>
+                <T.BoxGeometry />
+                <T.MeshBasicMaterial map={texes[x]} />
+            </T.Mesh>
         {/await}
     {/if}
 {/each}
