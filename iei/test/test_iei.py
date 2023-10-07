@@ -1,5 +1,9 @@
 import image_embedding_indexer
-iei=image_embedding_indexer.ImageEmbeddingIndexer(device='cpu')
+iei=image_embedding_indexer.ImageEmbeddingIndexer(
+    '/tmp/test.iei'
+    ,device='cpu'
+    ,create_if_missing=True
+    )
 print(iei)
 
 test_imgs = [
