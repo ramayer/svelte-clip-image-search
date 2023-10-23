@@ -94,6 +94,7 @@ import sqlite3
 import time
 import torch
 import zlib
+import typing
 
 
 # Python3.9 compatibility
@@ -305,11 +306,13 @@ class InsightFaceWrapper:
     def highlight_faces(self,img:Image.Image, res:list[dict]):
         draw = ImageDraw.Draw(img)
         for pic in res[0:10]:
-            clr = tuple(random.sample([255,random.randint(0,255),0],3))
+            clr = random.sample([255,random.randint(0,255),0],3)
+            clr_t = typing.cast(tuple[int,int,int],clr)
             for p in pic.get('landmark_2d_106',[]):
-                pts = [c-1 for c in p] + [c+1 for c in p]
-                draw.rectangle(tuple(pts),outline=clr,width=2)
-            draw.rectangle(pic['bbox'],outline=clr,width=5)
+                pts:list[float] = [c-1 for c in p] + [c+1 for c in p]
+                pts_t = typing.cast(tuple[float,float,float,float],pts)
+                draw.rectangle(pts_t,outline=clr_t,width=2)
+            draw.rectangle(pic['bbox'],outline=clr_t,width=5)
         return img
 
 
