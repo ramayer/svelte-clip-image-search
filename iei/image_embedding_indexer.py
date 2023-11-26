@@ -247,7 +247,7 @@ class OpenClipWrapper:
             return features
 
 import torchvision.transforms.transforms
-if include_openai_clip := True:
+if include_openai_clip := False:
     import clip
     class OpenAIWrapper:
 
@@ -1006,11 +1006,11 @@ class ImageEmbeddingIndexer:
         print(f"creating InsightFaceWrapper")
         return InsightFaceWrapper()
     
-    @functools.cached_property
-    def oiw(self) -> OpenAIWrapper:
-        print(f"creating OpenAIWrapper")
-        device = self.device
-        return OpenAIWrapper(device=device)
+    # @functools.cached_property
+    # def oiw(self) -> OpenAIWrapper:
+    #     print(f"creating OpenAIWrapper")
+    #     device = self.device
+    #     return OpenAIWrapper(device=device)
 
     @functools.cached_property
     def parser_helper(self):

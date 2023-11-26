@@ -1,5 +1,8 @@
 # TODOs
 
+
+* Fix [mypy and/or pylama and/or pyre-check and/or pyright and/or pytype warnings](https://inventwithpython.com/blog/2022/11/19/python-linter-comparison-2022-pylint-vs-pyflakes-vs-flake8-vs-autopep8-vs-bandit-vs-prospector-vs-pylama-vs-pyroma-vs-black-vs-mypy-vs-radon-vs-mccabe/)
+
 ## Ideas
 
 * quantify errors from encoding normalized vectors as int(999*max(abs(x))).

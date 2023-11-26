@@ -1,0 +1,31 @@
+FROM python:3.11-slim-bookworm
+
+RUN pip install --upgrade pip
+
+WORKDIR /app
+
+RUN apt update && \
+    apt install -y python3.11-dev build-essential
+
+COPY iei/requirements.txt requirements.txt
+
+RUN pip install -r requirements.txt
+
+RUN pip install uvicorn
+
+COPY iei .
+
+EXPOSE 8000
+ENV IEI_PATH=/data/iei_index.iei
+ENV IMG_PATH=/data/images
+RUN mkdir -p /data
+COPY iei/test/test_iei.py .
+RUN python test_iei.py
+
+CMD python -m uvicorn --host=0.0.0.0 --reload image_embedding_indexer_api:app
+
+#CMD ["uvicorn", "--host=0.0.0.0", "--reload", "image_embedding_indexer_api:app"]
+
+
+#CMD ["python3", "-m" , "uvicorn", "inventoryApi:app", "--host", "0.0.0.0", "--reload"]
+    

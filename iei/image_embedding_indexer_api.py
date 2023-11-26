@@ -24,7 +24,6 @@ import image_embedding_indexer
 from fastapi.responses import ORJSONResponse
 from fastapi.responses import RedirectResponse
 
-
 import pyparsing as pp
 
 
