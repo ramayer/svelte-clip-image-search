@@ -1,0 +1,14 @@
+FROM node:current-slim
+
+WORKDIR /app
+
+COPY sv .
+
+RUN npm install
+
+EXPOSE 5173
+
+RUN perl -pe 's/localhost/iei-api/' < src/routes/config.ts.example > src/routes/config.ts
+
+CMD ["npm", "run" , "dev", "--", "--host"]
+    
