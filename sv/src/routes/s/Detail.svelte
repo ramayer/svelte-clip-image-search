@@ -7,7 +7,7 @@
 
     export let results: PageData;
     import { preview_store, cols_store, split_header_store } from "./stores.js";
-    import { component_subscribe } from "svelte/internal";
+    // import { component_subscribe } from "svelte/internal";
 
     // console.log("Detail.svelte for d = ", results.d);
 
@@ -93,7 +93,8 @@
     /* This vector math should move to a different javascript file */
     function dotProduct(vector1: number[], vector2: number[]): number {
         if (vector1.length !== vector2.length) {
-            throw new Error("Vectors must have the same length");
+            return 0;
+            //throw new Error("Vectors must have the same length");
         }
 
         return vector1.reduce(

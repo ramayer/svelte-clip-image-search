@@ -4,7 +4,7 @@ import image_embedding_indexer
 import os
 import urllib.parse
 
-iei = image_embedding_indexer.ImageEmbeddingIndexer(device="cpu")
+iei = image_embedding_indexer.ImageEmbeddingIndexer(device="cuda")
 
 def process_file(f):
     try:

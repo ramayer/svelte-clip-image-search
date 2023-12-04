@@ -17,7 +17,7 @@ import os
 from typing import Optional, Union
 from fastapi import FastAPI
 from pydantic import BaseModel
-
+from PIL import ImageOps
 import fastapi
 import image_embedding_indexer
 
@@ -65,19 +65,37 @@ import pyparsing as pp
 
 print("Starting")
 
-iei = image_embedding_indexer.ImageEmbeddingIndexer()
-app = FastAPI()
 hdrs = {"Cache-Control": f"public, max-age={60*60*24*365}"}
 hdrs = {"Cache-Control": f"public, max-age={60*5}"}
 
-
 #####################################################################
+# https://fastapi.tiangolo.com/advanced/events/ 
+# @app.on_event("startup") has been deprecated
+#####################################################################
+# @app.on_event("startup")
+# async def initialize_large_models():
+#     iei.ocw
+#     iei.ifw
 #
-#####################################################################
-@app.on_event("startup")
-async def initialize_large_models():
+#  TODO: consider ray serve https://docs.ray.io/en/latest/serve/index.html
+
+iei = image_embedding_indexer.ImageEmbeddingIndexer()
+def initialize_models():
     iei.ocw
     iei.ifw
+
+from contextlib import asynccontextmanager
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Load the ML model
+    # initialize_models()
+    yield
+    # Clean up the ML models and release the resources
+    # ml_models.clear()
+    iei = None
+
+app = FastAPI(lifespan=lifespan)
 
 
 @app.get("/")
@@ -88,6 +106,10 @@ async def home():
 import orjson
 import io
 import time
+
+@app.get("/available_models")
+async def available_models():
+    return iei.ocw.get_pretrained_models()
 
 
 @app.get("/thm/{img_id}")
@@ -140,6 +162,17 @@ async def img(img_id: int, size: int = 400):
         img, _, _, img_bytes = iei.img_helper.fetch_img(
             metadata.img_uri, headers=req_hdrs
         )
+
+        hdrs = {"Cache-Control": "public, max-age=300"}
+        # handles heic
+        buf = io.BytesIO()
+        img        = ImageOps.exif_transpose(img)
+
+        img.save(buf, format="WebP", quality=90)
+        return fastapi.Response(
+            content=buf.getvalue(), headers=hdrs, media_type="image/webp"
+        )
+    
         if not img_bytes:
             raise fastapi.HTTPException(
                 status_code=404, detail=f"can't load image for {img_id}"

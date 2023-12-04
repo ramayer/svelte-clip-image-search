@@ -88,6 +88,7 @@ import open_clip
 import os
 import pickle
 import pyarrow
+import pyheif
 import re
 import requests
 import sqlite3
@@ -96,6 +97,10 @@ import torch
 import zlib
 import typing
 
+disable_openai_clip = True
+if not disable_openai_clip:
+    import importlib
+    clip = importlib.import_module('clip')
 
 # Python3.9 compatibility
 from typing import Optional, Union
@@ -208,7 +213,8 @@ class VectorHelper:
 #os.environ['CUDA_VISIBLE_DEVICES'] = ''
 import torchvision.transforms.transforms
 class OpenClipWrapper:
-    def __init__(self,model_name='ViT-B-32-quickgelu',pretrained='laion400m_e32',device='cpu'):
+    #def __init__(self,model_name='ViT-B-32-quickgelu',pretrained='laion400m_e32',device='cpu'):
+    def __init__(self,model_name='ViT-H-14',pretrained='laion2b_s32b_b79k',device='cpu'):
         """
             Try open_clip.list_pretrained() to see the list of models.
             This cheap GPU can only handle batches of ~10 images with laion400m_e32
@@ -247,38 +253,44 @@ class OpenClipWrapper:
             return features
 
 import torchvision.transforms.transforms
-if include_openai_clip := False:
-    import clip
-    class OpenAIWrapper:
 
-        def __init__(self,model_name="ViT-B/32",device='cpu'):
-            """
-            OpenAI's CLIP takes fewer parameters than LAION's openclip
-            """
-            self.model_name = model_name
-            self.device = device
-            m,p = clip.load(model_name, device=device)
-            self.model, self.preprocess = m,p
-                
-        def get_pretrained_models(self):
-            return clip.available_models()
-        
-        def img_embeddings(self,imgs):
-            with torch.no_grad(): # torch.autocast():
-                #print("type of preprocess is ",type(self.preprocess))
-                #torchvision.transforms.transforms.Compose
-                preprocessed_list = [self.preprocess(i) for i in imgs] # type: ignore
-                preprocessed = torch.stack(preprocessed_list).to(self.device) # type: ignore
-                features = self.model.encode_image(preprocessed) # type: ignore
-                features /= features.norm(dim=-1, keepdim=True)
-                return features
-        
-        def txt_embeddings(self,txts):
-            with torch.no_grad():# , torch.cuda.amp.autocast():# type: ignore
-                tokenized = clip.tokenize(txts).to(self.device)
-                features = self.model.encode_text(tokenized) # type: ignore
-                features /= features.norm(dim=-1, keepdim=True)
-                return features
+class OpenAIWrapper:
+
+    def __init__(self,model_name="ViT-B/32",device='cpu'):
+        """
+        OpenAI's CLIP takes fewer parameters than LAION's openclip
+        """
+        if disable_openai_clip := True:
+            self.model_name = None
+            return None
+        self.model_name = model_name
+        self.device = device
+        m,p = clip.load(model_name, device=device)
+        self.model, self.preprocess = m,p
+            
+    def get_pretrained_models(self):
+        if disable_openai_clip := True:
+            return None
+        return clip.available_models()
+    
+    def img_embeddings(self,imgs):
+        with torch.no_grad(): # torch.autocast():
+            #print("type of preprocess is ",type(self.preprocess))
+            #torchvision.transforms.transforms.Compose
+            preprocessed_list = [self.preprocess(i) for i in imgs] # type: ignore
+            preprocessed = torch.stack(preprocessed_list).to(self.device) # type: ignore
+            features = self.model.encode_image(preprocessed) # type: ignore
+            features /= features.norm(dim=-1, keepdim=True)
+            return features
+    
+    def txt_embeddings(self,txts):
+        if disable_openai_clip := True:
+            return None
+        with torch.no_grad():# , torch.cuda.amp.autocast():# type: ignore
+            tokenized = clip.tokenize(txts).to(self.device)
+            features = self.model.encode_text(tokenized) # type: ignore
+            features /= features.norm(dim=-1, keepdim=True)
+            return features
 
 # In[324]:
 
@@ -564,11 +576,25 @@ class ImgHelper:
         else:
             raise ValueError(f"can't figure out how to get {uri}")
         
+        if re.match(r'(?i).*heic$',uri):
+            heif_file = pyheif.read(io.BytesIO(img_bytes))
+            img = Image.frombytes(
+                heif_file.mode, 
+                heif_file.size, 
+                heif_file.data,
+                "raw",
+                heif_file.mode,
+                heif_file.stride,
+            )
+            mimetype = 'image/heif'
+        else:
+            img = Image.open(io.BytesIO(img_bytes))
+            mimetype = img.get_format_mimetype() # type: ignore
+
         if not mtime:
             mtime = datetime.datetime.now()
+
         bytesize = len(img_bytes)
-        img      = Image.open(io.BytesIO(img_bytes))
-        mimetype = img.get_format_mimetype() # type: ignore
         sha224   = base64.b85encode(hashlib.sha224(img_bytes).digest()).decode('utf-8')
         # get the size it'l be seen on the screen
         w,h      = ImageOps.exif_transpose(img).size
@@ -862,11 +888,12 @@ class ParserHelper:
                 continue
                 
             tembs = clipwrap.txt_embeddings([term])
-            for e in tembs:
-                #e = e * scale_factor
-                e = VectorHelper.cast_to_float32_array(e)
-                embeddings['clip'].append(e)
-                embeddings['clip_scale_factors'].append(scale_factor)
+            if tembs is not None: 
+                for e in tembs:
+                    #e = e * scale_factor
+                    e = VectorHelper.cast_to_float32_array(e)
+                    embeddings['clip'].append(e)
+                    embeddings['clip_scale_factors'].append(scale_factor)
 
         
         clip_result = face_result = None
@@ -1006,11 +1033,11 @@ class ImageEmbeddingIndexer:
         print(f"creating InsightFaceWrapper")
         return InsightFaceWrapper()
     
-    # @functools.cached_property
-    # def oiw(self) -> OpenAIWrapper:
-    #     print(f"creating OpenAIWrapper")
-    #     device = self.device
-    #     return OpenAIWrapper(device=device)
+    @functools.cached_property
+    def oiw(self) -> OpenAIWrapper:
+        print(f"creating OpenAIWrapper")
+        device = self.device
+        return OpenAIWrapper(device=device)
 
     @functools.cached_property
     def parser_helper(self):
@@ -1052,18 +1079,22 @@ class ImageEmbeddingIndexer:
         return self.get_faiss_helper(f'insightface')
     
     @functools.cached_property
-    def openai_clip5_kvs(self) -> SimpleSqliteKVStore:
+    def openai_clip5_kvs(self) -> Optional[SimpleSqliteKVStore]:
+        if not self.oiw.model_name:
+            return None
         safename = self.oiw.model_name.replace('/','_')
         return self.get_kvs(f'openaiclip_5_{safename}')
     
     @functools.cached_property
-    def openai_clip_faiss_helper(self) -> FaissHelper:
+    def openai_clip_faiss_helper(self) -> Optional[FaissHelper]:
+        if not self.oiw.model_name:
+            return None
         safename = self.oiw.model_name.replace('/','_')
         return self.get_faiss_helper(f'openaiclip_5_{safename}')
     
     @functools.cached_property
     def current_clip_faiss_helper(self) -> FaissHelper:
-        if self.use_openai_clip:
+        if self.use_openai_clip and self.openai_clip_faiss_helper:
             return self.openai_clip_faiss_helper
         else:
             return self.laion_clip_faiss_helper
@@ -1071,7 +1102,8 @@ class ImageEmbeddingIndexer:
     
     def __init__(self, 
                  imgidx_path=None,
-                 clip_model=('ViT-B-32-quickgelu','laion400m_e32'),
+                 #clip_model=('ViT-B-32-quickgelu','laion400m_e32'),
+                 clip_model=('ViT-H-14','laion2b_s32b_b79k'),
                  thm_size = (320,640),
                  device='cpu',
                  synchronous='OFF',
@@ -1264,6 +1296,8 @@ class ImageEmbeddingIndexer:
     ################
 
     def get_openai_clip_embedding(self,img_id) -> Union[np.ndarray, None]: # np.ndarray|None: # 3.9 hack
+        if not self.openai_clip5_kvs:
+            return None
         b = self.openai_clip5_kvs.get(img_id)
         ce = b and pickle.loads(b)
         if isinstance(ce,np.ndarray):
@@ -1276,6 +1310,8 @@ class ImageEmbeddingIndexer:
         " for autofaiss "
         ids = []
         emb = []
+        if not self.openai_clip5_kvs:
+            return (ids,emb)
         for k,v in self.openai_clip5_kvs.iter_with_values():
             es = pickle.loads(v)
             for e in es:
@@ -1283,12 +1319,14 @@ class ImageEmbeddingIndexer:
                 ids.append(k)
                 emb.append(en)
                 if only_use_one_clip_embedding := True:
-                    break;
+                    break
         return (ids,emb)
     
     def set_openai_clip_embedding(self,img_id:int,img:Image.Image):
         kvs = self.openai_clip5_kvs
-        if done := self.openai_clip5_kvs[img_id]:
+        if not kvs:
+            return None
+        if done := kvs[img_id]:
             print(f"already had {img_id}")
             pass
         thms = self.img_helper.make_5_tiles(img)
@@ -1297,9 +1335,11 @@ class ImageEmbeddingIndexer:
         kvs[img_id] = pickle.dumps(emb_np)
 
     def make_openai_clip_faiss_index(self):
+        fh = self.openai_clip_faiss_helper
+        if not fh:
+            return None
         ids,embs = self.get_all_openai_clip_embeddings()
         embs = np.stack(embs)
-        fh = self.openai_clip_faiss_helper
         return fh.create_index(ids,embs)
     
     ################

@@ -1,5 +1,5 @@
 autofaiss==2.15.8
-# clip==0.2.0 # prefer laion
+# clip==0.2.0 # prefer laion, make clip optional
 faiss-cpu==1.7.4
 fastapi==0.104.1
 filelock==3.13.1
@@ -10,9 +10,10 @@ onnxruntime==1.16.2
 open-clip-torch==2.23.0
 orjson==3.9.10
 Pillow==10.1.0
-# autofaiss requires pyarrow <13
+# pyarrow can't be up-to-date because autofaiss requires pyarrow <13
 pyarrow>=12.0.0
 pydantic==2.4.2
+pyheif>=0.7.1
 pyparsing==3.1.1
 pywikibot==8.5.1
 Requests==2.31.0
@@ -20,5 +21,8 @@ toml==0.10.2
 torch==2.1.0
 torchvision==0.16.0
 transformers==4.35.0
-uvicorn==0.24.0.post1
 types-Pillow==10.1.0
+types-protobuf>=4.24.0.4
+types-requests>=2.31.0.10
+types-toml>=0.10.8.7
+uvicorn==0.24.0.post1

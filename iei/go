@@ -15,7 +15,11 @@ else
      echo using $IEI_PATH
 fi
 
-uvicorn  --host=0.0.0.0 --reload image_embedding_indexer_api:app
+# 1 worker process for ML to not run out of GPU ram
+uvicorn  --host=0.0.0.0 --reload image_embedding_indexer_api:app --port=8000 &
+# 8 worker process for serving thumbnails
+uvicorn  --host=0.0.0.0 --reload image_embedding_indexer_api:app --port=8001 --workers=8 &
+wait
 
 
 

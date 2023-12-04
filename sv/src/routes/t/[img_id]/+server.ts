@@ -10,9 +10,13 @@ export const GET = (async ({ setHeaders, url, params }) => {
 
     //console.log("t",img_id,params)
     //try {
-        //const img_url = 'https://picsum.photos/302'
-        //const img_url = `http://192.168.12.110:8000/thm/${img_id}`
-        const img_url_base = `${config.app_uri}/thm/${img_id}`
+        // Use a different backend server for thumbnails than
+        // the rest of the API endpoints, because thumbnails
+        // are performance constrained (10ms matters) so 
+        // prefer a uvicorn server with dozens of backends;
+        // while other endpoints are RAM contrained and would
+        // be expensive to run with dozens of backends.
+        const img_url_base = `${config.thm_uri}/thm/${img_id}`
         const img_url = (w || h) ? img_url_base + '?' + (w?"w="+w:"") + (h?"&h="+h:""): img_url_base
 
         const img_res = await fetch(img_url)

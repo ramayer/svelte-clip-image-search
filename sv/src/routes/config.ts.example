@@ -1,5 +1,6 @@
 const config = {
-    app_uri: 'http://localhost:8000'
+    app_uri: 'http://localhost:8000',
+    thm_uri: 'http://localhost:8001',
 };
   
 export default config;
