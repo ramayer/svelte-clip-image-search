@@ -213,8 +213,7 @@ class VectorHelper:
 #os.environ['CUDA_VISIBLE_DEVICES'] = ''
 import torchvision.transforms.transforms
 class OpenClipWrapper:
-    #def __init__(self,model_name='ViT-B-32-quickgelu',pretrained='laion400m_e32',device='cpu'):
-    def __init__(self,model_name='ViT-H-14',pretrained='laion2b_s32b_b79k',device='cpu'):
+    def __init__(self,model_name='',pretrained='',device='cpu'):
         """
             Try open_clip.list_pretrained() to see the list of models.
             This cheap GPU can only handle batches of ~10 images with laion400m_e32
@@ -222,6 +221,12 @@ class OpenClipWrapper:
             * On CPU - 10 embeddings = 698 ms 
             * On GPU - 10 embeddings =  13 ms 
         """
+        print("ENVIRON = ",os.environ)
+        if not model_name:
+            # Possibly default to (ViT-H-14,laion2b_s32b_b79k) for quality
+            # or (ViT-B-32-quickgelu, laion400m_e32) for cost/speed
+            model_name = os.getenv("CLIP_MODEL","ViT-H-14")
+            pretrained = os.getenv("CLIP_PRETRAINED","laion2b_s32b_b79k")
         self.model_name = model_name
         self.pretrained = pretrained
         self.device = device
@@ -844,12 +849,17 @@ class ParserHelper:
                         if metadata:
                             print(f"fetching {metadata.img_uri}")
                             thm,_,_,_ = iei.img_helper.fetch_img(metadata.img_uri,headers=headers)
+                            print("possibly transposing")
+                            thm = ImageOps.exif_transpose(thm)
+                        
                     else:
                         print("warning, need a user agent for full sized image")
                         thm = iei.get_thm(cid)
 
                     if thm: 
                         print("size before cropping is",thm.size)
+                        thm.save('/tmp/debug_0_pre_cropped.jpg')
+
                         cropped = iei.img_helper.crop_by_pct(thm,int(x),int(y),int(w),int(h))
                         cropped.save('/tmp/debug_1_cropped.jpg')
                         cropped = ImageOps.pad(cropped, (512,512))
@@ -1102,8 +1112,7 @@ class ImageEmbeddingIndexer:
     
     def __init__(self, 
                  imgidx_path=None,
-                 #clip_model=('ViT-B-32-quickgelu','laion400m_e32'),
-                 clip_model=('ViT-H-14','laion2b_s32b_b79k'),
+                 clip_model=(None,None),
                  thm_size = (320,640),
                  device='cpu',
                  synchronous='OFF',
@@ -1120,6 +1129,11 @@ class ImageEmbeddingIndexer:
 
         if create_if_missing:
             os.makedirs(imgidx_path , exist_ok=True)
+                    
+        if clip_model == (None,None):
+            clip_model = (os.getenv("CLIP_MODEL",'ViT-B-32-quickgelu'),
+                          os.getenv("CLIP_PRETRAINED",'laion400m_e32'))
+ 
         self.imgidx_path       = imgidx_path
         self.clip_model        = clip_model
         self.device            = device

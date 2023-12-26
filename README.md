@@ -2,10 +2,6 @@
 
 A platform for indexing images using a variety of embeddings (face, clip, text embeddings of captions, fine-tuning your own embeddings to better recognize your own family, pets, cars, etc), and using those tools to manipulate an image gallery.
 
-
-
-
-
 ## Installation
 
 For small image collections, installing with docker and no Cuda/M1 acceleration is most convenient. 
@@ -22,22 +18,31 @@ Note that the requirements.txt file can be quite fragile, as different indexers 
     docker buildx build -f Dockerfile.iei_ui -t iei-ui:latest  .
     docker buildx build -f Dockerfile.iei_api -t iei-api:latest  .
 
-    
     docker network create iei-network
 
     docker run -d \
        -v /tmp/iei_index:/data/iei_index \
        -v /tmp/pics/storage_emulated_0:/data/images:ro \
        -p 0.0.0.0:8000:8000 \
+       -p 0.0.0.0:8001:8001 \
        --network iei-network --name iei-api \
        iei-api:latest
 
     docker run -d -p 0.0.0.0:5173:5173 \
         --network iei-network --name iei-ui \
-        iei-ui bash
+        iei-ui
 
 
 ### To index images:
+
+    docker run -it \
+        -v /tmp/iei_index:/data/iei_index \
+        -v /tmp/pics/storage_emulated_0:/data/images:ro \
+        iei-api  bash
+        
+    # and then manually run:
+    #  ./index_files.py -r /data/images
+
 
     docker run -it \
         -v /tmp/iei_index:/data/iei_index \
