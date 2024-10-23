@@ -163,15 +163,15 @@ async def img(img_id: int, size: int = 400):
             metadata.img_uri, headers=req_hdrs
         )
 
-        hdrs = {"Cache-Control": "public, max-age=300"}
-        # handles heic
-        buf = io.BytesIO()
-        img        = ImageOps.exif_transpose(img)
-
-        img.save(buf, format="WebP", quality=90)
-        return fastapi.Response(
-            content=buf.getvalue(), headers=hdrs, media_type="image/webp"
-        )
+        if re.match(r'.*heic',metadata.img_uri):
+            hdrs = {"Cache-Control": "public, max-age=300"}
+            # handles heic
+            buf = io.BytesIO()
+            img        = ImageOps.exif_transpose(img)
+            img.save(buf, format="WebP", quality=90)
+            return fastapi.Response(
+                content=buf.getvalue(), headers=hdrs, media_type="image/webp"
+            )
     
         if not img_bytes:
             raise fastapi.HTTPException(
